@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-eye Group | FireSafe Track</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0b1f3a, #142d4c);
+            color: white;
+        }
+
+        /* HEADER */
+        .header {
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(0,0,0,0.3);
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .logo span {
+            color: #ff3b30;
+        }
+
+        .nav button {
+            background: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 8px 16px;
+            margin-left: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav button:hover {
+            background-color: white;
+            color: #0b1f3a;
+        }
+
+        /* HERO */
+        .hero {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: #cfd8dc;
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+        }
+
+        .cta {
+            display: inline-block;
+            background-color: #ff3b30;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .cta:hover {
+            background-color: #cc2f26;
+        }
+
+        /* FEATURES */
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 40px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background-color: rgba(255,255,255,0.08);
+            padding: 20px;
+            width: 220px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .card h3 {
+            color: #ffcc00;
+        }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #aaa;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="auth.js"></script>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="logo">A-eye<span>Group</span> | FireSafe Track</div>
+
+        <div class="nav">
+            <button onclick="location.href='login.html'">Login</button>
+        </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero">
+        <h1>Fire Safety Intelligence System</h1>
+        <p>
+            A digital platform developed by A-eye Group for managing, tracking,
+            and inspecting fire safety equipment across industrial and mining environments.
+        </p>
+
+        <a class="cta" href="login.html">Get Started</a>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="features">
+        <div class="card">
+            <h3>Inspections</h3>
+            <p>Track fire equipment inspections in real time.</p>
+        </div>
+
+        <div class="card">
+            <h3>Compliance</h3>
+            <p>Ensure NFPA and site safety compliance.</p>
+        </div>
+
+        <div class="card">
+            <h3>Reporting</h3>
+            <p>Generate structured safety reports instantly.</p>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        © 2026 A-eye Group | FireSafe Track System
+    </div>
+
+</body>
+</html>

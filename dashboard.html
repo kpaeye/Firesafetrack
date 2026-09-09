@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>FireSafe Track | Dashboard</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0b1f3a,
+                    #142d4c
+                );
+
+            color: #ffffff;
+
+            min-height: 100vh;
+        }
+
+
+        /* =====================================================
+           TOPBAR
+        ===================================================== */
+
+        .topbar {
+
+            height: 70px;
+            width: 100%;
+
+            background: rgba(0, 0, 0, 0.30);
+
+            border-bottom:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 22px;
+
+            position: fixed;
+
+            top: 0;
+            left: 0;
+
+            z-index: 1000;
+        }
+
+
+        .topbar-left {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+
+            min-width: 0;
+        }
+
+
+        .menu-btn {
+
+            width: 44px;
+            height: 44px;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.15);
+
+            border-radius: 8px;
+
+            background:
+                rgba(255, 255, 255, 0.07);
+
+            color: #ffffff;
+
+            font-size: 24px;
+
+            cursor: pointer;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            transition: 0.2s ease;
+        }
+
+
+        .menu-btn:hover {
+
+            background: #ff3b30;
+
+            border-color: #ff3b30;
+        }
+
+
+        .topbar-title {
+
+            font-size: 20px;
+
+            font-weight: bold;
+
+            white-space: nowrap;
+        }
+
+
+        .topbar-right {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 14px;
+        }
+
+
+        .user-display {
+
+            font-size: 14px;
+
+            color: #d9e2ec;
+        }
+
+
+        .role-badge {
+
+            background:
+                rgba(255, 204, 0, 0.12);
+
+            border:
+                1px solid
+                rgba(255, 204, 0, 0.35);
+
+            color: #ffcc00;
+
+            padding: 7px 11px;
+
+            border-radius: 6px;
+
+            font-size: 12px;
+
+            font-weight: bold;
+        }
+
+
+        /* =====================================================
+           SIDEBAR OVERLAY
+        ===================================================== */
+
+        .sidebar-overlay {
+
+            position: fixed;
+
+            inset: 0;
+
+            background:
+                rgba(0, 0, 0, 0.55);
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            transition:
+                opacity 0.25s ease,
+                visibility 0.25s ease;
+
+            z-index: 1100;
+        }
+
+
+        .sidebar-overlay.active {
+
+            opacity: 1;
+
+            visibility: visible;
+        }
+
+
+        /* =====================================================
+           SIDEBAR
+        ===================================================== */
+
+        .sidebar {
+
+            position: fixed;
+
+            top: 0;
+            left: 0;
+
+            width: 265px;
+            height: 100vh;
+
+            background: #0b1f3a;
+
+            border-right:
+                1px solid
+                rgba(255, 255, 255, 0.10);
+
+            z-index: 1200;
+
+            transform: translateX(-100%);
+
+            transition:
+                transform 0.25s ease;
+
+            display: flex;
+
+            flex-direction: column;
+
+            overflow-y: auto;
+        }
+
+
+        .sidebar.active {
+
+            transform: translateX(0);
+        }
+
+
+        /* =====================================================
+           SIDEBAR HEADER
+        ===================================================== */
+
+        .sidebar-header {
+
+            padding: 22px 18px;
+
+            border-bottom:
+                1px solid
+                rgba(255, 255, 255, 0.10);
+        }
+
+
+        .brand {
+
+            font-size: 22px;
+
+            font-weight: bold;
+
+            line-height: 1.2;
+
+            color: #ffffff;
+        }
+
+
+        .brand-subtitle {
+
+            margin-top: 7px;
+
+            color: #aebdca;
+
+            font-size: 12px;
+        }
+
+
+        .close-sidebar {
+
+            position: absolute;
+
+            top: 17px;
+            right: 15px;
+
+            width: 34px;
+            height: 34px;
+
+            border: none;
+
+            border-radius: 6px;
+
+            background:
+                rgba(255, 255, 255, 0.08);
+
+            color: #ffffff;
+
+            font-size: 20px;
+
+            cursor: pointer;
+        }
+
+
+        .close-sidebar:hover {
+
+            background: #ff3b30;
+        }
+
+
+        /* =====================================================
+           NAVIGATION
+        ===================================================== */
+
+        .nav-section {
+
+            padding: 16px 12px;
+        }
+
+
+        .nav-label {
+
+            padding:
+                0 9px 9px;
+
+            font-size: 10px;
+
+            font-weight: bold;
+
+            color: #8496a8;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+        }
+
+
+        .nav-link {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            width: 100%;
+
+            padding: 12px 10px;
+
+            margin-bottom: 4px;
+
+            border-radius: 7px;
+
+            color: #dce6ef;
+
+            text-decoration: none;
+
+            font-size: 14px;
+
+            transition: 0.2s ease;
+        }
+
+
+        .nav-link:hover {
+
+            background:
+                rgba(255, 255, 255, 0.08);
+
+            color: #ffffff;
+        }
+
+
+        .nav-link.active {
+
+            background: #ff3b30;
+
+            color: #ffffff;
+        }
+
+
+        .nav-icon {
+
+            width: 24px;
+
+            text-align: center;
+
+            font-size: 17px;
+
+            flex-shrink: 0;
+        }
+
+
+        /* =====================================================
+           SIDEBAR FOOTER
+        ===================================================== */
+
+        .sidebar-footer {
+
+            margin-top: auto;
+
+            padding: 16px;
+
+            border-top:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+
+            color: #8496a8;
+
+            font-size: 11px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           MAIN CONTENT
+        ===================================================== */
+
+        .main {
+
+            width: 100%;
+
+            min-height: 100vh;
+
+            padding-top: 70px;
+        }
+
+
+        .content {
+
+            width: 100%;
+
+            max-width: 1500px;
+
+            margin: 0 auto;
+
+            padding: 28px;
+        }
+
+
+        /* =====================================================
+           PAGE HEADER
+        ===================================================== */
+
+        .page-header {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+            margin-bottom: 25px;
+        }
+
+
+        .page-title h1 {
+
+            margin: 0;
+
+            font-size: 28px;
+
+            font-weight: bold;
+        }
+
+
+        .page-title p {
+
+            margin: 7px 0 0;
+
+            color: #b7c5d2;
+
+            font-size: 14px;
+        }
+
+
+        .system-status {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            color: #cbd7e2;
+
+            font-size: 13px;
+        }
+
+
+        .status-dot {
+
+            width: 9px;
+            height: 9px;
+
+            border-radius: 50%;
+
+            background: #ffcc00;
+        }
+
+
+        /* =====================================================
+           STAT CARDS
+        ===================================================== */
+
+        .stats-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+
+            gap: 18px;
+
+            margin-bottom: 22px;
+        }
+
+
+        .stat-card {
+
+            background:
+                rgba(255, 255, 255, 0.08);
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.10);
+
+            border-radius: 10px;
+
+            padding: 20px;
+
+            min-height: 125px;
+        }
+
+
+        .stat-card:hover {
+
+            border-color:
+                rgba(255, 255, 255, 0.18);
+        }
+
+
+        .stat-label {
+
+            color: #aebdca;
+
+            font-size: 13px;
+
+            margin-bottom: 12px;
+        }
+
+
+        .stat-value {
+
+            font-size: 32px;
+
+            font-weight: bold;
+
+            line-height: 1;
+        }
+
+
+        .stat-note {
+
+            margin-top: 10px;
+
+            font-size: 11px;
+
+            color: #8496a8;
+        }
+
+
+        /* =====================================================
+           DASHBOARD GRID
+        ===================================================== */
+
+        .dashboard-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 2fr)
+                minmax(280px, 1fr);
+
+            gap: 20px;
+        }
+
+
+        .card {
+
+            background:
+                rgba(255, 255, 255, 0.08);
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.10);
+
+            border-radius: 10px;
+
+            overflow: hidden;
+        }
+
+
+        .card-header {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 17px 19px;
+
+            border-bottom:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+        }
+
+
+        .card-title {
+
+            font-size: 16px;
+
+            font-weight: bold;
+        }
+
+
+        .card-body {
+
+            padding: 20px;
+        }
+
+
+        /* =====================================================
+           EMPTY STATE
+        ===================================================== */
+
+        .empty-state {
+
+            text-align: center;
+
+            padding: 40px 20px;
+
+            color: #9eafbf;
+        }
+
+
+        .empty-icon {
+
+            font-size: 38px;
+
+            margin-bottom: 12px;
+
+            opacity: 0.8;
+        }
+
+
+        .empty-state h3 {
+
+            margin:
+                0 0 7px;
+
+            color: #dbe5ee;
+
+            font-size: 16px;
+        }
+
+
+        .empty-state p {
+
+            margin: 0;
+
+            font-size: 13px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           QUICK ACTIONS
+        ===================================================== */
+
+        .quick-actions {
+
+            display: grid;
+
+            gap: 10px;
+        }
+
+
+        .action-btn {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            width: 100%;
+
+            padding: 13px 14px;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.10);
+
+            border-radius: 7px;
+
+            background:
+                rgba(255, 255, 255, 0.05);
+
+            color: #ffffff;
+
+            text-decoration: none;
+
+            font-size: 13px;
+
+            transition: 0.2s ease;
+        }
+
+
+        .action-btn:hover {
+
+            background: #ff3b30;
+
+            border-color: #ff3b30;
+        }
+
+
+        .action-icon {
+
+            width: 25px;
+
+            text-align: center;
+
+            font-size: 17px;
+        }
+
+
+        /* =====================================================
+           COMPLIANCE
+        ===================================================== */
+
+        .compliance-box {
+
+            margin-top: 20px;
+        }
+
+
+        .compliance-title {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            margin-bottom: 9px;
+
+            font-size: 13px;
+        }
+
+
+        .compliance-value {
+
+            color: #ffcc00;
+
+            font-weight: bold;
+        }
+
+
+        .progress {
+
+            height: 7px;
+
+            width: 100%;
+
+            background:
+                rgba(255, 255, 255, 0.10);
+
+            border-radius: 20px;
+
+            overflow: hidden;
+        }
+
+
+        .progress-bar {
+
+            width: 0%;
+
+            height: 100%;
+
+            background: #ffcc00;
+        }
+
+
+        /* =====================================================
+           FOOTER
+        ===================================================== */
+
+        .footer {
+
+            padding:
+                25px 0 10px;
+
+            text-align: center;
+
+            color: #71869a;
+
+            font-size: 11px;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 1000px) {
+
+            .stats-grid {
+
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
+
+            .dashboard-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+        @media (max-width: 650px) {
+
+            .topbar {
+
+                padding: 0 14px;
+            }
+
+
+            .topbar-title {
+
+                font-size: 17px;
+            }
+
+
+            .user-display {
+
+                display: none;
+            }
+
+
+            .role-badge {
+
+                display: none;
+            }
+
+
+            .content {
+
+                padding: 20px 15px;
+            }
+
+
+            .page-header {
+
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
+
+            .page-title h1 {
+
+                font-size: 24px;
+            }
+
+
+            .stats-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+
+            .sidebar {
+
+                width: 280px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         SIDEBAR OVERLAY
+    ===================================================== -->
+
+    <div
+        class="sidebar-overlay"
+        id="sidebarOverlay"
+        onclick="closeSidebar()"
+    ></div>
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ===================================================== -->
+
+    <aside
+        class="sidebar"
+        id="sidebar"
+    >
+
+
+        <button
+            class="close-sidebar"
+            type="button"
+            onclick="closeSidebar()"
+            aria-label="Close navigation"
+        >
+            ×
+        </button>
+
+
+        <div class="sidebar-header">
+
+            <div class="brand">
+                FireSafe Track
+            </div>
+
+            <div class="brand-subtitle">
+                Fire Safety Management
+            </div>
+
+        </div>
+
+
+        <!-- MAIN NAVIGATION -->
+
+        <nav class="nav-section">
+
+            <div class="nav-label">
+                Main
+            </div>
+
+
+            <a
+                href="dashboard.html"
+                class="nav-link active"
+                onclick="closeSidebar()"
+            >
+
+                <span class="nav-icon">
+                    ⌂
+                </span>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </a>
+
+
+            <a
+                href="equipment.html"
+                class="nav-link"
+                onclick="closeSidebar()"
+            >
+
+                <span class="nav-icon">
+                    ▣
+                </span>
+
+                <span>
+                    Equipment Register
+                </span>
+
+            </a>
+
+
+            <a
+                href="equipment-types.html"
+                class="nav-link"
+                onclick="closeSidebar()"
+            >
+
+                <span class="nav-icon">
+                    ▤
+                </span>
+
+                <span>
+                    Equipment Types
+                </span>
+
+            </a>
+
+
+            <a
+                href="locations.html"
+                class="nav-link"
+                onclick="closeSidebar()"
+            >
+
+                <span class="nav-icon">
+                    ⌖
+                </span>
+
+                <span>
+                    Locations
+                </span>
+
+            </a>
+
+        </nav>
+
+
+        <!-- SAFETY MANAGEMENT -->
+
+        <nav class="nav-section">
+
+            <div class="nav-label">
+                Safety Management
+            </div>
+
+
+            <a
+                href="inspections.html"
+                class="nav-link"
+                onclick="closeSidebar()"
+            >
+
+                <span class="nav-icon">
+                    ✓
+                </span>
+
+                <span>
+                    Inspections
+                </span>
+
+            </a>
+
+
+            <a
+                href="deviations.html"
+                class="nav-link"
+                onclick="closeSidebar()"
+            >
+
+                <span class="nav-icon">
+                    !
+                </span>
+
+                <span>
+                    Deviations
+                </span>
+
+            </a>
+
+
+            <a
+                href="corrective-actions.html"
+                class="nav-link"
+                onclick="closeSidebar()"
+            >
+
+                <span class="nav-icon">
+                    ↻
+                </span>
+
+                <span>
+                    Corrective Actions
+                </span>
+
+            </a>
+
+
+            <a
+                href="reports.html"
+                class="nav-link"
+                onclick="closeSidebar()"
+            >
+
+                <span class="nav-icon">
+                    ▥
+                </span>
+
+                <span>
+                    Inspection Reports
+                </span>
+
+            </a>
+
+        </nav>
+
+
+        <!-- ADMINISTRATION -->
+
+        <nav class="nav-section">
+
+            <div class="nav-label">
+                Administration
+            </div>
+
+
+            <a
+                href="users.html"
+                class="nav-link"
+                onclick="closeSidebar()"
+            >
+
+                <span class="nav-icon">
+                    ♙
+                </span>
+
+                <span>
+                    Users
+                </span>
+
+            </a>
+
+
+            <a
+                href="settings.html"
+                class="nav-link"
+                onclick="closeSidebar()"
+            >
+
+                <span class="nav-icon">
+                    ⚙
+                </span>
+
+                <span>
+                    Settings
+                </span>
+
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-footer">
+
+            FireSafe Track<br>
+
+            Fire Safety Management System<br>
+
+            © 2026 A-eye Group
+
+        </div>
+
+
+    </aside>
+
+
+    <!-- =====================================================
+         TOPBAR
+    ===================================================== -->
+
+    <header class="topbar">
+
+
+        <div class="topbar-left">
+
+
+            <button
+                class="menu-btn"
+                id="menuButton"
+                type="button"
+                onclick="toggleSidebar()"
+                aria-label="Open navigation"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+
+
+            <div class="topbar-title">
+                FireSafe Track
+            </div>
+
+
+        </div>
+
+
+        <div class="topbar-right">
+
+
+            <div class="user-display">
+                Administrator
+            </div>
+
+
+            <div class="role-badge">
+                ADMIN
+            </div>
+
+
+        </div>
+
+
+    </header>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ===================================================== -->
+
+    <main class="main">
+
+
+        <div class="content">
+
+
+            <!-- PAGE HEADER -->
+
+            <div class="page-header">
+
+
+                <div class="page-title">
+
+                    <h1>
+                        Dashboard
+                    </h1>
+
+                    <p>
+                        Fire safety equipment management and inspection overview.
+                    </p>
+
+                </div>
+
+
+                <div class="system-status">
+
+                    <span class="status-dot"></span>
+
+                    System ready for setup
+
+                </div>
+
+
+            </div>
+
+
+            <!-- =================================================
+                 STATISTICS
+            ================================================== -->
+
+            <section class="stats-grid">
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Total Equipment
+                    </div>
+
+                    <div class="stat-value">
+                        0
+                    </div>
+
+                    <div class="stat-note">
+                        Equipment registered
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Inspections
+                    </div>
+
+                    <div class="stat-value">
+                        0
+                    </div>
+
+                    <div class="stat-note">
+                        Inspections completed
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Open Deviations
+                    </div>
+
+                    <div class="stat-value">
+                        0
+                    </div>
+
+                    <div class="stat-note">
+                        Outstanding issues
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Compliance
+                    </div>
+
+                    <div class="stat-value">
+                        0%
+                    </div>
+
+                    <div class="stat-note">
+                        Current compliance rate
+                    </div>
+
+                </div>
+
+
+            </section>
+
+
+            <!-- =================================================
+                 DASHBOARD CONTENT
+            ================================================== -->
+
+            <section class="dashboard-grid">
+
+
+                <!-- RECENT INSPECTIONS -->
+
+                <div class="card">
+
+
+                    <div class="card-header">
+
+                        <div class="card-title">
+                            Recent Inspections
+                        </div>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+
+                        <div class="empty-state">
+
+
+                            <div class="empty-icon">
+                                ✓
+                            </div>
+
+
+                            <h3>
+                                No inspections yet
+                            </h3>
+
+
+                            <p>
+                                Inspection records will appear here
+                                once the inspection module is connected.
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- QUICK ACTIONS -->
+
+                <div class="card">
+
+
+                    <div class="card-header">
+
+                        <div class="card-title">
+                            Quick Actions
+                        </div>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+
+                        <div class="quick-actions">
+
+
+                            <a
+                                href="equipment.html"
+                                class="action-btn"
+                            >
+
+                                <span class="action-icon">
+                                    ▣
+                                </span>
+
+                                <span>
+                                    Equipment Register
+                                </span>
+
+                            </a>
+
+
+                            <a
+                                href="inspections.html"
+                                class="action-btn"
+                            >
+
+                                <span class="action-icon">
+                                    ✓
+                                </span>
+
+                                <span>
+                                    Start Inspection
+                                </span>
+
+                            </a>
+
+
+                            <a
+                                href="deviations.html"
+                                class="action-btn"
+                            >
+
+                                <span class="action-icon">
+                                    !
+                                </span>
+
+                                <span>
+                                    View Deviations
+                                </span>
+
+                            </a>
+
+
+                            <a
+                                href="reports.html"
+                                class="action-btn"
+                            >
+
+                                <span class="action-icon">
+                                    ▥
+                                </span>
+
+                                <span>
+                                    Inspection Reports
+                                </span>
+
+                            </a>
+
+
+                        </div>
+
+
+                        <!-- COMPLIANCE -->
+
+                        <div class="compliance-box">
+
+
+                            <div class="compliance-title">
+
+                                <span>
+                                    Compliance
+                                </span>
+
+                                <span class="compliance-value">
+                                    0%
+                                </span>
+
+                            </div>
+
+
+                            <div class="progress">
+
+                                <div class="progress-bar"></div>
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </section>
+
+
+            <!-- FOOTER -->
+
+            <div class="footer">
+
+                © 2026 A-eye Group | FireSafe Track System
+
+            </div>
+
+
+        </div>
+
+
+    </main>
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ===================================================== -->
+
+    <script>
+
+
+        const sidebar =
+            document.getElementById("sidebar");
+
+
+        const sidebarOverlay =
+            document.getElementById("sidebarOverlay");
+
+
+        const menuButton =
+            document.getElementById("menuButton");
+
+
+        /* =====================================================
+           OPEN SIDEBAR
+        ===================================================== */
+
+        function openSidebar() {
+
+            sidebar.classList.add("active");
+
+            sidebarOverlay.classList.add("active");
+
+            menuButton.setAttribute(
+                "aria-expanded",
+                "true"
+            );
+
+            document.body.style.overflow = "hidden";
+
+        }
+
+
+        /* =====================================================
+           CLOSE SIDEBAR
+        ===================================================== */
+
+        function closeSidebar() {
+
+            sidebar.classList.remove("active");
+
+            sidebarOverlay.classList.remove("active");
+
+            menuButton.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+            document.body.style.overflow = "";
+
+        }
+
+
+        /* =====================================================
+           TOGGLE SIDEBAR
+        ===================================================== */
+
+        function toggleSidebar() {
+
+            if (
+                sidebar.classList.contains("active")
+            ) {
+
+                closeSidebar();
+
+            } else {
+
+                openSidebar();
+
+            }
+
+        }
+
+
+        /* =====================================================
+           ESC KEY
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function(event) {
+
+                if (
+                    event.key === "Escape" &&
+                    sidebar.classList.contains("active")
+                ) {
+
+                    closeSidebar();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           PREVENT SIDEBAR CLICK FROM CLOSING IT
+        ===================================================== */
+
+        sidebar.addEventListener(
+            "click",
+            function(event) {
+
+                event.stopPropagation();
+
+            }
+        );
+
+
+    </script>
+
+
+</body>
+
+</html>
