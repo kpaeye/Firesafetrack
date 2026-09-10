@@ -1,0 +1,4033 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>FireSafe Track | Inspections</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+html,
+body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    min-height:100vh;
+    color:#ffffff;
+    background:linear-gradient(135deg,#0b1f3a,#142d4c);
+}
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+.sidebar-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.55);
+    z-index:900;
+    display:none;
+}
+
+.sidebar-overlay.active{
+    display:block;
+}
+
+.sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:290px;
+    height:100vh;
+    background:#091a2e;
+    border-right:1px solid rgba(255,255,255,0.1);
+    z-index:1000;
+    transform:translateX(-100%);
+    transition:transform 0.25s ease;
+    overflow-y:auto;
+}
+
+.sidebar.open{
+    transform:translateX(0);
+}
+
+.sidebar-header{
+    padding:24px 20px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.brand-mark{
+    width:42px;
+    height:42px;
+    border-radius:10px;
+    background:#ff3b30;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:21px;
+    font-weight:bold;
+}
+
+.brand-text{
+    font-size:20px;
+    font-weight:bold;
+}
+
+.brand-subtitle{
+    color:#9fb1c5;
+    font-size:11px;
+    margin-top:3px;
+}
+
+.nav{
+    padding:14px 10px 30px;
+}
+
+.nav-section{
+    margin:18px 10px 8px;
+    color:#71859b;
+    font-size:10px;
+    font-weight:bold;
+    text-transform:uppercase;
+    letter-spacing:1px;
+}
+
+.nav-link{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 14px;
+    margin:3px 0;
+    color:#c9d4df;
+    text-decoration:none;
+    border-radius:8px;
+    font-size:14px;
+    transition:0.2s;
+}
+
+.nav-link:hover{
+    background:rgba(255,255,255,0.07);
+    color:#ffffff;
+}
+
+.nav-link.active{
+    background:#ff3b30;
+    color:#ffffff;
+}
+
+.nav-icon{
+    width:22px;
+    text-align:center;
+    font-size:16px;
+}
+
+/* =====================================================
+   TOPBAR
+===================================================== */
+
+.topbar{
+    height:70px;
+    background:rgba(0,0,0,0.3);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 22px;
+    position:sticky;
+    top:0;
+    z-index:500;
+}
+
+.menu-button{
+    width:42px;
+    height:42px;
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:8px;
+    background:rgba(255,255,255,0.07);
+    color:#ffffff;
+    font-size:22px;
+    cursor:pointer;
+}
+
+.menu-button:hover{
+    background:rgba(255,255,255,0.13);
+}
+
+.topbar-title{
+    font-size:18px;
+    font-weight:bold;
+}
+
+.topbar-right{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.database-status{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:12px;
+    color:#aebdca;
+}
+
+.status-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#ffcc00;
+}
+
+.status-dot.online{
+    background:#28d17c;
+}
+
+.status-dot.offline{
+    background:#ff3b30;
+}
+
+/* =====================================================
+   MAIN
+===================================================== */
+
+.main{
+    padding:25px;
+    max-width:1500px;
+    margin:auto;
+}
+
+.page-heading{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+    margin-bottom:25px;
+}
+
+.page-heading h1{
+    margin:0;
+    font-size:28px;
+}
+
+.page-heading p{
+    margin:8px 0 0;
+    color:#aebdca;
+    font-size:14px;
+}
+
+.refresh-button{
+    border:1px solid rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.08);
+    color:#ffffff;
+    padding:11px 16px;
+    border-radius:7px;
+    cursor:pointer;
+}
+
+.refresh-button:hover{
+    background:rgba(255,255,255,0.14);
+}
+
+/* =====================================================
+   STATS
+===================================================== */
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:15px;
+    margin-bottom:22px;
+}
+
+.stat-card{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.09);
+    border-radius:10px;
+    padding:18px;
+}
+
+.stat-label{
+    color:#9fb1c5;
+    font-size:12px;
+}
+
+.stat-value{
+    margin-top:8px;
+    font-size:26px;
+    font-weight:bold;
+}
+
+/* =====================================================
+   CARD
+===================================================== */
+
+.card{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.09);
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.card-header{
+    padding:18px 20px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.card-header h2{
+    margin:0;
+    font-size:17px;
+}
+
+.card-header p{
+    margin:6px 0 0;
+    color:#9fb1c5;
+    font-size:12px;
+}
+
+/* =====================================================
+   FILTERS
+===================================================== */
+
+.filters{
+    padding:18px 20px;
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr 1fr auto;
+    gap:10px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.input,
+.select{
+    width:100%;
+    padding:11px 12px;
+    border-radius:7px;
+    border:1px solid rgba(255,255,255,0.15);
+    background:rgba(0,0,0,0.22);
+    color:#ffffff;
+    outline:none;
+}
+
+.input:focus,
+.select:focus{
+    border-color:#ff3b30;
+}
+
+.select option{
+    background:#142d4c;
+    color:#ffffff;
+}
+
+.button{
+    border:none;
+    border-radius:7px;
+    padding:10px 15px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.button-primary{
+    background:#ff3b30;
+    color:#ffffff;
+}
+
+.button-primary:hover{
+    background:#cc2f26;
+}
+
+.button-primary:disabled{
+    background:#7d2a25;
+    color:#b9c1c9;
+    cursor:not-allowed;
+}
+
+.button-secondary{
+    background:rgba(255,255,255,0.1);
+    color:#ffffff;
+    border:1px solid rgba(255,255,255,0.13);
+}
+
+.button-secondary:hover{
+    background:rgba(255,255,255,0.16);
+}
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+.table-container{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:850px;
+}
+
+thead{
+    background:rgba(0,0,0,0.18);
+}
+
+th{
+    text-align:left;
+    padding:13px 15px;
+    color:#9fb1c5;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+}
+
+td{
+    padding:14px 15px;
+    border-top:1px solid rgba(255,255,255,0.06);
+    font-size:13px;
+    vertical-align:middle;
+}
+
+tbody tr:hover{
+    background:rgba(255,255,255,0.04);
+}
+
+.equipment-name{
+    font-weight:bold;
+}
+
+.equipment-code{
+    color:#9fb1c5;
+    font-size:11px;
+    margin-top:4px;
+}
+
+.type-text{
+    color:#d4dde6;
+}
+
+.action-button{
+    border:none;
+    border-radius:6px;
+    padding:8px 12px;
+    background:#ff3b30;
+    color:#ffffff;
+    cursor:pointer;
+    font-weight:bold;
+    font-size:12px;
+}
+
+.action-button:hover{
+    background:#cc2f26;
+}
+
+.empty-state{
+    text-align:center;
+    padding:45px 20px;
+    color:#9fb1c5;
+}
+
+.loading{
+    text-align:center;
+    padding:40px;
+    color:#9fb1c5;
+}
+
+/* =====================================================
+   MODALS
+===================================================== */
+
+.modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.72);
+    z-index:1500;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.modal-overlay.active{
+    display:flex;
+}
+
+.modal{
+    width:min(1050px,100%);
+    max-height:92vh;
+    overflow-y:auto;
+    background:#102943;
+    border:1px solid rgba(255,255,255,0.13);
+    border-radius:12px;
+    box-shadow:0 25px 70px rgba(0,0,0,0.45);
+}
+
+.modal-header{
+    position:sticky;
+    top:0;
+    z-index:2;
+    background:#102943;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:15px;
+    padding:20px;
+    border-bottom:1px solid rgba(255,255,255,0.09);
+}
+
+.modal-header h2{
+    margin:0;
+    font-size:20px;
+}
+
+.modal-header p{
+    margin:6px 0 0;
+    color:#9fb1c5;
+    font-size:12px;
+}
+
+.close-button{
+    width:34px;
+    height:34px;
+    border:none;
+    border-radius:6px;
+    background:rgba(255,255,255,0.08);
+    color:#ffffff;
+    cursor:pointer;
+    font-size:19px;
+}
+
+.close-button:hover{
+    background:rgba(255,255,255,0.16);
+}
+
+.modal-body{
+    padding:20px;
+}
+
+.modal-footer{
+    position:sticky;
+    bottom:0;
+    background:#102943;
+    padding:15px 20px;
+    border-top:1px solid rgba(255,255,255,0.09);
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+}
+
+/* =====================================================
+   EQUIPMENT INFORMATION
+===================================================== */
+
+.equipment-info{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:22px;
+}
+
+.info-box{
+    background:rgba(0,0,0,0.18);
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:7px;
+    padding:12px;
+}
+
+.info-label{
+    font-size:10px;
+    color:#8195aa;
+    text-transform:uppercase;
+    margin-bottom:5px;
+}
+
+.info-value{
+    font-size:13px;
+    font-weight:bold;
+    word-break:break-word;
+}
+
+/* =====================================================
+   INSPECTION HEADER
+===================================================== */
+
+.form-section{
+    margin-top:20px;
+}
+
+.section-title{
+    margin:0 0 10px;
+    font-size:15px;
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:12px;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.form-group.full{
+    grid-column:1/-1;
+}
+
+.form-label{
+    color:#aebdca;
+    font-size:11px;
+    font-weight:bold;
+    text-transform:uppercase;
+}
+
+.textarea{
+    min-height:90px;
+    resize:vertical;
+}
+
+/* =====================================================
+   CHECKLIST
+===================================================== */
+
+.checklist-wrapper{
+    margin-top:25px;
+}
+
+.checklist-title{
+    font-size:17px;
+    margin:0 0 5px;
+}
+
+.checklist-subtitle{
+    color:#9fb1c5;
+    font-size:12px;
+    margin:0 0 15px;
+}
+
+.checklist-progress{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    padding:12px 14px;
+    margin-bottom:12px;
+    background:rgba(0,0,0,0.18);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:7px;
+}
+
+.progress-message{
+    font-size:12px;
+    color:#cbd5df;
+}
+
+.progress-message.complete{
+    color:#54e39a;
+}
+
+.progress-count{
+    font-size:12px;
+    font-weight:bold;
+    color:#ffcc00;
+    white-space:nowrap;
+}
+
+.progress-count.complete{
+    color:#54e39a;
+}
+
+.checklist{
+    border:1px solid rgba(255,255,255,0.09);
+    border-radius:8px;
+    overflow:hidden;
+}
+
+.check-row{
+    display:grid;
+    grid-template-columns:55px minmax(300px,1fr) 170px minmax(180px,0.8fr);
+    gap:12px;
+    align-items:center;
+    padding:12px 14px;
+    border-top:1px solid rgba(255,255,255,0.06);
+    transition:background 0.15s ease;
+}
+
+.check-row:first-child{
+    border-top:none;
+}
+
+.check-row.header{
+    background:rgba(0,0,0,0.2);
+    color:#9fb1c5;
+    font-size:10px;
+    font-weight:bold;
+    text-transform:uppercase;
+}
+
+.check-row.unanswered{
+    background:rgba(255,204,0,0.055);
+}
+
+.check-row.unanswered .item-number{
+    color:#ffcc00;
+}
+
+.item-number{
+    font-weight:bold;
+    color:#9fb1c5;
+}
+
+.requirement{
+    font-size:13px;
+    line-height:1.4;
+}
+
+.answer-group{
+    display:flex;
+    gap:5px;
+}
+
+.answer-button{
+    flex:1;
+    min-width:48px;
+    padding:8px 6px;
+    border:1px solid rgba(255,255,255,0.13);
+    border-radius:5px;
+    background:rgba(255,255,255,0.05);
+    color:#cbd5df;
+    cursor:pointer;
+    font-size:10px;
+    font-weight:bold;
+}
+
+.answer-button:hover{
+    background:rgba(255,255,255,0.11);
+}
+
+.answer-button.selected-pass{
+    background:#1c8f5a;
+    border-color:#28d17c;
+    color:#ffffff;
+}
+
+.answer-button.selected-fail{
+    background:#b72e28;
+    border-color:#ff3b30;
+    color:#ffffff;
+}
+
+.answer-button.selected-na{
+    background:#6b5b00;
+    border-color:#ffcc00;
+    color:#ffffff;
+}
+
+.remarks-input{
+    width:100%;
+    padding:8px 9px;
+    border-radius:5px;
+    border:1px solid rgba(255,255,255,0.12);
+    background:rgba(0,0,0,0.18);
+    color:#ffffff;
+    outline:none;
+    font-size:11px;
+}
+
+.remarks-input:focus{
+    border-color:#ff3b30;
+}
+
+/* =====================================================
+   HISTORY
+===================================================== */
+
+.history-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.history-item{
+    background:rgba(0,0,0,0.18);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:8px;
+    padding:14px;
+}
+
+.history-top{
+    display:flex;
+    justify-content:space-between;
+    gap:15px;
+}
+
+.history-date{
+    font-weight:bold;
+}
+
+.history-type{
+    color:#9fb1c5;
+    font-size:12px;
+    margin-top:4px;
+}
+
+.history-status{
+    font-size:11px;
+    font-weight:bold;
+    padding:5px 9px;
+    border-radius:5px;
+    height:max-content;
+}
+
+.status-pass{
+    background:rgba(40,209,124,0.16);
+    color:#54e39a;
+}
+
+.status-fail{
+    background:rgba(255,59,48,0.16);
+    color:#ff7169;
+}
+
+.status-na{
+    background:rgba(255,204,0,0.14);
+    color:#ffcc00;
+}
+
+.status-pending{
+    background:rgba(255,255,255,0.1);
+    color:#cbd5df;
+}
+
+/* =====================================================
+   TOAST
+===================================================== */
+
+.toast-container{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    z-index:3000;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.toast{
+    min-width:260px;
+    max-width:380px;
+    background:#102943;
+    border:1px solid rgba(255,255,255,0.13);
+    border-left:4px solid #ffcc00;
+    color:#ffffff;
+    padding:13px 15px;
+    border-radius:7px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+    font-size:13px;
+}
+
+.toast.success{
+    border-left-color:#28d17c;
+}
+
+.toast.error{
+    border-left-color:#ff3b30;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media(max-width:1100px){
+
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .filters{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .equipment-info{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .form-grid{
+        grid-template-columns:1fr 1fr;
+    }
+
+}
+
+@media(max-width:700px){
+
+    .main{
+        padding:15px;
+    }
+
+    .page-heading{
+        flex-direction:column;
+    }
+
+    .stats{
+        grid-template-columns:1fr;
+    }
+
+    .filters{
+        grid-template-columns:1fr;
+    }
+
+    .equipment-info{
+        grid-template-columns:1fr;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+
+    .check-row{
+        grid-template-columns:35px 1fr;
+    }
+
+    .check-row.header{
+        display:none;
+    }
+
+    .answer-group,
+    .remarks-input{
+        grid-column:2;
+    }
+
+    .topbar-title{
+        display:none;
+    }
+
+    .checklist-progress{
+        align-items:flex-start;
+        flex-direction:column;
+        gap:5px;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- =====================================================
+     SIDEBAR OVERLAY
+===================================================== -->
+
+<div
+    id="sidebarOverlay"
+    class="sidebar-overlay"
+    onclick="closeSidebar()"
+></div>
+
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
+<aside
+    id="sidebar"
+    class="sidebar"
+>
+
+    <div class="sidebar-header">
+
+        <div class="brand">
+
+            <div class="brand-mark">
+                FS
+            </div>
+
+            <div>
+
+                <div class="brand-text">
+                    FireSafe Track
+                </div>
+
+                <div class="brand-subtitle">
+                    Fire Safety Inspection System
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <nav class="nav">
+
+        <div class="nav-section">
+            Main
+        </div>
+
+        <a
+            href="dashboard.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">▦</span>
+            <span>Dashboard</span>
+        </a>
+
+
+        <div class="nav-section">
+            Fire Safety Management
+        </div>
+
+        <a
+            href="equipment.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">▣</span>
+            <span>Equipment Register</span>
+        </a>
+
+        <a
+            href="equipment-types.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">◫</span>
+            <span>Equipment Types</span>
+        </a>
+
+        <a
+            href="locations.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">⌖</span>
+            <span>Locations</span>
+        </a>
+
+        <a
+            href="inspections.html"
+            class="nav-link active"
+        >
+            <span class="nav-icon">✓</span>
+            <span>Inspections</span>
+        </a>
+
+        <a
+            href="deviations.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">!</span>
+            <span>Deviations</span>
+        </a>
+
+        <a
+            href="corrective-actions.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">↻</span>
+            <span>Corrective Actions</span>
+        </a>
+
+        <a
+            href="reports.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">▤</span>
+            <span>Inspection Reports</span>
+        </a>
+
+
+        <div class="nav-section">
+            Administration
+        </div>
+
+        <a
+            href="users.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">♙</span>
+            <span>Users</span>
+        </a>
+
+        <a
+            href="settings.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">⚙</span>
+            <span>Settings</span>
+        </a>
+
+    </nav>
+
+</aside>
+
+
+<!-- =====================================================
+     TOPBAR
+===================================================== -->
+
+<header class="topbar">
+
+    <div style="display:flex;align-items:center;gap:14px;">
+
+        <button
+            class="menu-button"
+            onclick="openSidebar()"
+            aria-label="Open menu"
+        >
+            ☰
+        </button>
+
+        <div class="topbar-title">
+            Inspections
+        </div>
+
+    </div>
+
+
+    <div class="topbar-right">
+
+        <div class="database-status">
+
+            <span
+                id="statusDot"
+                class="status-dot"
+            ></span>
+
+            <span id="databaseStatus">
+                Connecting...
+            </span>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
+
+<main class="main">
+
+    <div class="page-heading">
+
+        <div>
+
+            <h1>
+                Fire Safety Inspections
+            </h1>
+
+            <p>
+                Select equipment from the register and FireSafe Track will automatically open the correct inspection form.
+            </p>
+
+        </div>
+
+        <button
+            class="refresh-button"
+            onclick="loadEquipment()"
+        >
+            ↻ Refresh
+        </button>
+
+    </div>
+
+
+    <!-- =================================================
+         STATS
+    ================================================== -->
+
+    <section class="stats">
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Equipment Available
+            </div>
+
+            <div
+                id="totalEquipment"
+                class="stat-value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Inspections
+            </div>
+
+            <div
+                id="totalInspections"
+                class="stat-value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Passed
+            </div>
+
+            <div
+                id="passedInspections"
+                class="stat-value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Failed
+            </div>
+
+            <div
+                id="failedInspections"
+                class="stat-value"
+            >
+                0
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         EQUIPMENT SELECTION
+    ================================================== -->
+
+    <section class="card">
+
+        <div class="card-header">
+
+            <h2>
+                Select Equipment
+            </h2>
+
+            <p>
+                The inspection form is determined automatically from the equipment type stored in the Equipment Register.
+            </p>
+
+        </div>
+
+
+        <div class="filters">
+
+            <input
+                id="searchInput"
+                class="input"
+                type="text"
+                placeholder="Search equipment name, code, manufacturer, area or location..."
+                oninput="applyFilters()"
+            >
+
+
+            <select
+                id="typeFilter"
+                class="select"
+                onchange="applyFilters()"
+            >
+
+                <option value="">
+                    All Equipment Types
+                </option>
+
+                <option value="Fire extinguisher">
+                    Fire extinguisher
+                </option>
+
+                <option value="Onboard fire suppression">
+                    Onboard fire suppression
+                </option>
+
+                <option value="Fire hydrant">
+                    Fire hydrant
+                </option>
+
+                <option value="Fire hose reel">
+                    Fire hose reel
+                </option>
+
+                <option value="Installation control valve">
+                    Installation control valve
+                </option>
+
+                <option value="Fire Alarm">
+                    Fire Alarm
+                </option>
+
+            </select>
+
+
+            <input
+                id="areaFilter"
+                class="input"
+                type="text"
+                placeholder="Area"
+                oninput="applyFilters()"
+            >
+
+
+            <input
+                id="locationFilter"
+                class="input"
+                type="text"
+                placeholder="Location"
+                oninput="applyFilters()"
+            >
+
+
+            <button
+                class="button button-secondary"
+                onclick="resetFilters()"
+            >
+                Reset
+            </button>
+
+        </div>
+
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Equipment
+                        </th>
+
+                        <th>
+                            Type
+                        </th>
+
+                        <th>
+                            Area
+                        </th>
+
+                        <th>
+                            Location
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="equipmentTableBody">
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="loading"
+                        >
+                            Loading equipment...
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- =====================================================
+     INSPECTION FORM MODAL
+===================================================== -->
+
+<div
+    id="inspectionModal"
+    class="modal-overlay"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2 id="inspectionModalTitle">
+                    Inspection
+                </h2>
+
+                <p id="inspectionModalSubtitle">
+                    Fire safety equipment inspection
+                </p>
+
+            </div>
+
+            <button
+                class="close-button"
+                onclick="closeInspectionModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="modal-body">
+
+            <!-- EQUIPMENT INFORMATION -->
+
+            <div class="equipment-info">
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Equipment
+                    </div>
+
+                    <div
+                        id="infoName"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Equipment Code
+                    </div>
+
+                    <div
+                        id="infoCode"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Equipment Type
+                    </div>
+
+                    <div
+                        id="infoType"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Location
+                    </div>
+
+                    <div
+                        id="infoLocation"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Area
+                    </div>
+
+                    <div
+                        id="infoArea"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Manufacturer
+                    </div>
+
+                    <div
+                        id="infoManufacturer"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Model
+                    </div>
+
+                    <div
+                        id="infoModel"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Serial Number
+                    </div>
+
+                    <div
+                        id="infoSerial"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- INSPECTION DETAILS -->
+
+            <div class="form-section">
+
+                <h3 class="section-title">
+                    Inspection Details
+                </h3>
+
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label class="form-label">
+                            Inspection Date
+                        </label>
+
+                        <input
+                            id="inspectionDate"
+                            class="input"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label class="form-label">
+                            Inspector Name
+                        </label>
+
+                        <input
+                            id="inspectorName"
+                            class="input"
+                            type="text"
+                            placeholder="Enter inspector name"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label class="form-label">
+                            Inspection Type
+                        </label>
+
+                        <input
+                            id="inspectionTypeDisplay"
+                            class="input"
+                            type="text"
+                            readonly
+                        >
+
+                    </div>
+
+
+                    <div class="form-group full">
+
+                        <label class="form-label">
+                            General Notes
+                        </label>
+
+                        <textarea
+                            id="inspectionNotes"
+                            class="input textarea"
+                            placeholder="Enter general inspection notes..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- CHECKLIST -->
+
+            <div class="checklist-wrapper">
+
+                <h3
+                    id="checklistTitle"
+                    class="checklist-title"
+                >
+                    Inspection Checklist
+                </h3>
+
+                <p class="checklist-subtitle">
+                    Every requirement must be deliberately marked PASS, FAIL or N/A before the inspection can be saved.
+                </p>
+
+
+                <!-- CHECKLIST PROGRESS -->
+
+                <div
+                    id="checklistProgress"
+                    class="checklist-progress"
+                >
+
+                    <div
+                        id="progressMessage"
+                        class="progress-message"
+                    >
+                        No items answered yet.
+                    </div>
+
+                    <div
+                        id="progressCount"
+                        class="progress-count"
+                    >
+                        0 answered
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="checklist"
+                    class="checklist"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <div class="modal-footer">
+
+            <button
+                class="button button-secondary"
+                onclick="closeInspectionModal()"
+            >
+                Cancel
+            </button>
+
+            <button
+                id="saveInspectionButton"
+                class="button button-primary"
+                onclick="saveInspection()"
+            >
+                Save Inspection
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     HISTORY MODAL
+===================================================== -->
+
+<div
+    id="historyModal"
+    class="modal-overlay"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2>
+                    Inspection History
+                </h2>
+
+                <p id="historySubtitle">
+                    Previous inspections
+                </p>
+
+            </div>
+
+            <button
+                class="close-button"
+                onclick="closeHistoryModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="modal-body">
+
+            <div
+                id="historyList"
+                class="history-list"
+            ></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     TOASTS
+===================================================== -->
+
+<div
+    id="toastContainer"
+    class="toast-container"
+></div>
+
+
+<script>
+
+/* =====================================================
+   SUPABASE
+===================================================== */
+
+const SUPABASE_URL =
+    "https://syiemjazbawflavxibzv.supabase.co";
+
+const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5aWVtamF6YmF3ZmxhdnhpYnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Njg5MzEsImV4cCI6MjEwNDU0NDkzMX0.RJ6siFDLg3LAsP2ZPDgdFVGAFasg05hK4GikdIO68PM";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let equipmentList = [];
+
+let filteredEquipment = [];
+
+let currentEquipment = null;
+
+let currentChecklist = [];
+
+/*
+ * IMPORTANT:
+ *
+ * Each checklist item starts as null.
+ *
+ * null = unanswered
+ * PASS = explicitly passed
+ * FAIL = explicitly failed
+ * N/A = explicitly marked not applicable
+ *
+ * We DO NOT automatically assign N/A.
+ */
+
+let checklistAnswers = [];
+
+
+/* =====================================================
+   INSPECTION CHECKLISTS
+===================================================== */
+
+const INSPECTION_FORMS = {
+
+    "Fire extinguisher": [
+
+        "Equipment correctly identified and labelled",
+        "Correct designated location",
+        "Access to equipment is clear",
+        "Equipment securely mounted or positioned",
+        "Cylinder/body condition satisfactory",
+        "Safety pin fitted correctly",
+        "Tamper seal intact",
+        "Pressure gauge within acceptable range",
+        "Hose/nozzle condition satisfactory",
+        "Handle and operating lever condition satisfactory",
+        "Operating instructions and label legible",
+        "Inspection/service tag present and current",
+        "Equipment suitable for identified fire risk",
+        "No evidence of discharge, damage or tampering"
+
+    ],
+
+
+    "Onboard fire suppression": [
+
+        "Equipment identification/tag is present",
+        "Components are correctly installed and secured",
+        "Agent cylinders are securely mounted",
+        "Cylinder condition is satisfactory",
+        "Cylinder pressure is acceptable",
+        "Discharge piping is secure and undamaged",
+        "Discharge nozzles are correctly positioned",
+        "Detection lines/sensors are in place and satisfactory",
+        "Manual release mechanism is accessible",
+        "Automatic release system is operational",
+        "Alarm/indication system is satisfactory",
+        "Isolation valves are in the correct operating position",
+        "Safety signage and instructions are available",
+        "Service and maintenance information is current",
+        "No leakage, damage, tampering or impairment observed"
+
+    ],
+
+
+    "Fire hydrant": [
+
+        "Hydrant identification is visible",
+        "Hydrant is accessible",
+        "Hydrant body is in satisfactory condition",
+        "Outlet/coupling is in satisfactory condition",
+        "Outlet cap is fitted and serviceable",
+        "Valve operating mechanism is satisfactory",
+        "Spindle condition is satisfactory",
+        "Hydrant enclosure/box is satisfactory where applicable",
+        "Drainage around hydrant is satisfactory",
+        "Associated hose is available where applicable",
+        "Hydrant is adequately protected from damage",
+        "Hydrant signage is visible",
+        "No leakage observed",
+        "Hydrant is available for emergency use"
+
+    ],
+
+
+    "Fire hose reel": [
+
+        "Equipment identification is visible",
+        "Access to hose reel is clear",
+        "Cabinet/enclosure is in satisfactory condition",
+        "Hose is correctly wound and stored",
+        "Hose condition is satisfactory",
+        "Hose connection is secure",
+        "Nozzle condition is satisfactory",
+        "Nozzle control operates correctly",
+        "Reel rotates freely",
+        "Isolation valve is accessible and satisfactory",
+        "Pipework and connections are secure",
+        "Cabinet/signage is clearly identified",
+        "Equipment is protected from damage",
+        "Hose reel is available for emergency use"
+
+    ],
+
+
+    "Installation control valve": [
+
+        "Valve identification/label is visible",
+        "Valve is accessible",
+        "Access to valve is clear",
+        "Valve body is in satisfactory condition",
+        "Valve is in the normal operating position",
+        "Supervisory arrangement is satisfactory where applicable",
+        "Handwheel/operating mechanism is satisfactory",
+        "Associated pipework and fittings are satisfactory",
+        "No leakage observed",
+        "Pressure indication is satisfactory where applicable",
+        "Drain/test arrangement is satisfactory",
+        "Required signage is present",
+        "Area around valve is clean and accessible",
+        "No tampering or unnecessary isolation observed",
+        "Valve is available for emergency operation"
+
+    ],
+
+
+    "Fire Alarm": [
+
+        "Fire alarm control panel is correctly identified",
+        "Panel is accessible",
+        "Panel indicates normal operation with no unexplained faults",
+        "Primary power supply is available",
+        "Standby battery condition is satisfactory",
+        "Zones/areas are correctly identified",
+        "Detection devices are present and unobstructed",
+        "Manual call points are accessible",
+        "Manual call points are in satisfactory condition",
+        "Sounders/visual indicators are satisfactory",
+        "Alarm indication labels are clear",
+        "No unexplained fault indications",
+        "Panel controls operate correctly",
+        "Logbook/service records are available and current",
+        "No unauthorised impairment or isolation observed"
+
+    ]
+
+};
+
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+function openSidebar(){
+
+    document
+        .getElementById("sidebar")
+        .classList
+        .add("open");
+
+    document
+        .getElementById("sidebarOverlay")
+        .classList
+        .add("active");
+
+}
+
+
+function closeSidebar(){
+
+    document
+        .getElementById("sidebar")
+        .classList
+        .remove("open");
+
+    document
+        .getElementById("sidebarOverlay")
+        .classList
+        .remove("active");
+
+}
+
+
+/* =====================================================
+   TOAST
+===================================================== */
+
+function showToast(
+    message,
+    type = "info"
+){
+
+    const container =
+        document.getElementById(
+            "toastContainer"
+        );
+
+    const toast =
+        document.createElement("div");
+
+    toast.className =
+        "toast " + type;
+
+    toast.textContent =
+        message;
+
+    container.appendChild(toast);
+
+    setTimeout(
+        () => {
+
+            toast.remove();
+
+        },
+        3500
+    );
+
+}
+
+
+/* =====================================================
+   HTML ESCAPE
+===================================================== */
+
+function escapeHtml(value){
+
+    if(
+        value === null ||
+        value === undefined
+    ){
+
+        return "";
+
+    }
+
+    return String(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+/* =====================================================
+   DATE
+===================================================== */
+
+function getToday(){
+
+    const now =
+        new Date();
+
+    const year =
+        now.getFullYear();
+
+    const month =
+        String(
+            now.getMonth() + 1
+        ).padStart(2,"0");
+
+    const day =
+        String(
+            now.getDate()
+        ).padStart(2,"0");
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+/* =====================================================
+   DATABASE STATUS
+===================================================== */
+
+function setDatabaseStatus(
+    status
+){
+
+    const dot =
+        document.getElementById(
+            "statusDot"
+        );
+
+    const text =
+        document.getElementById(
+            "databaseStatus"
+        );
+
+    dot.className =
+        "status-dot";
+
+    if(status === "online"){
+
+        dot.classList.add("online");
+
+        text.textContent =
+            "Database connected";
+
+    }
+    else if(status === "offline"){
+
+        dot.classList.add("offline");
+
+        text.textContent =
+            "Database error";
+
+    }
+    else{
+
+        text.textContent =
+            "Connecting...";
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD EQUIPMENT
+===================================================== */
+
+async function loadEquipment(){
+
+    setDatabaseStatus("connecting");
+
+    const tbody =
+        document.getElementById(
+            "equipmentTableBody"
+        );
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="6" class="loading">
+                Loading equipment...
+            </td>
+        </tr>
+    `;
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("equipment")
+            .select(`
+                id,
+                name,
+                equipment_code,
+                equipment_type,
+                manufacture_date,
+                area,
+                location,
+                manufacturer,
+                model,
+                serial_number,
+                installation_date,
+                last_inspection_date,
+                next_inspection_date,
+                status,
+                description,
+                notes,
+                created_at,
+                updated_at
+            `)
+            .order(
+                "name",
+                {
+                    ascending:true
+                }
+            );
+
+
+    if(error){
+
+        console.error(
+            "Equipment loading error:",
+            error
+        );
+
+        setDatabaseStatus("offline");
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6">
+
+                    <div class="empty-state">
+
+                        Unable to load equipment.
+
+                        <br><br>
+
+                        ${escapeHtml(
+                            error.message
+                        )}
+
+                    </div>
+
+                </td>
+            </tr>
+        `;
+
+        showToast(
+            "Could not load equipment: " +
+            error.message,
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    setDatabaseStatus("online");
+
+    equipmentList =
+        data || [];
+
+    filteredEquipment =
+        [...equipmentList];
+
+    document.getElementById(
+        "totalEquipment"
+    ).textContent =
+        equipmentList.length;
+
+    renderEquipment();
+
+    await loadInspectionStats();
+
+}
+
+
+/* =====================================================
+   RENDER EQUIPMENT
+===================================================== */
+
+function renderEquipment(){
+
+    const tbody =
+        document.getElementById(
+            "equipmentTableBody"
+        );
+
+
+    if(
+        filteredEquipment.length === 0
+    ){
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6">
+
+                    <div class="empty-state">
+                        No equipment matches your search.
+                    </div>
+
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    tbody.innerHTML =
+        filteredEquipment
+            .map(
+                equipment => {
+
+                    return `
+                        <tr>
+
+                            <td>
+
+                                <div class="equipment-name">
+                                    ${escapeHtml(
+                                        equipment.name ||
+                                        "Unnamed equipment"
+                                    )}
+                                </div>
+
+                                <div class="equipment-code">
+                                    ${escapeHtml(
+                                        equipment.equipment_code ||
+                                        "No code"
+                                    )}
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                <div class="type-text">
+                                    ${escapeHtml(
+                                        equipment.equipment_type ||
+                                        "Not assigned"
+                                    )}
+                                </div>
+
+                            </td>
+
+
+                            <td>
+                                ${escapeHtml(
+                                    equipment.area ||
+                                    "—"
+                                )}
+                            </td>
+
+
+                            <td>
+                                ${escapeHtml(
+                                    equipment.location ||
+                                    "—"
+                                )}
+                            </td>
+
+
+                            <td>
+                                ${escapeHtml(
+                                    equipment.status ||
+                                    "—"
+                                )}
+                            </td>
+
+
+                            <td>
+
+                                <button
+                                    class="action-button"
+                                    onclick="startInspection('${equipment.id}')"
+                                >
+                                    Inspect
+                                </button>
+
+                            </td>
+
+                        </tr>
+                    `;
+
+                }
+            )
+            .join("");
+
+}
+
+
+/* =====================================================
+   FILTERS
+===================================================== */
+
+function applyFilters(){
+
+    const search =
+        document
+            .getElementById("searchInput")
+            .value
+            .trim()
+            .toLowerCase();
+
+    const type =
+        document
+            .getElementById("typeFilter")
+            .value;
+
+    const area =
+        document
+            .getElementById("areaFilter")
+            .value
+            .trim()
+            .toLowerCase();
+
+    const location =
+        document
+            .getElementById("locationFilter")
+            .value
+            .trim()
+            .toLowerCase();
+
+
+    filteredEquipment =
+        equipmentList.filter(
+            equipment => {
+
+                const searchable = [
+
+                    equipment.name,
+
+                    equipment.equipment_code,
+
+                    equipment.equipment_type,
+
+                    equipment.area,
+
+                    equipment.location,
+
+                    equipment.manufacturer,
+
+                    equipment.model,
+
+                    equipment.serial_number
+
+                ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+
+                const matchesSearch =
+                    !search ||
+                    searchable.includes(search);
+
+
+                const matchesType =
+                    !type ||
+                    equipment.equipment_type === type;
+
+
+                const matchesArea =
+                    !area ||
+                    String(
+                        equipment.area || ""
+                    )
+                    .toLowerCase()
+                    .includes(area);
+
+
+                const matchesLocation =
+                    !location ||
+                    String(
+                        equipment.location || ""
+                    )
+                    .toLowerCase()
+                    .includes(location);
+
+
+                return (
+                    matchesSearch &&
+                    matchesType &&
+                    matchesArea &&
+                    matchesLocation
+                );
+
+            }
+        );
+
+
+    renderEquipment();
+
+}
+
+
+function resetFilters(){
+
+    document.getElementById(
+        "searchInput"
+    ).value = "";
+
+    document.getElementById(
+        "typeFilter"
+    ).value = "";
+
+    document.getElementById(
+        "areaFilter"
+    ).value = "";
+
+    document.getElementById(
+        "locationFilter"
+    ).value = "";
+
+    filteredEquipment =
+        [...equipmentList];
+
+    renderEquipment();
+
+}
+
+
+/* =====================================================
+   START INSPECTION
+===================================================== */
+
+function startInspection(
+    equipmentId
+){
+
+    const equipment =
+        equipmentList.find(
+            item =>
+                String(item.id) ===
+                String(equipmentId)
+        );
+
+
+    if(!equipment){
+
+        showToast(
+            "Equipment record could not be found.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if(!equipment.equipment_type){
+
+        showToast(
+            "This equipment does not have an Equipment Type assigned.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const checklist =
+        INSPECTION_FORMS[
+            equipment.equipment_type
+        ];
+
+
+    if(!checklist){
+
+        showToast(
+            "No inspection form is configured for: " +
+            equipment.equipment_type,
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    currentEquipment =
+        equipment;
+
+    currentChecklist =
+        checklist;
+
+
+    /*
+     * CRITICAL:
+     *
+     * Every item starts as null.
+     *
+     * Nothing is automatically answered.
+     */
+
+    checklistAnswers =
+        currentChecklist.map(
+            () => null
+        );
+
+
+    openInspectionForm(
+        equipment
+    );
+
+}
+
+
+/* =====================================================
+   OPEN INSPECTION FORM
+===================================================== */
+
+function openInspectionForm(
+    equipment
+){
+
+    document.getElementById(
+        "inspectionModalTitle"
+    ).textContent =
+        equipment.equipment_type +
+        " Inspection";
+
+
+    document.getElementById(
+        "inspectionModalSubtitle"
+    ).textContent =
+        "Inspection for " +
+        (
+            equipment.name ||
+            equipment.equipment_code ||
+            "selected equipment"
+        );
+
+
+    document.getElementById(
+        "infoName"
+    ).textContent =
+        equipment.name ||
+        "—";
+
+
+    document.getElementById(
+        "infoCode"
+    ).textContent =
+        equipment.equipment_code ||
+        "—";
+
+
+    document.getElementById(
+        "infoType"
+    ).textContent =
+        equipment.equipment_type ||
+        "—";
+
+
+    document.getElementById(
+        "infoLocation"
+    ).textContent =
+        equipment.location ||
+        "—";
+
+
+    document.getElementById(
+        "infoArea"
+    ).textContent =
+        equipment.area ||
+        "—";
+
+
+    document.getElementById(
+        "infoManufacturer"
+    ).textContent =
+        equipment.manufacturer ||
+        "—";
+
+
+    document.getElementById(
+        "infoModel"
+    ).textContent =
+        equipment.model ||
+        "—";
+
+
+    document.getElementById(
+        "infoSerial"
+    ).textContent =
+        equipment.serial_number ||
+        "—";
+
+
+    document.getElementById(
+        "inspectionDate"
+    ).value =
+        getToday();
+
+
+    document.getElementById(
+        "inspectorName"
+    ).value = "";
+
+
+    document.getElementById(
+        "inspectionTypeDisplay"
+    ).value =
+        equipment.equipment_type;
+
+
+    document.getElementById(
+        "inspectionNotes"
+    ).value = "";
+
+
+    document.getElementById(
+        "checklistTitle"
+    ).textContent =
+        equipment.equipment_type +
+        " Inspection Checklist";
+
+
+    renderChecklist();
+
+    updateChecklistProgress();
+
+
+    const saveButton =
+        document.getElementById(
+            "saveInspectionButton"
+        );
+
+    saveButton.disabled =
+        false;
+
+    saveButton.textContent =
+        "Save Inspection";
+
+
+    document.getElementById(
+        "inspectionModal"
+    ).classList.add("active");
+
+}
+
+
+/* =====================================================
+   RENDER CHECKLIST
+===================================================== */
+
+function renderChecklist(){
+
+    const container =
+        document.getElementById(
+            "checklist"
+        );
+
+
+    if(
+        !currentChecklist ||
+        currentChecklist.length === 0
+    ){
+
+        container.innerHTML = `
+            <div class="empty-state">
+                No inspection requirements configured.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    let html = `
+
+        <div class="check-row header">
+
+            <div>
+                #
+            </div>
+
+            <div>
+                Inspection Requirement
+            </div>
+
+            <div>
+                Result
+            </div>
+
+            <div>
+                Remarks
+            </div>
+
+        </div>
+
+    `;
+
+
+    currentChecklist.forEach(
+        (requirement,index) => {
+
+            html += `
+
+                <div
+                    class="check-row unanswered"
+                    data-item-index="${index}"
+                >
+
+                    <div class="item-number">
+                        ${index + 1}
+                    </div>
+
+
+                    <div class="requirement">
+                        ${escapeHtml(
+                            requirement
+                        )}
+                    </div>
+
+
+                    <div class="answer-group">
+
+                        <button
+                            type="button"
+                            class="answer-button"
+                            data-answer="PASS"
+                            onclick="setAnswer(${index},'PASS')"
+                        >
+                            PASS
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="answer-button"
+                            data-answer="FAIL"
+                            onclick="setAnswer(${index},'FAIL')"
+                        >
+                            FAIL
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="answer-button"
+                            data-answer="N/A"
+                            onclick="setAnswer(${index},'N/A')"
+                        >
+                            N/A
+                        </button>
+
+                    </div>
+
+
+                    <div>
+
+                        <input
+                            id="remarks-${index}"
+                            class="remarks-input"
+                            type="text"
+                            placeholder="Remarks"
+                        >
+
+                    </div>
+
+                </div>
+
+            `;
+
+        }
+    );
+
+
+    container.innerHTML =
+        html;
+
+}
+
+
+/* =====================================================
+   SET ANSWER
+===================================================== */
+
+function setAnswer(
+    index,
+    answer
+){
+
+    if(
+        index < 0 ||
+        index >= checklistAnswers.length
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        ![
+            "PASS",
+            "FAIL",
+            "N/A"
+        ].includes(answer)
+    ){
+
+        return;
+
+    }
+
+
+    /*
+     * Store the answer in state.
+     */
+
+    checklistAnswers[index] =
+        answer;
+
+
+    const row =
+        document.querySelector(
+            `[data-item-index="${index}"]`
+        );
+
+
+    if(!row){
+        return;
+    }
+
+
+    /*
+     * Remove unanswered visual state.
+     */
+
+    row.classList.remove(
+        "unanswered"
+    );
+
+
+    const buttons =
+        row.querySelectorAll(
+            ".answer-button"
+        );
+
+
+    buttons.forEach(
+        button => {
+
+            button.classList.remove(
+                "selected-pass",
+                "selected-fail",
+                "selected-na"
+            );
+
+
+            const buttonAnswer =
+                button.dataset.answer;
+
+
+            if(
+                buttonAnswer === answer
+            ){
+
+                if(answer === "PASS"){
+
+                    button.classList.add(
+                        "selected-pass"
+                    );
+
+                }
+                else if(answer === "FAIL"){
+
+                    button.classList.add(
+                        "selected-fail"
+                    );
+
+                }
+                else if(answer === "N/A"){
+
+                    button.classList.add(
+                        "selected-na"
+                    );
+
+                }
+
+            }
+
+        }
+    );
+
+
+    updateChecklistProgress();
+
+}
+
+
+/* =====================================================
+   CHECKLIST COMPLETION
+===================================================== */
+
+function getUnansweredIndexes(){
+
+    return checklistAnswers
+        .map(
+            (answer,index) =>
+                answer === null
+                    ? index
+                    : null
+        )
+        .filter(
+            index =>
+                index !== null
+        );
+
+}
+
+
+function getUnansweredCount(){
+
+    return getUnansweredIndexes().length;
+
+}
+
+
+/* =====================================================
+   UPDATE CHECKLIST PROGRESS
+===================================================== */
+
+function updateChecklistProgress(){
+
+    const total =
+        currentChecklist.length;
+
+    const unanswered =
+        getUnansweredCount();
+
+    const answered =
+        total - unanswered;
+
+
+    const message =
+        document.getElementById(
+            "progressMessage"
+        );
+
+    const count =
+        document.getElementById(
+            "progressCount"
+        );
+
+
+    if(total === 0){
+
+        message.textContent =
+            "No inspection items.";
+
+        message.classList.remove(
+            "complete"
+        );
+
+        count.textContent =
+            "0 items";
+
+        count.classList.remove(
+            "complete"
+        );
+
+        return;
+
+    }
+
+
+    if(unanswered === 0){
+
+        message.textContent =
+            "Inspection checklist complete. All items have been answered.";
+
+        message.classList.add(
+            "complete"
+        );
+
+        count.textContent =
+            `${answered} / ${total} answered`;
+
+        count.classList.add(
+            "complete"
+        );
+
+    }
+    else{
+
+        message.textContent =
+            `${unanswered} item${unanswered === 1 ? "" : "s"} still require${unanswered === 1 ? "s" : ""} an answer.`;
+
+        message.classList.remove(
+            "complete"
+        );
+
+        count.textContent =
+            `${answered} / ${total} answered`;
+
+        count.classList.remove(
+            "complete"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   GET CHECKLIST ANSWERS
+===================================================== */
+
+function getChecklistAnswers(){
+
+    const answers = [];
+
+
+    currentChecklist.forEach(
+        (requirement,index) => {
+
+            const remarksElement =
+                document.getElementById(
+                    `remarks-${index}`
+                );
+
+
+            const remarks =
+                remarksElement
+                    ? remarksElement.value.trim()
+                    : "";
+
+
+            answers.push({
+
+                item_number:
+                    index + 1,
+
+                inspection_requirement:
+                    requirement,
+
+                answer:
+                    checklistAnswers[index],
+
+                remarks:
+                    remarks
+
+            });
+
+        }
+    );
+
+
+    return answers;
+
+}
+
+
+/* =====================================================
+   DETERMINE OVERALL STATUS
+===================================================== */
+
+function calculateOverallStatus(
+    answers
+){
+
+    /*
+     * This function should only be called
+     * after every item has been answered.
+     */
+
+    const hasFail =
+        answers.some(
+            item =>
+                item.answer === "FAIL"
+        );
+
+
+    if(hasFail){
+
+        return "Fail";
+
+    }
+
+
+    const passCount =
+        answers.filter(
+            item =>
+                item.answer === "PASS"
+        )
+        .length;
+
+
+    if(passCount > 0){
+
+        return "Pass";
+
+    }
+
+
+    /*
+     * If all answers are explicitly N/A,
+     * the overall result is N/A.
+     */
+
+    return "N/A";
+
+}
+
+
+/* =====================================================
+   SCROLL TO FIRST UNANSWERED ITEM
+===================================================== */
+
+function focusFirstUnanswered(){
+
+    const unansweredIndexes =
+        getUnansweredIndexes();
+
+
+    if(
+        unansweredIndexes.length === 0
+    ){
+
+        return;
+
+    }
+
+
+    const firstIndex =
+        unansweredIndexes[0];
+
+
+    const row =
+        document.querySelector(
+            `[data-item-index="${firstIndex}"]`
+        );
+
+
+    if(row){
+
+        row.scrollIntoView({
+            behavior:"smooth",
+            block:"center"
+        });
+
+    }
+
+}
+
+
+/* =====================================================
+   SAVE INSPECTION
+===================================================== */
+
+async function saveInspection(){
+
+    if(!currentEquipment){
+
+        showToast(
+            "No equipment selected.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * =================================================
+     * FIRST AND MOST IMPORTANT VALIDATION
+     * =================================================
+     *
+     * Do this BEFORE creating anything in Supabase.
+     */
+
+    const unansweredIndexes =
+        getUnansweredIndexes();
+
+
+    if(
+        unansweredIndexes.length > 0
+    ){
+
+        const count =
+            unansweredIndexes.length;
+
+
+        showToast(
+            `Inspection incomplete — ${count} item${count === 1 ? "" : "s"} still require${count === 1 ? "s" : ""} an answer.`,
+            "error"
+        );
+
+
+        /*
+         * Make unanswered rows visible.
+         */
+
+        unansweredIndexes.forEach(
+            index => {
+
+                const row =
+                    document.querySelector(
+                        `[data-item-index="${index}"]`
+                    );
+
+
+                if(row){
+
+                    row.classList.add(
+                        "unanswered"
+                    );
+
+                }
+
+            }
+        );
+
+
+        updateChecklistProgress();
+
+        focusFirstUnanswered();
+
+        return;
+
+    }
+
+
+    const inspectionDate =
+        document.getElementById(
+            "inspectionDate"
+        ).value;
+
+
+    const inspectorName =
+        document.getElementById(
+            "inspectorName"
+        ).value.trim();
+
+
+    const notes =
+        document.getElementById(
+            "inspectionNotes"
+        ).value.trim();
+
+
+    if(!inspectionDate){
+
+        showToast(
+            "Please select an inspection date.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if(!inspectorName){
+
+        showToast(
+            "Please enter the inspector name.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const answers =
+        getChecklistAnswers();
+
+
+    /*
+     * Defensive validation.
+     *
+     * Even though the checklist state has already
+     * been checked, verify the final answer array
+     * before touching the database.
+     */
+
+    const invalidAnswers =
+        answers.filter(
+            item =>
+                ![
+                    "PASS",
+                    "FAIL",
+                    "N/A"
+                ].includes(
+                    item.answer
+                )
+        );
+
+
+    if(
+        invalidAnswers.length > 0
+    ){
+
+        showToast(
+            "Inspection cannot be saved because one or more checklist items are unanswered.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const overallStatus =
+        calculateOverallStatus(
+            answers
+        );
+
+
+    const saveButton =
+        document.getElementById(
+            "saveInspectionButton"
+        );
+
+
+    saveButton.disabled =
+        true;
+
+    saveButton.textContent =
+        "Saving...";
+
+
+    try{
+
+        /* =============================================
+           CREATE INSPECTION
+        ============================================= */
+
+        const {
+            data: inspection,
+            error: inspectionError
+        } =
+            await supabaseClient
+                .from("inspections")
+                .insert({
+
+                    equipment_id:
+                        currentEquipment.id,
+
+                    inspection_date:
+                        inspectionDate,
+
+                    inspector_name:
+                        inspectorName,
+
+                    inspection_type:
+                        currentEquipment.equipment_type,
+
+                    overall_status:
+                        overallStatus,
+
+                    notes:
+                        notes || null
+
+                })
+                .select()
+                .single();
+
+
+        if(inspectionError){
+
+            throw inspectionError;
+
+        }
+
+
+        /* =============================================
+           CREATE ANSWERS
+        ============================================= */
+
+        const answerRows =
+            answers.map(
+                item => ({
+
+                    inspection_id:
+                        inspection.id,
+
+                    item_number:
+                        item.item_number,
+
+                    inspection_requirement:
+                        item.inspection_requirement,
+
+                    answer:
+                        item.answer,
+
+                    remarks:
+                        item.remarks || null
+
+                })
+            );
+
+
+        const {
+            error: answersError
+        } =
+            await supabaseClient
+                .from("inspection_answers")
+                .insert(
+                    answerRows
+                );
+
+
+        if(answersError){
+
+            /*
+             * Remove the inspection if the
+             * answer records failed.
+             */
+
+            await supabaseClient
+                .from("inspections")
+                .delete()
+                .eq(
+                    "id",
+                    inspection.id
+                );
+
+
+            throw answersError;
+
+        }
+
+
+        /* =============================================
+           UPDATE EQUIPMENT INSPECTION DATE
+        ============================================= */
+
+        const nextInspection =
+            calculateNextInspectionDate(
+                inspectionDate
+            );
+
+
+        const {
+            error: equipmentUpdateError
+        } =
+            await supabaseClient
+                .from("equipment")
+                .update({
+
+                    last_inspection_date:
+                        inspectionDate,
+
+                    next_inspection_date:
+                        nextInspection
+
+                })
+                .eq(
+                    "id",
+                    currentEquipment.id
+                );
+
+
+        if(equipmentUpdateError){
+
+            console.warn(
+                "Equipment inspection dates could not be updated:",
+                equipmentUpdateError
+            );
+
+        }
+
+
+        showToast(
+            "Inspection saved successfully.",
+            "success"
+        );
+
+
+        closeInspectionModal();
+
+
+        await loadEquipment();
+
+    }
+    catch(error){
+
+        console.error(
+            "Inspection save error:",
+            error
+        );
+
+
+        showToast(
+            "Inspection could not be saved: " +
+            (
+                error.message ||
+                "Unknown database error."
+            ),
+            "error"
+        );
+
+    }
+    finally{
+
+        saveButton.disabled =
+            false;
+
+        saveButton.textContent =
+            "Save Inspection";
+
+    }
+
+}
+
+
+/* =====================================================
+   NEXT INSPECTION DATE
+===================================================== */
+
+function calculateNextInspectionDate(
+    inspectionDate
+){
+
+    /*
+     * Temporary MVP rule:
+     * next inspection = 12 months later.
+     *
+     * This can be changed later when the
+     * official Debswana inspection frequency
+     * is confirmed.
+     */
+
+    const date =
+        new Date(
+            inspectionDate +
+            "T00:00:00"
+        );
+
+
+    date.setFullYear(
+        date.getFullYear() + 1
+    );
+
+
+    const year =
+        date.getFullYear();
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(2,"0");
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(2,"0");
+
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+/* =====================================================
+   LOAD INSPECTION STATS
+===================================================== */
+
+async function loadInspectionStats(){
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("inspections")
+            .select(
+                "id, overall_status"
+            );
+
+
+    if(error){
+
+        console.error(
+            "Inspection stats error:",
+            error
+        );
+
+        return;
+
+    }
+
+
+    const inspections =
+        data || [];
+
+
+    document.getElementById(
+        "totalInspections"
+    ).textContent =
+        inspections.length;
+
+
+    document.getElementById(
+        "passedInspections"
+    ).textContent =
+        inspections.filter(
+            item =>
+                item.overall_status ===
+                "Pass"
+        ).length;
+
+
+    document.getElementById(
+        "failedInspections"
+    ).textContent =
+        inspections.filter(
+            item =>
+                item.overall_status ===
+                "Fail"
+        ).length;
+
+}
+
+
+/* =====================================================
+   CLOSE INSPECTION MODAL
+===================================================== */
+
+function closeInspectionModal(){
+
+    document.getElementById(
+        "inspectionModal"
+    ).classList.remove("active");
+
+    currentEquipment =
+        null;
+
+    currentChecklist =
+        [];
+
+    checklistAnswers =
+        [];
+
+}
+
+
+/* =====================================================
+   INSPECTION HISTORY
+===================================================== */
+
+async function openHistory(
+    equipmentId
+){
+
+    const equipment =
+        equipmentList.find(
+            item =>
+                String(item.id) ===
+                String(equipmentId)
+        );
+
+
+    if(!equipment){
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "historySubtitle"
+    ).textContent =
+        "Inspection history for " +
+        (
+            equipment.name ||
+            equipment.equipment_code
+        );
+
+
+    const historyList =
+        document.getElementById(
+            "historyList"
+        );
+
+
+    historyList.innerHTML = `
+        <div class="loading">
+            Loading inspection history...
+        </div>
+    `;
+
+
+    document.getElementById(
+        "historyModal"
+    ).classList.add("active");
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("inspections")
+            .select(`
+                id,
+                inspection_date,
+                inspector_name,
+                inspection_type,
+                overall_status,
+                notes,
+                created_at
+            `)
+            .eq(
+                "equipment_id",
+                equipment.id
+            )
+            .order(
+                "inspection_date",
+                {
+                    ascending:false
+                }
+            );
+
+
+    if(error){
+
+        historyList.innerHTML = `
+            <div class="empty-state">
+
+                Unable to load inspection history.
+
+                <br><br>
+
+                ${escapeHtml(
+                    error.message
+                )}
+
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    if(!data || data.length === 0){
+
+        historyList.innerHTML = `
+            <div class="empty-state">
+                No previous inspections found for this equipment.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    historyList.innerHTML =
+        data
+            .map(
+                inspection => {
+
+                    let statusClass =
+                        "status-pending";
+
+
+                    if(
+                        inspection.overall_status ===
+                        "Pass"
+                    ){
+
+                        statusClass =
+                            "status-pass";
+
+                    }
+                    else if(
+                        inspection.overall_status ===
+                        "Fail"
+                    ){
+
+                        statusClass =
+                            "status-fail";
+
+                    }
+                    else if(
+                        inspection.overall_status ===
+                        "N/A"
+                    ){
+
+                        statusClass =
+                            "status-na";
+
+                    }
+
+
+                    return `
+
+                        <div class="history-item">
+
+                            <div class="history-top">
+
+                                <div>
+
+                                    <div class="history-date">
+                                        ${escapeHtml(
+                                            inspection.inspection_date
+                                        )}
+                                    </div>
+
+                                    <div class="history-type">
+
+                                        ${escapeHtml(
+                                            inspection.inspection_type
+                                        )}
+
+                                        —
+
+                                        Inspector:
+
+                                        ${escapeHtml(
+                                            inspection.inspector_name
+                                        )}
+
+                                    </div>
+
+                                </div>
+
+
+                                <div
+                                    class="history-status ${statusClass}"
+                                >
+                                    ${escapeHtml(
+                                        inspection.overall_status
+                                    )}
+                                </div>
+
+                            </div>
+
+
+                            ${
+                                inspection.notes
+                                ? `
+
+                                    <div
+                                        style="
+                                            margin-top:10px;
+                                            color:#b9c6d2;
+                                            font-size:12px;
+                                        "
+                                    >
+
+                                        ${escapeHtml(
+                                            inspection.notes
+                                        )}
+
+                                    </div>
+
+                                `
+                                : ""
+                            }
+
+                        </div>
+
+                    `;
+
+                }
+            )
+            .join("");
+
+}
+
+
+/* =====================================================
+   CLOSE HISTORY
+===================================================== */
+
+function closeHistoryModal(){
+
+    document.getElementById(
+        "historyModal"
+    ).classList.remove("active");
+
+}
+
+
+/* =====================================================
+   MODAL OUTSIDE CLICK
+===================================================== */
+
+document
+    .getElementById("inspectionModal")
+    .addEventListener(
+        "click",
+        function(event){
+
+            if(
+                event.target ===
+                this
+            ){
+
+                closeInspectionModal();
+
+            }
+
+        }
+    );
+
+
+document
+    .getElementById("historyModal")
+    .addEventListener(
+        "click",
+        function(event){
+
+            if(
+                event.target ===
+                this
+            ){
+
+                closeHistoryModal();
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   ESCAPE KEY
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(
+            event.key ===
+            "Escape"
+        ){
+
+            closeSidebar();
+
+            closeInspectionModal();
+
+            closeHistoryModal();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   INITIAL LOAD
+===================================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+        document.getElementById(
+            "inspectionDate"
+        ).value =
+            getToday();
+
+
+        loadEquipment();
+
+    }
+);
+
+</script>
+
+</body>
+
+</html>

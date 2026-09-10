@@ -1,0 +1,4165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>FireSafe Track | Deviations</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+/* =====================================================
+   GLOBAL
+===================================================== */
+
+*{
+    box-sizing:border-box;
+}
+
+html,
+body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+}
+
+body{
+    font-family:Arial,sans-serif;
+    background:linear-gradient(135deg,#0b1f3a,#142d4c);
+    color:#fff;
+}
+
+/* =====================================================
+   TOPBAR
+===================================================== */
+
+.topbar{
+    height:64px;
+    background:rgba(0,0,0,0.30);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+    position:sticky;
+    top:0;
+    z-index:900;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.menu-btn{
+    width:42px;
+    height:42px;
+    border:none;
+    border-radius:8px;
+    background:rgba(255,255,255,0.08);
+    color:#fff;
+    font-size:23px;
+    cursor:pointer;
+}
+
+.menu-btn:hover{
+    background:rgba(255,255,255,0.15);
+}
+
+.topbar-title{
+    flex:1;
+    margin-left:16px;
+}
+
+.topbar-title h1{
+    margin:0;
+    font-size:19px;
+    font-weight:600;
+}
+
+.topbar-title span{
+    display:block;
+    font-size:11px;
+    color:#aebdca;
+    margin-top:3px;
+}
+
+.db-status{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    color:#b9c5cf;
+}
+
+.status-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#ffcc00;
+}
+
+.status-dot.online{
+    background:#28d17c;
+}
+
+.status-dot.offline{
+    background:#ff3b30;
+}
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+.sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:280px;
+    height:100vh;
+    background:#0b192b;
+    z-index:1100;
+    transform:translateX(-100%);
+    transition:transform .25s ease;
+    box-shadow:8px 0 30px rgba(0,0,0,.35);
+    overflow-y:auto;
+}
+
+.sidebar.open{
+    transform:translateX(0);
+}
+
+.sidebar-header{
+    height:76px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.logo{
+    font-size:21px;
+    font-weight:bold;
+    letter-spacing:.3px;
+}
+
+.logo .fire{
+    color:#ff3b30;
+}
+
+.close-sidebar{
+    border:none;
+    background:transparent;
+    color:#fff;
+    font-size:26px;
+    cursor:pointer;
+}
+
+.nav{
+    padding:14px 10px 30px;
+}
+
+.nav-section{
+    color:#718296;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    padding:15px 12px 8px;
+}
+
+.nav a{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 13px;
+    margin:3px 0;
+    border-radius:7px;
+    color:#d9e1e8;
+    text-decoration:none;
+    font-size:14px;
+}
+
+.nav a:hover{
+    background:rgba(255,255,255,.07);
+}
+
+.nav a.active{
+    background:rgba(255,59,48,.15);
+    color:#fff;
+    border-left:3px solid #ff3b30;
+    padding-left:10px;
+}
+
+.nav-icon{
+    width:22px;
+    text-align:center;
+    font-size:16px;
+}
+
+.sidebar-footer{
+    padding:16px 20px;
+    color:#647589;
+    font-size:11px;
+    border-top:1px solid rgba(255,255,255,.06);
+}
+
+/* =====================================================
+   OVERLAY
+===================================================== */
+
+.sidebar-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    z-index:1000;
+    display:none;
+}
+
+.sidebar-overlay.show{
+    display:block;
+}
+
+/* =====================================================
+   MAIN
+===================================================== */
+
+.main{
+    min-height:calc(100vh - 64px);
+    padding:24px;
+}
+
+.page-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:20px;
+    margin-bottom:24px;
+}
+
+.page-header h2{
+    margin:0;
+    font-size:26px;
+}
+
+.page-header p{
+    margin:7px 0 0;
+    color:#aebdca;
+    font-size:13px;
+}
+
+.primary-btn{
+    border:none;
+    background:#ff3b30;
+    color:#fff;
+    padding:11px 17px;
+    border-radius:7px;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:bold;
+}
+
+.primary-btn:hover{
+    background:#cc2f26;
+}
+
+.secondary-btn{
+    border:1px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.06);
+    color:#fff;
+    padding:10px 15px;
+    border-radius:7px;
+    cursor:pointer;
+    font-size:13px;
+}
+
+.secondary-btn:hover{
+    background:rgba(255,255,255,.11);
+}
+
+/* =====================================================
+   STATS
+===================================================== */
+
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:14px;
+    margin-bottom:20px;
+}
+
+.stat-card{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:10px;
+    padding:18px;
+    min-height:105px;
+}
+
+.stat-label{
+    color:#9eacba;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.stat-value{
+    font-size:28px;
+    font-weight:bold;
+    margin-top:12px;
+}
+
+.stat-card.open .stat-value{
+    color:#ffcc00;
+}
+
+.stat-card.progress .stat-value{
+    color:#62b5ff;
+}
+
+.stat-card.closed .stat-value{
+    color:#28d17c;
+}
+
+.stat-card.critical .stat-value{
+    color:#ff3b30;
+}
+
+/* =====================================================
+   CARD
+===================================================== */
+
+.card{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.card-header{
+    padding:16px 18px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+}
+
+.card-title{
+    font-size:15px;
+    font-weight:bold;
+}
+
+.record-count{
+    color:#8fa0b1;
+    font-size:12px;
+}
+
+/* =====================================================
+   FILTERS
+===================================================== */
+
+.filters{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr 1fr auto;
+    gap:10px;
+    padding:15px 18px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.input,
+.select,
+.textarea{
+    width:100%;
+    border:1px solid rgba(255,255,255,.13);
+    background:rgba(0,0,0,.20);
+    color:#fff;
+    border-radius:6px;
+    padding:10px 11px;
+    outline:none;
+    font-family:Arial,sans-serif;
+    font-size:13px;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus{
+    border-color:#ff3b30;
+}
+
+.select option{
+    background:#142d4c;
+    color:#fff;
+}
+
+.textarea{
+    resize:vertical;
+    min-height:90px;
+}
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+.table-wrap{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1000px;
+}
+
+thead{
+    background:rgba(0,0,0,.18);
+}
+
+th{
+    text-align:left;
+    color:#92a2b1;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    padding:13px 14px;
+    white-space:nowrap;
+}
+
+td{
+    padding:14px;
+    border-top:1px solid rgba(255,255,255,.06);
+    font-size:12px;
+    color:#e4e9ee;
+    vertical-align:middle;
+}
+
+tbody tr:hover{
+    background:rgba(255,255,255,.035);
+}
+
+.deviation-number{
+    color:#fff;
+    font-weight:bold;
+}
+
+.equipment-name{
+    font-weight:bold;
+}
+
+.secondary-text{
+    color:#8798a9;
+    font-size:11px;
+    margin-top:4px;
+}
+
+/* =====================================================
+   BADGES
+===================================================== */
+
+.badge{
+    display:inline-flex;
+    align-items:center;
+    padding:5px 9px;
+    border-radius:20px;
+    font-size:10px;
+    font-weight:bold;
+    white-space:nowrap;
+}
+
+.badge-low{
+    background:rgba(40,209,124,.12);
+    color:#63e29a;
+}
+
+.badge-medium{
+    background:rgba(255,204,0,.12);
+    color:#ffdc52;
+}
+
+.badge-high{
+    background:rgba(255,139,48,.14);
+    color:#ffab68;
+}
+
+.badge-critical{
+    background:rgba(255,59,48,.15);
+    color:#ff7068;
+}
+
+.badge-open{
+    background:rgba(255,204,0,.12);
+    color:#ffdc52;
+}
+
+.badge-progress{
+    background:rgba(98,181,255,.13);
+    color:#73c0ff;
+}
+
+.badge-closed{
+    background:rgba(40,209,124,.12);
+    color:#63e29a;
+}
+
+/* =====================================================
+   ACTIONS
+===================================================== */
+
+.actions{
+    display:flex;
+    gap:6px;
+}
+
+.action-btn{
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.05);
+    color:#dce4eb;
+    padding:7px 9px;
+    border-radius:5px;
+    cursor:pointer;
+    font-size:11px;
+}
+
+.action-btn:hover{
+    background:rgba(255,255,255,.10);
+}
+
+.action-btn.danger:hover{
+    background:rgba(255,59,48,.15);
+    color:#ff716a;
+}
+
+/* =====================================================
+   EMPTY / LOADING
+===================================================== */
+
+.empty-state{
+    padding:55px 20px;
+    text-align:center;
+    color:#8292a2;
+}
+
+.empty-icon{
+    font-size:35px;
+    margin-bottom:12px;
+}
+
+.loading{
+    padding:45px;
+    text-align:center;
+    color:#9aabba;
+}
+
+/* =====================================================
+   MODALS
+===================================================== */
+
+.modal-backdrop{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.68);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:1500;
+    padding:20px;
+}
+
+.modal-backdrop.show{
+    display:flex;
+}
+
+.modal{
+    width:min(800px,100%);
+    max-height:92vh;
+    overflow-y:auto;
+    background:#10263f;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:11px;
+    box-shadow:0 20px 70px rgba(0,0,0,.5);
+}
+
+.modal.large{
+    width:min(950px,100%);
+}
+
+.modal-header{
+    padding:18px 20px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    position:sticky;
+    top:0;
+    background:#10263f;
+    z-index:2;
+}
+
+.modal-header h3{
+    margin:0;
+    font-size:17px;
+}
+
+.modal-close{
+    border:none;
+    background:transparent;
+    color:#aebdca;
+    font-size:25px;
+    cursor:pointer;
+}
+
+.modal-body{
+    padding:20px;
+}
+
+.modal-footer{
+    padding:15px 20px;
+    border-top:1px solid rgba(255,255,255,.08);
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    position:sticky;
+    bottom:0;
+    background:#10263f;
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+
+.form-group.full{
+    grid-column:1/-1;
+}
+
+.form-label{
+    font-size:11px;
+    color:#aebdca;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+}
+
+.required{
+    color:#ff3b30;
+}
+
+.readonly-box{
+    width:100%;
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(0,0,0,.16);
+    color:#dce4eb;
+    border-radius:6px;
+    padding:10px 11px;
+    min-height:38px;
+    font-size:13px;
+}
+
+/* =====================================================
+   DETAIL
+===================================================== */
+
+.detail-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+}
+
+.detail-item{
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:7px;
+    padding:12px;
+}
+
+.detail-item.full{
+    grid-column:1/-1;
+}
+
+.detail-label{
+    color:#7f91a3;
+    text-transform:uppercase;
+    font-size:9px;
+    letter-spacing:.7px;
+    margin-bottom:6px;
+}
+
+.detail-value{
+    color:#e7edf2;
+    font-size:13px;
+    line-height:1.5;
+    white-space:pre-wrap;
+    word-break:break-word;
+}
+
+.detail-section{
+    margin-top:20px;
+}
+
+.detail-section-title{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.7px;
+    color:#ffcc00;
+    margin-bottom:10px;
+}
+
+/* =====================================================
+   CONFIRM
+===================================================== */
+
+.confirm-box{
+    text-align:center;
+    padding:15px 5px;
+}
+
+.confirm-icon{
+    font-size:40px;
+    color:#ff3b30;
+    margin-bottom:12px;
+}
+
+.confirm-box h3{
+    margin:0 0 8px;
+}
+
+.confirm-box p{
+    color:#aebdca;
+    font-size:13px;
+    line-height:1.5;
+}
+
+/* =====================================================
+   TOAST
+===================================================== */
+
+.toast-container{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    z-index:3000;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.toast{
+    min-width:280px;
+    max-width:380px;
+    padding:13px 15px;
+    border-radius:7px;
+    background:#10263f;
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+    font-size:12px;
+    animation:toastIn .2s ease;
+}
+
+.toast.success{
+    border-left:4px solid #28d17c;
+}
+
+.toast.error{
+    border-left:4px solid #ff3b30;
+}
+
+.toast.info{
+    border-left:4px solid #62b5ff;
+}
+
+@keyframes toastIn{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media(max-width:1100px){
+
+    .stats-grid{
+        grid-template-columns:repeat(3,1fr);
+    }
+
+    .filters{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+}
+
+@media(max-width:700px){
+
+    .main{
+        padding:15px;
+    }
+
+    .page-header{
+        flex-direction:column;
+    }
+
+    .page-header .primary-btn{
+        width:100%;
+    }
+
+    .stats-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .filters{
+        grid-template-columns:1fr;
+    }
+
+    .form-grid,
+    .detail-grid{
+        grid-template-columns:1fr;
+    }
+
+    .form-group.full,
+    .detail-item.full{
+        grid-column:auto;
+    }
+
+    .db-status span{
+        display:none;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
+<aside
+    class="sidebar"
+    id="sidebar"
+>
+
+    <div class="sidebar-header">
+
+        <div class="logo">
+            <span class="fire">FireSafe</span> Track
+        </div>
+
+        <button
+            class="close-sidebar"
+            onclick="closeSidebar()"
+            aria-label="Close menu"
+        >
+            ×
+        </button>
+
+    </div>
+
+    <nav class="nav">
+
+        <div class="nav-section">
+            Main
+        </div>
+
+        <a href="dashboard.html">
+            <span class="nav-icon">▦</span>
+            Dashboard
+        </a>
+
+        <a href="equipment.html">
+            <span class="nav-icon">▣</span>
+            Equipment Register
+        </a>
+
+        <a href="equipment-types.html">
+            <span class="nav-icon">◈</span>
+            Equipment Types
+        </a>
+
+        <a href="locations.html">
+            <span class="nav-icon">⌖</span>
+            Locations
+        </a>
+
+        <a href="inspections.html">
+            <span class="nav-icon">✓</span>
+            Inspections
+        </a>
+
+        <a
+            href="deviations.html"
+            class="active"
+        >
+            <span class="nav-icon">!</span>
+            Deviations
+        </a>
+
+        <a href="corrective-actions.html">
+            <span class="nav-icon">↻</span>
+            Corrective Actions
+        </a>
+
+        <div class="nav-section">
+            Reporting & Administration
+        </div>
+
+        <a href="reports.html">
+            <span class="nav-icon">▤</span>
+            Inspection Reports
+        </a>
+
+        <a href="users.html">
+            <span class="nav-icon">♙</span>
+            Users
+        </a>
+
+        <a href="settings.html">
+            <span class="nav-icon">⚙</span>
+            Settings
+        </a>
+
+    </nav>
+
+    <div class="sidebar-footer">
+        FireSafe Track
+    </div>
+
+</aside>
+
+<div
+    class="sidebar-overlay"
+    id="sidebarOverlay"
+    onclick="closeSidebar()"
+></div>
+
+
+<!-- =====================================================
+     TOPBAR
+===================================================== -->
+
+<header class="topbar">
+
+    <button
+        class="menu-btn"
+        onclick="openSidebar()"
+        aria-label="Open menu"
+    >
+        ☰
+    </button>
+
+    <div class="topbar-title">
+
+        <h1>Deviations</h1>
+
+        <span>
+            Fire safety findings and non-conformances
+        </span>
+
+    </div>
+
+    <div class="db-status">
+
+        <span
+            class="status-dot"
+            id="statusDot"
+        ></span>
+
+        <span id="statusText">
+            Connecting...
+        </span>
+
+    </div>
+
+</header>
+
+
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
+
+<main class="main">
+
+    <div class="page-header">
+
+        <div>
+
+            <h2>Deviation Register</h2>
+
+            <p>
+                Record, track and manage fire safety findings.
+            </p>
+
+        </div>
+
+        <button
+            class="primary-btn"
+            onclick="openAddModal()"
+        >
+            + Add Deviation
+        </button>
+
+    </div>
+
+
+    <!-- =================================================
+         STATS
+    ================================================= -->
+
+    <section class="stats-grid">
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Total Deviations
+            </div>
+
+            <div
+                class="stat-value"
+                id="totalCount"
+            >
+                0
+            </div>
+
+        </div>
+
+        <div class="stat-card open">
+
+            <div class="stat-label">
+                Open
+            </div>
+
+            <div
+                class="stat-value"
+                id="openCount"
+            >
+                0
+            </div>
+
+        </div>
+
+        <div class="stat-card progress">
+
+            <div class="stat-label">
+                In Progress
+            </div>
+
+            <div
+                class="stat-value"
+                id="progressCount"
+            >
+                0
+            </div>
+
+        </div>
+
+        <div class="stat-card closed">
+
+            <div class="stat-label">
+                Closed
+            </div>
+
+            <div
+                class="stat-value"
+                id="closedCount"
+            >
+                0
+            </div>
+
+        </div>
+
+        <div class="stat-card critical">
+
+            <div class="stat-label">
+                Critical
+            </div>
+
+            <div
+                class="stat-value"
+                id="criticalCount"
+            >
+                0
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         REGISTER
+    ================================================= -->
+
+    <section class="card">
+
+        <div class="card-header">
+
+            <div class="card-title">
+                Deviation Register
+            </div>
+
+            <div
+                class="record-count"
+                id="recordCount"
+            >
+                0 records
+            </div>
+
+        </div>
+
+
+        <!-- FILTERS -->
+
+        <div class="filters">
+
+            <input
+                type="text"
+                id="searchInput"
+                class="input"
+                placeholder="Search deviation, equipment or description..."
+            >
+
+            <select
+                id="statusFilter"
+                class="select"
+            >
+
+                <option value="">
+                    All Statuses
+                </option>
+
+                <option value="Open">
+                    Open
+                </option>
+
+                <option value="In Progress">
+                    In Progress
+                </option>
+
+                <option value="Closed">
+                    Closed
+                </option>
+
+            </select>
+
+            <select
+                id="severityFilter"
+                class="select"
+            >
+
+                <option value="">
+                    All Severities
+                </option>
+
+                <option value="Low">
+                    Low
+                </option>
+
+                <option value="Medium">
+                    Medium
+                </option>
+
+                <option value="High">
+                    High
+                </option>
+
+                <option value="Critical">
+                    Critical
+                </option>
+
+            </select>
+
+            <select
+                id="equipmentFilter"
+                class="select"
+            >
+
+                <option value="">
+                    All Equipment
+                </option>
+
+            </select>
+
+            <button
+                class="secondary-btn"
+                onclick="resetFilters()"
+            >
+                Reset
+            </button>
+
+        </div>
+
+
+        <!-- TABLE -->
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Deviation
+                        </th>
+
+                        <th>
+                            Equipment
+                        </th>
+
+                        <th>
+                            Requirement
+                        </th>
+
+                        <th>
+                            Severity
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Target Date
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="deviationsBody">
+
+                    <tr>
+
+                        <td colspan="7">
+
+                            <div class="loading">
+                                Loading deviations...
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- =====================================================
+     ADD / EDIT MODAL
+===================================================== -->
+
+<div
+    class="modal-backdrop"
+    id="formModal"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <h3 id="formModalTitle">
+                Add Deviation
+            </h3>
+
+            <button
+                class="modal-close"
+                onclick="closeFormModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="modal-body">
+
+            <div class="form-grid">
+
+                <!-- Equipment -->
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Equipment <span class="required">*</span>
+                    </label>
+
+                    <select
+                        id="equipmentId"
+                        class="select"
+                    >
+
+                        <option value="">
+                            Select equipment
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Inspection -->
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Inspection
+                    </label>
+
+                    <select
+                        id="inspectionId"
+                        class="select"
+                    >
+
+                        <option value="">
+                            Select inspection
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Item -->
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Failed Item Number
+                    </label>
+
+                    <input
+                        type="number"
+                        id="itemNumber"
+                        class="input"
+                        min="1"
+                        placeholder="e.g. 8"
+                    >
+
+                </div>
+
+
+                <!-- Requirement -->
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Inspection Requirement
+                    </label>
+
+                    <input
+                        type="text"
+                        id="inspectionRequirement"
+                        class="input"
+                        placeholder="Failed checklist requirement"
+                    >
+
+                </div>
+
+
+                <!-- Severity -->
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Severity <span class="required">*</span>
+                    </label>
+
+                    <select
+                        id="severity"
+                        class="select"
+                    >
+
+                        <option value="Low">
+                            Low
+                        </option>
+
+                        <option
+                            value="Medium"
+                            selected
+                        >
+                            Medium
+                        </option>
+
+                        <option value="High">
+                            High
+                        </option>
+
+                        <option value="Critical">
+                            Critical
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Status -->
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Status <span class="required">*</span>
+                    </label>
+
+                    <select
+                        id="status"
+                        class="select"
+                    >
+
+                        <option value="Open">
+                            Open
+                        </option>
+
+                        <option value="In Progress">
+                            In Progress
+                        </option>
+
+                        <option value="Closed">
+                            Closed
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Responsible -->
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Responsible Person
+                    </label>
+
+                    <input
+                        type="text"
+                        id="responsiblePerson"
+                        class="input"
+                        placeholder="Name or responsible role"
+                    >
+
+                </div>
+
+
+                <!-- Target -->
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Target Completion Date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="targetDate"
+                        class="input"
+                    >
+
+                </div>
+
+
+                <!-- Description -->
+
+                <div class="form-group full">
+
+                    <label class="form-label">
+                        Deviation Description <span class="required">*</span>
+                    </label>
+
+                    <textarea
+                        id="deviationDescription"
+                        class="textarea"
+                        placeholder="Describe the finding or non-conformance..."
+                    ></textarea>
+
+                </div>
+
+
+                <!-- Corrective -->
+
+                <div class="form-group full">
+
+                    <label class="form-label">
+                        Corrective Action
+                    </label>
+
+                    <textarea
+                        id="correctiveAction"
+                        class="textarea"
+                        placeholder="Describe the action required to correct the deviation..."
+                    ></textarea>
+
+                </div>
+
+
+                <!-- Notes -->
+
+                <div class="form-group full">
+
+                    <label class="form-label">
+                        Notes
+                    </label>
+
+                    <textarea
+                        id="notes"
+                        class="textarea"
+                        placeholder="Additional notes..."
+                    ></textarea>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="modal-footer">
+
+            <button
+                class="secondary-btn"
+                onclick="closeFormModal()"
+            >
+                Cancel
+            </button>
+
+            <button
+                class="primary-btn"
+                id="saveButton"
+                onclick="saveDeviation()"
+            >
+                Save Deviation
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     DETAIL MODAL
+===================================================== -->
+
+<div
+    class="modal-backdrop"
+    id="detailModal"
+>
+
+    <div class="modal large">
+
+        <div class="modal-header">
+
+            <h3>
+                Deviation Details
+            </h3>
+
+            <button
+                class="modal-close"
+                onclick="closeDetailModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div
+            class="modal-body"
+            id="detailBody"
+        ></div>
+
+        <div class="modal-footer">
+
+            <button
+                class="secondary-btn"
+                onclick="closeDetailModal()"
+            >
+                Close
+            </button>
+
+            <button
+                class="primary-btn"
+                id="detailEditButton"
+            >
+                Edit Deviation
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     DELETE MODAL
+===================================================== -->
+
+<div
+    class="modal-backdrop"
+    id="deleteModal"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <h3>
+                Delete Deviation
+            </h3>
+
+            <button
+                class="modal-close"
+                onclick="closeDeleteModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div class="confirm-box">
+
+                <div class="confirm-icon">
+                    !
+                </div>
+
+                <h3>
+                    Delete this deviation?
+                </h3>
+
+                <p>
+                    This action cannot be undone.
+                    The deviation record will be permanently
+                    removed from the database.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+
+            <button
+                class="secondary-btn"
+                onclick="closeDeleteModal()"
+            >
+                Cancel
+            </button>
+
+            <button
+                class="primary-btn"
+                onclick="confirmDelete()"
+            >
+                Delete
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     TOAST
+===================================================== -->
+
+<div
+    class="toast-container"
+    id="toastContainer"
+></div>
+
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+<script>
+
+/* =====================================================
+   SUPABASE CONFIGURATION
+===================================================== */
+
+const SUPABASE_URL =
+    "https://syiemjazbawflavxibzv.supabase.co";
+
+const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5aWVtamF6YmF3ZmxhdnhpYnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Njg5MzEsImV4cCI6MjEwNDU0NDkzMX0.RJ6siFDLg3LAsP2ZPDgdFVGAFasg05hK4GikdIO68PM";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let deviations = [];
+
+let equipmentList = [];
+
+let inspectionsList = [];
+
+let filteredDeviations = [];
+
+let editingDeviationId = null;
+
+let deletingDeviationId = null;
+
+
+/* =====================================================
+   INITIALIZATION
+===================================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async function(){
+
+        setupFilters();
+
+        await testDatabase();
+
+        await loadEquipment();
+
+        await loadInspections();
+
+        await loadDeviations();
+
+    }
+);
+
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+function openSidebar(){
+
+    document
+        .getElementById("sidebar")
+        .classList
+        .add("open");
+
+    document
+        .getElementById("sidebarOverlay")
+        .classList
+        .add("show");
+
+}
+
+
+function closeSidebar(){
+
+    document
+        .getElementById("sidebar")
+        .classList
+        .remove("open");
+
+    document
+        .getElementById("sidebarOverlay")
+        .classList
+        .remove("show");
+
+}
+
+
+/* =====================================================
+   DATABASE TEST
+===================================================== */
+
+async function testDatabase(){
+
+    const dot =
+        document.getElementById("statusDot");
+
+    const text =
+        document.getElementById("statusText");
+
+    try{
+
+        const {
+            error
+        } =
+        await supabaseClient
+            .from("equipment")
+            .select("id")
+            .limit(1);
+
+        if(error){
+            throw error;
+        }
+
+        dot.classList.add("online");
+
+        text.textContent =
+            "Database connected";
+
+    }
+    catch(error){
+
+        console.error(
+            "Database connection error:",
+            error
+        );
+
+        dot.classList.add("offline");
+
+        text.textContent =
+            "Database error";
+
+        showToast(
+            "Unable to connect to the database.",
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD EQUIPMENT
+===================================================== */
+
+async function loadEquipment(){
+
+    try{
+
+        const {
+            data,
+            error
+        } =
+        await supabaseClient
+            .from("equipment")
+            .select(`
+                id,
+                name,
+                equipment_code,
+                equipment_type,
+                area,
+                location,
+                status
+            `)
+            .order(
+                "name",
+                {
+                    ascending:true
+                }
+            );
+
+        if(error){
+            throw error;
+        }
+
+        equipmentList =
+            data || [];
+
+        populateEquipmentSelects();
+
+    }
+    catch(error){
+
+        console.error(
+            "Equipment loading error:",
+            error
+        );
+
+        showToast(
+            "Equipment could not be loaded.",
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   POPULATE EQUIPMENT SELECTS
+===================================================== */
+
+function populateEquipmentSelects(){
+
+    const equipmentSelect =
+        document.getElementById(
+            "equipmentId"
+        );
+
+    const equipmentFilter =
+        document.getElementById(
+            "equipmentFilter"
+        );
+
+    equipmentSelect.innerHTML =
+        `<option value="">Select equipment</option>`;
+
+    equipmentFilter.innerHTML =
+        `<option value="">All Equipment</option>`;
+
+    equipmentList.forEach(
+        equipment => {
+
+            const label =
+                `${equipment.equipment_code || "No Code"} — ${equipment.name || "Unnamed"}`;
+
+            const option =
+                document.createElement("option");
+
+            option.value =
+                equipment.id;
+
+            option.textContent =
+                label;
+
+            equipmentSelect.appendChild(
+                option
+            );
+
+
+            const filterOption =
+                document.createElement("option");
+
+            filterOption.value =
+                equipment.id;
+
+            filterOption.textContent =
+                label;
+
+            equipmentFilter.appendChild(
+                filterOption
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   LOAD INSPECTIONS
+===================================================== */
+
+async function loadInspections(){
+
+    try{
+
+        const {
+            data,
+            error
+        } =
+        await supabaseClient
+            .from("inspections")
+            .select(`
+                id,
+                equipment_id,
+                inspection_date,
+                inspector_name,
+                inspection_type,
+                overall_status
+            `)
+            .order(
+                "inspection_date",
+                {
+                    ascending:false
+                }
+            );
+
+        if(error){
+            throw error;
+        }
+
+        inspectionsList =
+            data || [];
+
+        populateInspectionSelect();
+
+    }
+    catch(error){
+
+        console.error(
+            "Inspection loading error:",
+            error
+        );
+
+        showToast(
+            "Inspections could not be loaded.",
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   POPULATE INSPECTION SELECT
+===================================================== */
+
+function populateInspectionSelect(){
+
+    const select =
+        document.getElementById(
+            "inspectionId"
+        );
+
+    select.innerHTML =
+        `<option value="">Select inspection</option>`;
+
+    inspectionsList.forEach(
+        inspection => {
+
+            const equipment =
+                equipmentList.find(
+                    item =>
+                        item.id ===
+                        inspection.equipment_id
+                );
+
+            const equipmentName =
+                equipment
+                    ? (
+                        equipment.equipment_code ||
+                        equipment.name ||
+                        "Equipment"
+                    )
+                    : "Equipment";
+
+            const option =
+                document.createElement("option");
+
+            option.value =
+                inspection.id;
+
+            option.textContent =
+                `${formatDate(inspection.inspection_date)} — ${equipmentName} — ${inspection.inspection_type || "Inspection"}`;
+
+            select.appendChild(
+                option
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   LOAD DEVIATIONS
+===================================================== */
+
+async function loadDeviations(){
+
+    showTableLoading();
+
+    try{
+
+        const {
+            data,
+            error
+        } =
+        await supabaseClient
+            .from("deviations")
+            .select("*")
+            .order(
+                "created_at",
+                {
+                    ascending:false
+                }
+            );
+
+        if(error){
+            throw error;
+        }
+
+        deviations =
+            data || [];
+
+        filteredDeviations =
+            [...deviations];
+
+        updateStats();
+
+        renderTable();
+
+    }
+    catch(error){
+
+        console.error(
+            "Deviation loading error:",
+            error
+        );
+
+        showTableError(
+            error.message
+        );
+
+        showToast(
+            "Deviations could not be loaded.",
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   FILTER SETUP
+===================================================== */
+
+function setupFilters(){
+
+    document
+        .getElementById("searchInput")
+        .addEventListener(
+            "input",
+            applyFilters
+        );
+
+    document
+        .getElementById("statusFilter")
+        .addEventListener(
+            "change",
+            applyFilters
+        );
+
+    document
+        .getElementById("severityFilter")
+        .addEventListener(
+            "change",
+            applyFilters
+        );
+
+    document
+        .getElementById("equipmentFilter")
+        .addEventListener(
+            "change",
+            applyFilters
+        );
+
+}
+
+
+/* =====================================================
+   APPLY FILTERS
+===================================================== */
+
+function applyFilters(){
+
+    const search =
+        document
+            .getElementById("searchInput")
+            .value
+            .trim()
+            .toLowerCase();
+
+    const status =
+        document
+            .getElementById("statusFilter")
+            .value;
+
+    const severity =
+        document
+            .getElementById("severityFilter")
+            .value;
+
+    const equipmentId =
+        document
+            .getElementById("equipmentFilter")
+            .value;
+
+
+    filteredDeviations =
+        deviations.filter(
+            deviation => {
+
+                const equipment =
+                    getEquipment(
+                        deviation.equipment_id
+                    );
+
+                const equipmentText =
+                    equipment
+                        ? `
+                            ${equipment.name || ""}
+                            ${equipment.equipment_code || ""}
+                            ${equipment.equipment_type || ""}
+                            ${equipment.area || ""}
+                            ${equipment.location || ""}
+                        `
+                        .toLowerCase()
+                        : "";
+
+
+                const searchText =
+                    `
+                    ${deviation.deviation_number || ""}
+                    ${deviation.deviation_description || ""}
+                    ${deviation.inspection_requirement || ""}
+                    ${deviation.responsible_person || ""}
+                    ${equipmentText}
+                    `
+                    .toLowerCase();
+
+
+                const matchesSearch =
+                    !search ||
+                    searchText.includes(search);
+
+                const matchesStatus =
+                    !status ||
+                    deviation.status === status;
+
+                const matchesSeverity =
+                    !severity ||
+                    deviation.severity === severity;
+
+                const matchesEquipment =
+                    !equipmentId ||
+                    deviation.equipment_id === equipmentId;
+
+
+                return (
+                    matchesSearch &&
+                    matchesStatus &&
+                    matchesSeverity &&
+                    matchesEquipment
+                );
+
+            }
+        );
+
+    renderTable();
+
+}
+
+
+/* =====================================================
+   RESET FILTERS
+===================================================== */
+
+function resetFilters(){
+
+    document
+        .getElementById("searchInput")
+        .value = "";
+
+    document
+        .getElementById("statusFilter")
+        .value = "";
+
+    document
+        .getElementById("severityFilter")
+        .value = "";
+
+    document
+        .getElementById("equipmentFilter")
+        .value = "";
+
+    applyFilters();
+
+}
+
+
+/* =====================================================
+   UPDATE STATS
+===================================================== */
+
+function updateStats(){
+
+    const total =
+        deviations.length;
+
+    const open =
+        deviations.filter(
+            item =>
+                item.status === "Open"
+        ).length;
+
+    const progress =
+        deviations.filter(
+            item =>
+                item.status === "In Progress"
+        ).length;
+
+    const closed =
+        deviations.filter(
+            item =>
+                item.status === "Closed"
+        ).length;
+
+    const critical =
+        deviations.filter(
+            item =>
+                item.severity === "Critical"
+        ).length;
+
+
+    document
+        .getElementById("totalCount")
+        .textContent =
+        total;
+
+    document
+        .getElementById("openCount")
+        .textContent =
+        open;
+
+    document
+        .getElementById("progressCount")
+        .textContent =
+        progress;
+
+    document
+        .getElementById("closedCount")
+        .textContent =
+        closed;
+
+    document
+        .getElementById("criticalCount")
+        .textContent =
+        critical;
+
+}
+
+
+/* =====================================================
+   RENDER TABLE
+===================================================== */
+
+function renderTable(){
+
+    const body =
+        document.getElementById(
+            "deviationsBody"
+        );
+
+    document
+        .getElementById("recordCount")
+        .textContent =
+        `${filteredDeviations.length} record${filteredDeviations.length === 1 ? "" : "s"}`;
+
+
+    if(filteredDeviations.length === 0){
+
+        body.innerHTML = `
+
+            <tr>
+
+                <td colspan="7">
+
+                    <div class="empty-state">
+
+                        <div class="empty-icon">
+                            ✓
+                        </div>
+
+                        <div>
+                            No deviations found.
+                        </div>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    body.innerHTML =
+        filteredDeviations
+            .map(
+                deviation =>
+                    buildTableRow(
+                        deviation
+                    )
+            )
+            .join("");
+
+}
+
+
+/* =====================================================
+   BUILD TABLE ROW
+===================================================== */
+
+function buildTableRow(
+    deviation
+){
+
+    const equipment =
+        getEquipment(
+            deviation.equipment_id
+        );
+
+
+    const equipmentName =
+        equipment
+            ? escapeHtml(
+                equipment.name ||
+                "Unnamed equipment"
+            )
+            : "Equipment removed";
+
+
+    const equipmentCode =
+        equipment
+            ? escapeHtml(
+                equipment.equipment_code ||
+                "No code"
+            )
+            : "";
+
+
+    const requirement =
+        deviation.inspection_requirement
+            ? escapeHtml(
+                deviation.inspection_requirement
+            )
+            : "—";
+
+
+    const targetDate =
+        deviation.target_date
+            ? formatDate(
+                deviation.target_date
+            )
+            : "—";
+
+
+    return `
+
+        <tr>
+
+            <td>
+
+                <div class="deviation-number">
+                    ${escapeHtml(
+                        deviation.deviation_number ||
+                        generateDisplayNumber(
+                            deviation
+                        )
+                    )}
+                </div>
+
+                <div class="secondary-text">
+                    ${formatDate(
+                        deviation.created_at
+                    )}
+                </div>
+
+            </td>
+
+
+            <td>
+
+                <div class="equipment-name">
+                    ${equipmentName}
+                </div>
+
+                <div class="secondary-text">
+                    ${equipmentCode}
+                </div>
+
+            </td>
+
+
+            <td>
+
+                <div>
+                    ${requirement}
+                </div>
+
+                ${
+                    deviation.item_number
+                    ?
+                    `
+                        <div class="secondary-text">
+                            Item ${escapeHtml(
+                                deviation.item_number
+                            )}
+                        </div>
+                    `
+                    :
+                    ""
+                }
+
+            </td>
+
+
+            <td>
+                ${severityBadge(
+                    deviation.severity
+                )}
+            </td>
+
+
+            <td>
+                ${statusBadge(
+                    deviation.status
+                )}
+            </td>
+
+
+            <td>
+                ${targetDate}
+            </td>
+
+
+            <td>
+
+                <div class="actions">
+
+                    <button
+                        class="action-btn"
+                        onclick="viewDeviation('${deviation.id}')"
+                    >
+                        View
+                    </button>
+
+                    <button
+                        class="action-btn"
+                        onclick="openEditModal('${deviation.id}')"
+                    >
+                        Edit
+                    </button>
+
+                    <button
+                        class="action-btn danger"
+                        onclick="openDeleteModal('${deviation.id}')"
+                    >
+                        Delete
+                    </button>
+
+                </div>
+
+            </td>
+
+        </tr>
+
+    `;
+
+}
+
+
+/* =====================================================
+   OPEN ADD MODAL
+===================================================== */
+
+function openAddModal(){
+
+    editingDeviationId =
+        null;
+
+    document
+        .getElementById("formModalTitle")
+        .textContent =
+        "Add Deviation";
+
+    document
+        .getElementById("saveButton")
+        .textContent =
+        "Save Deviation";
+
+    clearForm();
+
+    document
+        .getElementById("formModal")
+        .classList
+        .add("show");
+
+}
+
+
+/* =====================================================
+   OPEN EDIT MODAL
+===================================================== */
+
+function openEditModal(id){
+
+    const deviation =
+        deviations.find(
+            item =>
+                item.id === id
+        );
+
+    if(!deviation){
+        showToast(
+            "Deviation could not be found.",
+            "error"
+        );
+        return;
+    }
+
+
+    editingDeviationId =
+        id;
+
+
+    document
+        .getElementById("formModalTitle")
+        .textContent =
+        "Edit Deviation";
+
+
+    document
+        .getElementById("saveButton")
+        .textContent =
+        "Update Deviation";
+
+
+    document
+        .getElementById("equipmentId")
+        .value =
+        deviation.equipment_id || "";
+
+
+    document
+        .getElementById("inspectionId")
+        .value =
+        deviation.inspection_id || "";
+
+
+    document
+        .getElementById("itemNumber")
+        .value =
+        deviation.item_number || "";
+
+
+    document
+        .getElementById("inspectionRequirement")
+        .value =
+        deviation.inspection_requirement || "";
+
+
+    document
+        .getElementById("severity")
+        .value =
+        deviation.severity || "Medium";
+
+
+    document
+        .getElementById("status")
+        .value =
+        deviation.status || "Open";
+
+
+    document
+        .getElementById("responsiblePerson")
+        .value =
+        deviation.responsible_person || "";
+
+
+    document
+        .getElementById("targetDate")
+        .value =
+        deviation.target_date || "";
+
+
+    document
+        .getElementById("deviationDescription")
+        .value =
+        deviation.deviation_description || "";
+
+
+    document
+        .getElementById("correctiveAction")
+        .value =
+        deviation.corrective_action || "";
+
+
+    document
+        .getElementById("notes")
+        .value =
+        deviation.notes || "";
+
+
+    document
+        .getElementById("formModal")
+        .classList
+        .add("show");
+
+}
+
+
+/* =====================================================
+   CLEAR FORM
+===================================================== */
+
+function clearForm(){
+
+    document
+        .getElementById("equipmentId")
+        .value = "";
+
+    document
+        .getElementById("inspectionId")
+        .value = "";
+
+    document
+        .getElementById("itemNumber")
+        .value = "";
+
+    document
+        .getElementById("inspectionRequirement")
+        .value = "";
+
+    document
+        .getElementById("severity")
+        .value = "Medium";
+
+    document
+        .getElementById("status")
+        .value = "Open";
+
+    document
+        .getElementById("responsiblePerson")
+        .value = "";
+
+    document
+        .getElementById("targetDate")
+        .value = "";
+
+    document
+        .getElementById("deviationDescription")
+        .value = "";
+
+    document
+        .getElementById("correctiveAction")
+        .value = "";
+
+    document
+        .getElementById("notes")
+        .value = "";
+
+}
+
+
+/* =====================================================
+   CLOSE FORM MODAL
+===================================================== */
+
+function closeFormModal(){
+
+    document
+        .getElementById("formModal")
+        .classList
+        .remove("show");
+
+}
+
+
+/* =====================================================
+   SAVE DEVIATION
+===================================================== */
+
+async function saveDeviation(){
+
+    const equipmentId =
+        document
+            .getElementById("equipmentId")
+            .value;
+
+    const inspectionId =
+        document
+            .getElementById("inspectionId")
+            .value;
+
+    const itemNumberRaw =
+        document
+            .getElementById("itemNumber")
+            .value;
+
+    const inspectionRequirement =
+        document
+            .getElementById("inspectionRequirement")
+            .value
+            .trim();
+
+    const severity =
+        document
+            .getElementById("severity")
+            .value;
+
+    const status =
+        document
+            .getElementById("status")
+            .value;
+
+    const responsiblePerson =
+        document
+            .getElementById("responsiblePerson")
+            .value
+            .trim();
+
+    const targetDate =
+        document
+            .getElementById("targetDate")
+            .value;
+
+    const description =
+        document
+            .getElementById("deviationDescription")
+            .value
+            .trim();
+
+    const correctiveAction =
+        document
+            .getElementById("correctiveAction")
+            .value
+            .trim();
+
+    const notes =
+        document
+            .getElementById("notes")
+            .value
+            .trim();
+
+
+    /* ---------------------------------------------
+       VALIDATION
+    --------------------------------------------- */
+
+    if(!equipmentId){
+
+        showToast(
+            "Please select equipment.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if(!description){
+
+        showToast(
+            "Deviation description is required.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const itemNumber =
+        itemNumberRaw
+            ? parseInt(
+                itemNumberRaw,
+                10
+            )
+            : null;
+
+
+    if(
+        itemNumberRaw &&
+        (
+            Number.isNaN(itemNumber) ||
+            itemNumber < 1
+        )
+    ){
+
+        showToast(
+            "Failed item number must be a valid positive number.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const saveButton =
+        document
+            .getElementById("saveButton");
+
+
+    saveButton.disabled =
+        true;
+
+    saveButton.textContent =
+        editingDeviationId
+            ? "Updating..."
+            : "Saving...";
+
+
+    try{
+
+        if(editingDeviationId){
+
+            await updateDeviation(
+                editingDeviationId,
+                {
+                    inspection_id:
+                        inspectionId || null,
+
+                    equipment_id:
+                        equipmentId,
+
+                    item_number:
+                        itemNumber,
+
+                    inspection_requirement:
+                        inspectionRequirement || null,
+
+                    deviation_description:
+                        description,
+
+                    severity:
+                        severity,
+
+                    status:
+                        status,
+
+                    responsible_person:
+                        responsiblePerson || null,
+
+                    target_date:
+                        targetDate || null,
+
+                    completion_date:
+                        status === "Closed"
+                            ? (
+                                getExistingCompletionDate(
+                                    editingDeviationId
+                                ) ||
+                                new Date()
+                                    .toISOString()
+                                    .split("T")[0]
+                            )
+                            : null,
+
+                    corrective_action:
+                        correctiveAction || null,
+
+                    notes:
+                        notes || null,
+
+                    updated_at:
+                        new Date()
+                            .toISOString()
+
+                }
+            );
+
+
+            showToast(
+                "Deviation updated successfully.",
+                "success"
+            );
+
+        }
+        else{
+
+            const deviationNumber =
+                await generateDeviationNumber();
+
+
+            const {
+                error
+            } =
+            await supabaseClient
+                .from("deviations")
+                .insert({
+
+                    deviation_number:
+                        deviationNumber,
+
+                    inspection_id:
+                        inspectionId || null,
+
+                    equipment_id:
+                        equipmentId,
+
+                    item_number:
+                        itemNumber,
+
+                    inspection_requirement:
+                        inspectionRequirement || null,
+
+                    deviation_description:
+                        description,
+
+                    severity:
+                        severity,
+
+                    status:
+                        status,
+
+                    responsible_person:
+                        responsiblePerson || null,
+
+                    target_date:
+                        targetDate || null,
+
+                    completion_date:
+                        status === "Closed"
+                            ? new Date()
+                                .toISOString()
+                                .split("T")[0]
+                            : null,
+
+                    corrective_action:
+                        correctiveAction || null,
+
+                    notes:
+                        notes || null
+
+                });
+
+
+            if(error){
+                throw error;
+            }
+
+
+            showToast(
+                "Deviation created successfully.",
+                "success"
+            );
+
+        }
+
+
+        closeFormModal();
+
+        await loadDeviations();
+
+    }
+    catch(error){
+
+        console.error(
+            "Deviation save error:",
+            error
+        );
+
+        showToast(
+            `Unable to save deviation: ${error.message}`,
+            "error"
+        );
+
+    }
+    finally{
+
+        saveButton.disabled =
+            false;
+
+        saveButton.textContent =
+            editingDeviationId
+                ? "Update Deviation"
+                : "Save Deviation";
+
+    }
+
+}
+
+
+/* =====================================================
+   UPDATE DEVIATION
+===================================================== */
+
+async function updateDeviation(
+    id,
+    values
+){
+
+    const {
+        error
+    } =
+    await supabaseClient
+        .from("deviations")
+        .update(values)
+        .eq(
+            "id",
+            id
+        );
+
+    if(error){
+        throw error;
+    }
+
+}
+
+
+/* =====================================================
+   GENERATE DEVIATION NUMBER
+===================================================== */
+
+async function generateDeviationNumber(){
+
+    const {
+        data,
+        error
+    } =
+    await supabaseClient
+        .from("deviations")
+        .select("deviation_number")
+        .order(
+            "created_at",
+            {
+                ascending:false
+            }
+        )
+        .limit(1);
+
+
+    if(error){
+        throw error;
+    }
+
+
+    let nextNumber =
+        1;
+
+
+    if(
+        data &&
+        data.length &&
+        data[0].deviation_number
+    ){
+
+        const match =
+            data[0]
+                .deviation_number
+                .match(
+                    /(\d+)$/
+                );
+
+        if(match){
+
+            nextNumber =
+                parseInt(
+                    match[1],
+                    10
+                ) + 1;
+
+        }
+
+    }
+
+
+    return (
+        "DEV-" +
+        String(nextNumber)
+            .padStart(4,"0")
+    );
+
+}
+
+
+/* =====================================================
+   DISPLAY NUMBER FALLBACK
+===================================================== */
+
+function generateDisplayNumber(
+    deviation
+){
+
+    if(deviation.id){
+
+        return (
+            "DEV-" +
+            deviation.id
+                .replace(/-/g,"")
+                .substring(0,6)
+                .toUpperCase()
+        );
+
+    }
+
+    return "DEV";
+
+}
+
+
+/* =====================================================
+   GET EQUIPMENT
+===================================================== */
+
+function getEquipment(id){
+
+    return equipmentList.find(
+        equipment =>
+            equipment.id === id
+    );
+
+}
+
+
+/* =====================================================
+   GET INSPECTION
+===================================================== */
+
+function getInspection(id){
+
+    return inspectionsList.find(
+        inspection =>
+            inspection.id === id
+    );
+
+}
+
+
+/* =====================================================
+   GET EXISTING COMPLETION DATE
+===================================================== */
+
+function getExistingCompletionDate(id){
+
+    const deviation =
+        deviations.find(
+            item =>
+                item.id === id
+        );
+
+    return deviation
+        ? deviation.completion_date
+        : null;
+
+}
+
+
+/* =====================================================
+   VIEW DEVIATION
+===================================================== */
+
+function viewDeviation(id){
+
+    const deviation =
+        deviations.find(
+            item =>
+                item.id === id
+        );
+
+    if(!deviation){
+
+        showToast(
+            "Deviation could not be found.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const equipment =
+        getEquipment(
+            deviation.equipment_id
+        );
+
+    const inspection =
+        getInspection(
+            deviation.inspection_id
+        );
+
+
+    const equipmentName =
+        equipment
+            ? escapeHtml(
+                equipment.name ||
+                "Unnamed"
+            )
+            : "Equipment removed";
+
+
+    const equipmentCode =
+        equipment
+            ? escapeHtml(
+                equipment.equipment_code ||
+                "No code"
+            )
+            : "—";
+
+
+    const inspectionText =
+        inspection
+            ? `
+                ${escapeHtml(
+                    inspection.inspection_type ||
+                    "Inspection"
+                )}
+                — 
+                ${formatDate(
+                    inspection.inspection_date
+                )}
+                —
+                ${escapeHtml(
+                    inspection.inspector_name ||
+                    "Unknown inspector"
+                )}
+            `
+            : "No inspection linked";
+
+
+    document
+        .getElementById("detailBody")
+        .innerHTML = `
+
+            <div class="detail-grid">
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Deviation Number
+                    </div>
+
+                    <div class="detail-value">
+                        ${escapeHtml(
+                            deviation.deviation_number ||
+                            generateDisplayNumber(
+                                deviation
+                            )
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Created
+                    </div>
+
+                    <div class="detail-value">
+                        ${formatDateTime(
+                            deviation.created_at
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Equipment
+                    </div>
+
+                    <div class="detail-value">
+                        ${equipmentName}
+                        <br>
+                        <span class="secondary-text">
+                            ${equipmentCode}
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Inspection
+                    </div>
+
+                    <div class="detail-value">
+                        ${inspectionText}
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Severity
+                    </div>
+
+                    <div class="detail-value">
+                        ${severityBadge(
+                            deviation.severity
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Status
+                    </div>
+
+                    <div class="detail-value">
+                        ${statusBadge(
+                            deviation.status
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Failed Item
+                    </div>
+
+                    <div class="detail-value">
+                        ${
+                            deviation.item_number
+                                ? "Item " +
+                                  escapeHtml(
+                                      deviation.item_number
+                                  )
+                                : "Not specified"
+                        }
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Target Date
+                    </div>
+
+                    <div class="detail-value">
+                        ${
+                            deviation.target_date
+                                ? formatDate(
+                                    deviation.target_date
+                                )
+                                : "Not specified"
+                        }
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Responsible Person
+                    </div>
+
+                    <div class="detail-value">
+                        ${
+                            escapeHtml(
+                                deviation.responsible_person ||
+                                "Not assigned"
+                            )
+                        }
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item">
+
+                    <div class="detail-label">
+                        Completion Date
+                    </div>
+
+                    <div class="detail-value">
+                        ${
+                            deviation.completion_date
+                                ? formatDate(
+                                    deviation.completion_date
+                                )
+                                : "Not completed"
+                        }
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item full">
+
+                    <div class="detail-label">
+                        Inspection Requirement
+                    </div>
+
+                    <div class="detail-value">
+                        ${
+                            escapeHtml(
+                                deviation.inspection_requirement ||
+                                "Not specified"
+                            )
+                        }
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item full">
+
+                    <div class="detail-label">
+                        Deviation Description
+                    </div>
+
+                    <div class="detail-value">
+                        ${
+                            escapeHtml(
+                                deviation.deviation_description ||
+                                ""
+                            )
+                        }
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item full">
+
+                    <div class="detail-label">
+                        Corrective Action
+                    </div>
+
+                    <div class="detail-value">
+                        ${
+                            escapeHtml(
+                                deviation.corrective_action ||
+                                "No corrective action recorded."
+                            )
+                        }
+                    </div>
+
+                </div>
+
+
+                <div class="detail-item full">
+
+                    <div class="detail-label">
+                        Notes
+                    </div>
+
+                    <div class="detail-value">
+                        ${
+                            escapeHtml(
+                                deviation.notes ||
+                                "No additional notes."
+                            )
+                        }
+                    </div>
+
+                </div>
+
+            </div>
+
+        `;
+
+
+    document
+        .getElementById("detailEditButton")
+        .onclick =
+        function(){
+
+            closeDetailModal();
+
+            openEditModal(id);
+
+        };
+
+
+    document
+        .getElementById("detailModal")
+        .classList
+        .add("show");
+
+}
+
+
+/* =====================================================
+   CLOSE DETAIL
+===================================================== */
+
+function closeDetailModal(){
+
+    document
+        .getElementById("detailModal")
+        .classList
+        .remove("show");
+
+}
+
+
+/* =====================================================
+   OPEN DELETE MODAL
+===================================================== */
+
+function openDeleteModal(id){
+
+    deletingDeviationId =
+        id;
+
+    document
+        .getElementById("deleteModal")
+        .classList
+        .add("show");
+
+}
+
+
+/* =====================================================
+   CLOSE DELETE MODAL
+===================================================== */
+
+function closeDeleteModal(){
+
+    deletingDeviationId =
+        null;
+
+    document
+        .getElementById("deleteModal")
+        .classList
+        .remove("show");
+
+}
+
+
+/* =====================================================
+   CONFIRM DELETE
+===================================================== */
+
+async function confirmDelete(){
+
+    if(!deletingDeviationId){
+        return;
+    }
+
+
+    const id =
+        deletingDeviationId;
+
+
+    try{
+
+        const {
+            error
+        } =
+        await supabaseClient
+            .from("deviations")
+            .delete()
+            .eq(
+                "id",
+                id
+            );
+
+
+        if(error){
+            throw error;
+        }
+
+
+        closeDeleteModal();
+
+        showToast(
+            "Deviation deleted successfully.",
+            "success"
+        );
+
+
+        await loadDeviations();
+
+    }
+    catch(error){
+
+        console.error(
+            "Deviation delete error:",
+            error
+        );
+
+        showToast(
+            `Unable to delete deviation: ${error.message}`,
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   BADGES
+===================================================== */
+
+function severityBadge(
+    severity
+){
+
+    const value =
+        severity || "Medium";
+
+
+    const className =
+        value
+            .toLowerCase();
+
+
+    return `
+        <span
+            class="badge badge-${className}"
+        >
+            ${escapeHtml(value)}
+        </span>
+    `;
+
+}
+
+
+function statusBadge(
+    status
+){
+
+    const value =
+        status || "Open";
+
+
+    let className =
+        "open";
+
+
+    if(value === "In Progress"){
+        className =
+            "progress";
+    }
+
+    if(value === "Closed"){
+        className =
+            "closed";
+    }
+
+
+    return `
+        <span
+            class="badge badge-${className}"
+        >
+            ${escapeHtml(value)}
+        </span>
+    `;
+
+}
+
+
+/* =====================================================
+   LOADING / ERROR
+===================================================== */
+
+function showTableLoading(){
+
+    document
+        .getElementById("deviationsBody")
+        .innerHTML = `
+
+            <tr>
+
+                <td colspan="7">
+
+                    <div class="loading">
+                        Loading deviations...
+                    </div>
+
+                </td>
+
+            </tr>
+
+        `;
+
+}
+
+
+function showTableError(
+    message
+){
+
+    document
+        .getElementById("deviationsBody")
+        .innerHTML = `
+
+            <tr>
+
+                <td colspan="7">
+
+                    <div class="empty-state">
+
+                        <div class="empty-icon">
+                            !
+                        </div>
+
+                        <div>
+                            Unable to load deviations.
+                        </div>
+
+                        <div
+                            class="secondary-text"
+                            style="margin-top:8px;"
+                        >
+                            ${escapeHtml(
+                                message || ""
+                            )}
+                        </div>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+        `;
+
+}
+
+
+/* =====================================================
+   DATE FORMATTING
+===================================================== */
+
+function formatDate(
+    value
+){
+
+    if(!value){
+        return "—";
+    }
+
+
+    const date =
+        new Date(
+            value + (
+                String(value).length === 10
+                    ? "T00:00:00"
+                    : ""
+            )
+        );
+
+
+    if(
+        Number.isNaN(
+            date.getTime()
+        )
+    ){
+
+        return escapeHtml(
+            String(value)
+        );
+
+    }
+
+
+    return date.toLocaleDateString(
+        "en-GB",
+        {
+            day:"2-digit",
+            month:"short",
+            year:"numeric"
+        }
+    );
+
+}
+
+
+function formatDateTime(
+    value
+){
+
+    if(!value){
+        return "—";
+    }
+
+
+    const date =
+        new Date(value);
+
+
+    if(
+        Number.isNaN(
+            date.getTime()
+        )
+    ){
+
+        return escapeHtml(
+            String(value)
+        );
+
+    }
+
+
+    return date.toLocaleString(
+        "en-GB",
+        {
+            day:"2-digit",
+            month:"short",
+            year:"numeric",
+            hour:"2-digit",
+            minute:"2-digit"
+        }
+    );
+
+}
+
+
+/* =====================================================
+   HTML ESCAPE
+===================================================== */
+
+function escapeHtml(
+    value
+){
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+/* =====================================================
+   TOAST
+===================================================== */
+
+function showToast(
+    message,
+    type = "info"
+){
+
+    const container =
+        document.getElementById(
+            "toastContainer"
+        );
+
+
+    const toast =
+        document.createElement(
+            "div"
+        );
+
+
+    toast.className =
+        `toast ${type}`;
+
+
+    toast.textContent =
+        message;
+
+
+    container.appendChild(
+        toast
+    );
+
+
+    setTimeout(
+        function(){
+
+            toast.remove();
+
+        },
+        4000
+    );
+
+}
+
+
+/* =====================================================
+   MODAL OUTSIDE CLICK
+===================================================== */
+
+document.addEventListener(
+    "click",
+    function(event){
+
+        const formModal =
+            document.getElementById(
+                "formModal"
+            );
+
+        const detailModal =
+            document.getElementById(
+                "detailModal"
+            );
+
+        const deleteModal =
+            document.getElementById(
+                "deleteModal"
+            );
+
+
+        if(
+            event.target ===
+            formModal
+        ){
+
+            closeFormModal();
+
+        }
+
+
+        if(
+            event.target ===
+            detailModal
+        ){
+
+            closeDetailModal();
+
+        }
+
+
+        if(
+            event.target ===
+            deleteModal
+        ){
+
+            closeDeleteModal();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   KEYBOARD
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(
+            event.key === "Escape"
+        ){
+
+            closeSidebar();
+
+            closeFormModal();
+
+            closeDetailModal();
+
+            closeDeleteModal();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   AUTO-FILL INSPECTION INFORMATION
+===================================================== */
+
+document
+    .getElementById("inspectionId")
+    .addEventListener(
+        "change",
+        function(){
+
+            const inspection =
+                getInspection(
+                    this.value
+                );
+
+            if(!inspection){
+                return;
+            }
+
+
+            if(
+                inspection.equipment_id
+            ){
+
+                document
+                    .getElementById(
+                        "equipmentId"
+                    )
+                    .value =
+                    inspection.equipment_id;
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   AUTO-FILL COMPLETION DATE BEHAVIOUR
+===================================================== */
+
+document
+    .getElementById("status")
+    .addEventListener(
+        "change",
+        function(){
+
+            if(
+                this.value === "Closed"
+            ){
+
+                /*
+                   Completion date is handled
+                   automatically when saving.
+                */
+
+            }
+
+        }
+    );
+
+</script>
+
+</body>
+
+</html>
