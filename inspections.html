@@ -3585,100 +3585,21 @@ if(failedWithoutRemarks){
             throw answersError;
 
         }
-        /* =============================================
-   CREATE DEVIATIONS
-============================================= */
+                /* =============================================
+           CREATE DEVIATIONS FROM FAILED ITEMS
+        ============================================= */
 
-async function createDeviations(
-    inspectionId,
-    equipmentId,
-    answers
-){
+        const deviationResult =
+            await createDeviations(
+                inspection.id,
+                currentEquipment.id,
+                answers
+            );
 
-    const failedItems =
-        answers.filter(
-            item => item.answer === "FAIL"
+        console.log(
+            "Deviation creation result:",
+            deviationResult
         );
-
-    // No failed items = no deviations needed
-    if(failedItems.length === 0){
-
-        return {
-            created: 0,
-            data: []
-        };
-
-    }
-
-    const deviationRows =
-        failedItems.map((item,index)=>({
-
-            deviation_number:
-                `DEV-${Date.now()}-${index + 1}`,
-
-            inspection_id:
-                inspectionId,
-
-            equipment_id:
-                equipmentId,
-
-            item_number:
-                item.item_number,
-
-            inspection_requirement:
-                item.inspection_requirement,
-
-            deviation_description:
-                item.remarks?.trim()
-                    ? item.remarks.trim()
-                    : item.inspection_requirement,
-
-            severity:
-                item.severity || "Medium",
-
-            status:
-                "Open"
-
-        }));
-
-    console.log(
-        "Creating deviations:",
-        deviationRows
-    );
-
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-            .from("deviations")
-            .insert(deviationRows)
-            .select();
-
-    if(error){
-
-        console.error(
-            "Deviation creation error:",
-            error
-        );
-
-        throw new Error(
-            "Inspection was saved, but the deviation records could not be created: " +
-            error.message
-        );
-
-    }
-
-    console.log(
-        `${deviationRows.length} deviation(s) created successfully.`
-    );
-
-    return {
-        created: deviationRows.length,
-        data: data || []
-    };
-
-}
           
         /* =============================================
            UPDATE EQUIPMENT INSPECTION DATE
@@ -3762,6 +3683,78 @@ async function createDeviations(
 
 }
 
+/* =====================================================
+   CREATE DEVIATIONS AUTOMATICALLY
+===================================================== */
+
+async function createDeviations(inspectionId, equipmentId, answers) {
+
+    // Get only failed inspection items
+    const failedItems = answers.filter(
+        item => item.answer === "FAIL"
+    );
+
+    // No failed items = no deviations
+    if (failedItems.length === 0) {
+        return {
+            created: 0,
+            data: []
+        };
+    }
+
+    // Build deviation records
+    const deviationRows = failedItems.map((item, index) => ({
+        deviation_number: `DEV-${Date.now()}-${index + 1}`,
+
+        inspection_id: inspectionId,
+
+        equipment_id: equipmentId,
+
+        item_number: item.item_number,
+
+        inspection_requirement: item.inspection_requirement,
+
+        deviation_description:
+            item.remarks && item.remarks.trim()
+                ? item.remarks.trim()
+                : item.inspection_requirement,
+
+        severity: item.severity || "Medium",
+
+        status: "Open"
+    }));
+
+    console.log("Creating deviations:", deviationRows);
+
+    // Save deviations
+    const { data, error } = await supabaseClient
+        .from("deviations")
+        .insert(deviationRows)
+        .select();
+
+    if (error) {
+
+        console.error(
+            "Deviation creation error:",
+            error
+        );
+
+        throw new Error(
+            "Inspection was saved, but the deviation records could not be created: " +
+            error.message
+        );
+    }
+
+    console.log(
+        `${deviationRows.length} deviation(s) created successfully.`,
+        data
+    );
+
+    return {
+        created: deviationRows.length,
+        data: data || []
+    };
+}
 
 /* =====================================================
    NEXT INSPECTION DATE

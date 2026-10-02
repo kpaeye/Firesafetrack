@@ -12,6 +12,13 @@
 
     <title>FireSafe Track | Dashboard</title>
 
+    <!-- =====================================================
+         SUPABASE
+    ====================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
     <style>
 
         * {
@@ -26,6 +33,7 @@
         }
 
         body {
+
             font-family: Arial, sans-serif;
 
             background:
@@ -171,7 +179,7 @@
 
 
         /* =====================================================
-           SIDEBAR OVERLAY
+           SIDEBAR
         ===================================================== */
 
         .sidebar-overlay {
@@ -202,10 +210,6 @@
             visibility: visible;
         }
 
-
-        /* =====================================================
-           SIDEBAR
-        ===================================================== */
 
         .sidebar {
 
@@ -243,10 +247,6 @@
             transform: translateX(0);
         }
 
-
-        /* =====================================================
-           SIDEBAR HEADER
-        ===================================================== */
 
         .sidebar-header {
 
@@ -310,10 +310,6 @@
             background: #ff3b30;
         }
 
-
-        /* =====================================================
-           NAVIGATION
-        ===================================================== */
 
         .nav-section {
 
@@ -393,10 +389,6 @@
         }
 
 
-        /* =====================================================
-           SIDEBAR FOOTER
-        ===================================================== */
-
         .sidebar-footer {
 
             margin-top: auto;
@@ -416,7 +408,7 @@
 
 
         /* =====================================================
-           MAIN CONTENT
+           MAIN
         ===================================================== */
 
         .main {
@@ -501,6 +493,20 @@
             border-radius: 50%;
 
             background: #ffcc00;
+
+            transition: 0.3s;
+        }
+
+
+        .status-dot.online {
+
+            background: #28d17c;
+        }
+
+
+        .status-dot.error {
+
+            background: #ff3b30;
         }
 
 
@@ -535,6 +541,8 @@
             padding: 20px;
 
             min-height: 125px;
+
+            transition: 0.2s ease;
         }
 
 
@@ -542,6 +550,8 @@
 
             border-color:
                 rgba(255, 255, 255, 0.18);
+
+            transform: translateY(-1px);
         }
 
 
@@ -637,47 +647,111 @@
 
 
         /* =====================================================
-           EMPTY STATE
+           RECENT INSPECTIONS TABLE
         ===================================================== */
 
-        .empty-state {
+        .table-wrap {
 
-            text-align: center;
+            width: 100%;
 
-            padding: 40px 20px;
-
-            color: #9eafbf;
+            overflow-x: auto;
         }
 
 
-        .empty-icon {
+        .inspection-table {
 
-            font-size: 38px;
+            width: 100%;
 
-            margin-bottom: 12px;
+            border-collapse: collapse;
 
-            opacity: 0.8;
+            min-width: 600px;
         }
 
 
-        .empty-state h3 {
+        .inspection-table th {
 
-            margin:
-                0 0 7px;
+            text-align: left;
 
-            color: #dbe5ee;
+            padding: 11px 10px;
 
-            font-size: 16px;
+            font-size: 11px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.5px;
+
+            color: #8496a8;
+
+            border-bottom:
+                1px solid
+                rgba(255, 255, 255, 0.08);
         }
 
 
-        .empty-state p {
+        .inspection-table td {
 
-            margin: 0;
+            padding: 13px 10px;
 
-            font-size: 13px;
+            font-size: 12px;
 
-            line-height: 1.5;
+            color: #dce6ef;
+
+            border-bottom:
+                1px solid
+                rgba(255, 255, 255, 0.06);
+        }
+
+
+        .inspection-table tr:last-child td {
+
+            border-bottom: none;
+        }
+
+
+        .inspection-table tr:hover td {
+
+            background:
+                rgba(255, 255, 255, 0.03);
+        }
+
+
+        .status-badge {
+
+            display: inline-block;
+
+            padding: 5px 8px;
+
+            border-radius: 5px;
+
+            font-size: 10px;
+
+            font-weight: bold;
+
+            white-space: nowrap;
+        }
+
+
+        .status-pass {
+
+            background: rgba(40, 209, 124, 0.12);
+
+            color: #4ee49a;
+        }
+
+
+        .status-fail {
+
+            background: rgba(255, 59, 48, 0.12);
+
+            color: #ff7169;
+        }
+
+
+        .status-other {
+
+            background: rgba(255, 204, 0, 0.12);
+
+            color: #ffcc00;
         }
 
 
@@ -794,6 +868,134 @@
             height: 100%;
 
             background: #ffcc00;
+
+            transition: width 0.5s ease;
+        }
+
+
+        /* =====================================================
+           DASHBOARD INFO
+        ===================================================== */
+
+        .info-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
+
+            gap: 12px;
+
+            margin-top: 20px;
+        }
+
+
+        .info-item {
+
+            background:
+                rgba(255, 255, 255, 0.04);
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.07);
+
+            border-radius: 7px;
+
+            padding: 13px;
+        }
+
+
+        .info-label {
+
+            font-size: 10px;
+
+            color: #8496a8;
+
+            text-transform: uppercase;
+
+            margin-bottom: 6px;
+        }
+
+
+        .info-value {
+
+            font-size: 18px;
+
+            font-weight: bold;
+        }
+
+
+        /* =====================================================
+           EMPTY / LOADING
+        ===================================================== */
+
+        .empty-state {
+
+            text-align: center;
+
+            padding: 40px 20px;
+
+            color: #9eafbf;
+        }
+
+
+        .empty-icon {
+
+            font-size: 38px;
+
+            margin-bottom: 12px;
+
+            opacity: 0.8;
+        }
+
+
+        .empty-state h3 {
+
+            margin:
+                0 0 7px;
+
+            color: #dbe5ee;
+
+            font-size: 16px;
+        }
+
+
+        .empty-state p {
+
+            margin: 0;
+
+            font-size: 13px;
+
+            line-height: 1.5;
+        }
+
+
+        .loading {
+
+            opacity: 0.6;
+        }
+
+
+        .error-message {
+
+            background:
+                rgba(255, 59, 48, 0.10);
+
+            border:
+                1px solid
+                rgba(255, 59, 48, 0.25);
+
+            color: #ffaaa5;
+
+            padding: 12px;
+
+            border-radius: 7px;
+
+            font-size: 12px;
+
+            margin-bottom: 20px;
+
+            display: none;
         }
 
 
@@ -830,6 +1032,13 @@
             .dashboard-grid {
 
                 grid-template-columns: 1fr;
+            }
+
+
+            .info-grid {
+
+                grid-template-columns:
+                    repeat(3, minmax(0, 1fr));
             }
 
         }
@@ -892,6 +1101,12 @@
                 width: 280px;
             }
 
+
+            .info-grid {
+
+                grid-template-columns: 1fr;
+            }
+
         }
 
     </style>
@@ -904,7 +1119,7 @@
 
     <!-- =====================================================
          SIDEBAR OVERLAY
-    ===================================================== -->
+    ====================================================== -->
 
     <div
         class="sidebar-overlay"
@@ -915,13 +1130,12 @@
 
     <!-- =====================================================
          SIDEBAR
-    ===================================================== -->
+    ====================================================== -->
 
     <aside
         class="sidebar"
         id="sidebar"
     >
-
 
         <button
             class="close-sidebar"
@@ -946,8 +1160,6 @@
         </div>
 
 
-        <!-- MAIN NAVIGATION -->
-
         <nav class="nav-section">
 
             <div class="nav-label">
@@ -961,13 +1173,9 @@
                 onclick="closeSidebar()"
             >
 
-                <span class="nav-icon">
-                    ⌂
-                </span>
+                <span class="nav-icon">⌂</span>
 
-                <span>
-                    Dashboard
-                </span>
+                <span>Dashboard</span>
 
             </a>
 
@@ -978,13 +1186,9 @@
                 onclick="closeSidebar()"
             >
 
-                <span class="nav-icon">
-                    ▣
-                </span>
+                <span class="nav-icon">▣</span>
 
-                <span>
-                    Equipment Register
-                </span>
+                <span>Equipment Register</span>
 
             </a>
 
@@ -995,13 +1199,9 @@
                 onclick="closeSidebar()"
             >
 
-                <span class="nav-icon">
-                    ▤
-                </span>
+                <span class="nav-icon">▤</span>
 
-                <span>
-                    Equipment Types
-                </span>
+                <span>Equipment Types</span>
 
             </a>
 
@@ -1012,20 +1212,14 @@
                 onclick="closeSidebar()"
             >
 
-                <span class="nav-icon">
-                    ⌖
-                </span>
+                <span class="nav-icon">⌖</span>
 
-                <span>
-                    Locations
-                </span>
+                <span>Locations</span>
 
             </a>
 
         </nav>
 
-
-        <!-- SAFETY MANAGEMENT -->
 
         <nav class="nav-section">
 
@@ -1040,13 +1234,9 @@
                 onclick="closeSidebar()"
             >
 
-                <span class="nav-icon">
-                    ✓
-                </span>
+                <span class="nav-icon">✓</span>
 
-                <span>
-                    Inspections
-                </span>
+                <span>Inspections</span>
 
             </a>
 
@@ -1057,13 +1247,9 @@
                 onclick="closeSidebar()"
             >
 
-                <span class="nav-icon">
-                    !
-                </span>
+                <span class="nav-icon">!</span>
 
-                <span>
-                    Deviations
-                </span>
+                <span>Deviations</span>
 
             </a>
 
@@ -1074,13 +1260,9 @@
                 onclick="closeSidebar()"
             >
 
-                <span class="nav-icon">
-                    ↻
-                </span>
+                <span class="nav-icon">↻</span>
 
-                <span>
-                    Corrective Actions
-                </span>
+                <span>Corrective Actions</span>
 
             </a>
 
@@ -1091,20 +1273,14 @@
                 onclick="closeSidebar()"
             >
 
-                <span class="nav-icon">
-                    ▥
-                </span>
+                <span class="nav-icon">▥</span>
 
-                <span>
-                    Inspection Reports
-                </span>
+                <span>Inspection Reports</span>
 
             </a>
 
         </nav>
 
-
-        <!-- ADMINISTRATION -->
 
         <nav class="nav-section">
 
@@ -1119,13 +1295,9 @@
                 onclick="closeSidebar()"
             >
 
-                <span class="nav-icon">
-                    ♙
-                </span>
+                <span class="nav-icon">♙</span>
 
-                <span>
-                    Users
-                </span>
+                <span>Users</span>
 
             </a>
 
@@ -1136,13 +1308,9 @@
                 onclick="closeSidebar()"
             >
 
-                <span class="nav-icon">
-                    ⚙
-                </span>
+                <span class="nav-icon">⚙</span>
 
-                <span>
-                    Settings
-                </span>
+                <span>Settings</span>
 
             </a>
 
@@ -1159,19 +1327,16 @@
 
         </div>
 
-
     </aside>
 
 
     <!-- =====================================================
          TOPBAR
-    ===================================================== -->
+    ====================================================== -->
 
     <header class="topbar">
 
-
         <div class="topbar-left">
-
 
             <button
                 class="menu-btn"
@@ -1189,35 +1354,36 @@
                 FireSafe Track
             </div>
 
-
         </div>
 
 
         <div class="topbar-right">
 
-
-            <div class="user-display">
-                Administrator
+            <div
+                class="user-display"
+                id="userDisplay"
+            >
+                Loading...
             </div>
 
 
-            <div class="role-badge">
-                ADMIN
+            <div
+                class="role-badge"
+                id="roleBadge"
+            >
+                ...
             </div>
-
 
         </div>
-
 
     </header>
 
 
     <!-- =====================================================
-         MAIN CONTENT
-    ===================================================== -->
+         MAIN
+    ====================================================== -->
 
     <main class="main">
-
 
         <div class="content">
 
@@ -1225,7 +1391,6 @@
             <!-- PAGE HEADER -->
 
             <div class="page-header">
-
 
                 <div class="page-title">
 
@@ -1242,14 +1407,26 @@
 
                 <div class="system-status">
 
-                    <span class="status-dot"></span>
+                    <span
+                        class="status-dot"
+                        id="systemStatusDot"
+                    ></span>
 
-                    System ready for setup
+                    <span id="systemStatusText">
+                        Connecting to database...
+                    </span>
 
                 </div>
 
-
             </div>
+
+
+            <!-- DATABASE ERROR -->
+
+            <div
+                class="error-message"
+                id="databaseError"
+            ></div>
 
 
             <!-- =================================================
@@ -1265,8 +1442,11 @@
                         Total Equipment
                     </div>
 
-                    <div class="stat-value">
-                        0
+                    <div
+                        class="stat-value"
+                        id="totalEquipment"
+                    >
+                        —
                     </div>
 
                     <div class="stat-note">
@@ -1282,8 +1462,11 @@
                         Inspections
                     </div>
 
-                    <div class="stat-value">
-                        0
+                    <div
+                        class="stat-value"
+                        id="totalInspections"
+                    >
+                        —
                     </div>
 
                     <div class="stat-note">
@@ -1299,8 +1482,11 @@
                         Open Deviations
                     </div>
 
-                    <div class="stat-value">
-                        0
+                    <div
+                        class="stat-value"
+                        id="openDeviations"
+                    >
+                        —
                     </div>
 
                     <div class="stat-note">
@@ -1316,22 +1502,24 @@
                         Compliance
                     </div>
 
-                    <div class="stat-value">
-                        0%
+                    <div
+                        class="stat-value"
+                        id="complianceValue"
+                    >
+                        —
                     </div>
 
                     <div class="stat-note">
-                        Current compliance rate
+                        Based on inspection results
                     </div>
 
                 </div>
-
 
             </section>
 
 
             <!-- =================================================
-                 DASHBOARD CONTENT
+                 DASHBOARD GRID
             ================================================== -->
 
             <section class="dashboard-grid">
@@ -1341,43 +1529,52 @@
 
                 <div class="card">
 
-
                     <div class="card-header">
 
                         <div class="card-title">
                             Recent Inspections
                         </div>
 
+                        <a
+                            href="inspections.html"
+                            style="
+                                color:#ffcc00;
+                                font-size:11px;
+                                text-decoration:none;
+                            "
+                        >
+                            View all
+                        </a>
+
                     </div>
 
 
                     <div class="card-body">
 
+                        <div
+                            class="table-wrap"
+                            id="recentInspectionsContainer"
+                        >
 
-                        <div class="empty-state">
+                            <div class="empty-state">
 
+                                <div class="empty-icon">
+                                    ✓
+                                </div>
 
-                            <div class="empty-icon">
-                                ✓
+                                <h3>
+                                    Loading inspections...
+                                </h3>
+
+                                <p>
+                                    Connecting to FireSafe Track database.
+                                </p>
+
                             </div>
-
-
-                            <h3>
-                                No inspections yet
-                            </h3>
-
-
-                            <p>
-                                Inspection records will appear here
-                                once the inspection module is connected.
-                            </p>
-
 
                         </div>
 
-
                     </div>
-
 
                 </div>
 
@@ -1385,7 +1582,6 @@
                 <!-- QUICK ACTIONS -->
 
                 <div class="card">
-
 
                     <div class="card-header">
 
@@ -1465,7 +1661,6 @@
 
                             </a>
 
-
                         </div>
 
 
@@ -1473,15 +1668,17 @@
 
                         <div class="compliance-box">
 
-
                             <div class="compliance-title">
 
                                 <span>
                                     Compliance
                                 </span>
 
-                                <span class="compliance-value">
-                                    0%
+                                <span
+                                    class="compliance-value"
+                                    id="complianceSideValue"
+                                >
+                                    —
                                 </span>
 
                             </div>
@@ -1489,19 +1686,73 @@
 
                             <div class="progress">
 
-                                <div class="progress-bar"></div>
+                                <div
+                                    class="progress-bar"
+                                    id="complianceProgress"
+                                ></div>
 
                             </div>
-
 
                         </div>
 
 
+                        <!-- ADDITIONAL INFORMATION -->
+
+                        <div class="info-grid">
+
+
+                            <div class="info-item">
+
+                                <div class="info-label">
+                                    Due / Overdue
+                                </div>
+
+                                <div
+                                    class="info-value"
+                                    id="dueEquipment"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="info-item">
+
+                                <div class="info-label">
+                                    Passed
+                                </div>
+
+                                <div
+                                    class="info-value"
+                                    id="passedInspections"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="info-item">
+
+                                <div class="info-label">
+                                    Failed
+                                </div>
+
+                                <div
+                                    class="info-value"
+                                    id="failedInspections"
+                                >
+                                    —
+                                </div>
+
+                            </div>
+
+                        </div>
+
                     </div>
 
-
                 </div>
-
 
             </section>
 
@@ -1517,104 +1768,563 @@
 
         </div>
 
-
     </main>
 
 
     <!-- =====================================================
          JAVASCRIPT
-    ===================================================== -->
+    ====================================================== -->
 
     <script>
 
+    /* =====================================================
+       SUPABASE CONFIGURATION
+    ====================================================== */
 
-        const sidebar =
-            document.getElementById("sidebar");
+    const SUPABASE_URL =
+        "https://syiemjazbawflavxibzv.supabase.co";
+
+    const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5aWVtamF6YmF3ZmxhdnhpYnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Njg5MzEsImV4cCI6MjEwNDU0NDkzMX0.RJ6siFDLg3LAsP2ZPDgdFVGAFasg05hK4GikdIO68PM";
+
+    const {
+        createClient
+    } = window.supabase;
+
+    const supabaseClient =
+        createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+        );
 
 
-        const sidebarOverlay =
-            document.getElementById("sidebarOverlay");
+    /* =====================================================
+       SIDEBAR
+    ====================================================== */
+
+    const sidebar =
+        document.getElementById("sidebar");
+
+    const sidebarOverlay =
+        document.getElementById("sidebarOverlay");
+
+    const menuButton =
+        document.getElementById("menuButton");
 
 
-        const menuButton =
-            document.getElementById("menuButton");
+    function openSidebar() {
+
+        sidebar.classList.add("active");
+
+        sidebarOverlay.classList.add("active");
+
+        menuButton.setAttribute(
+            "aria-expanded",
+            "true"
+        );
+
+        document.body.style.overflow = "hidden";
+    }
 
 
-        /* =====================================================
-           OPEN SIDEBAR
-        ===================================================== */
+    function closeSidebar() {
 
-        function openSidebar() {
+        sidebar.classList.remove("active");
 
-            sidebar.classList.add("active");
+        sidebarOverlay.classList.remove("active");
 
-            sidebarOverlay.classList.add("active");
+        menuButton.setAttribute(
+            "aria-expanded",
+            "false"
+        );
 
-            menuButton.setAttribute(
-                "aria-expanded",
-                "true"
-            );
+        document.body.style.overflow = "";
+    }
 
-            document.body.style.overflow = "hidden";
+
+    function toggleSidebar() {
+
+        if (
+            sidebar.classList.contains("active")
+        ) {
+
+            closeSidebar();
+
+        } else {
+
+            openSidebar();
 
         }
 
-
-        /* =====================================================
-           CLOSE SIDEBAR
-        ===================================================== */
-
-        function closeSidebar() {
-
-            sidebar.classList.remove("active");
-
-            sidebarOverlay.classList.remove("active");
-
-            menuButton.setAttribute(
-                "aria-expanded",
-                "false"
-            );
-
-            document.body.style.overflow = "";
-
-        }
+    }
 
 
-        /* =====================================================
-           TOGGLE SIDEBAR
-        ===================================================== */
-
-        function toggleSidebar() {
+    document.addEventListener(
+        "keydown",
+        function(event) {
 
             if (
+                event.key === "Escape" &&
                 sidebar.classList.contains("active")
             ) {
 
                 closeSidebar();
 
-            } else {
+            }
 
-                openSidebar();
+        }
+    );
+
+
+    sidebar.addEventListener(
+        "click",
+        function(event) {
+
+            event.stopPropagation();
+
+        }
+    );
+
+
+    /* =====================================================
+       ELEMENT REFERENCES
+    ====================================================== */
+
+    const totalEquipmentEl =
+        document.getElementById(
+            "totalEquipment"
+        );
+
+    const totalInspectionsEl =
+        document.getElementById(
+            "totalInspections"
+        );
+
+    const openDeviationsEl =
+        document.getElementById(
+            "openDeviations"
+        );
+
+    const complianceValueEl =
+        document.getElementById(
+            "complianceValue"
+        );
+
+    const complianceSideValueEl =
+        document.getElementById(
+            "complianceSideValue"
+        );
+
+    const complianceProgressEl =
+        document.getElementById(
+            "complianceProgress"
+        );
+
+    const dueEquipmentEl =
+        document.getElementById(
+            "dueEquipment"
+        );
+
+    const passedInspectionsEl =
+        document.getElementById(
+            "passedInspections"
+        );
+
+    const failedInspectionsEl =
+        document.getElementById(
+            "failedInspections"
+        );
+
+    const recentInspectionsContainer =
+        document.getElementById(
+            "recentInspectionsContainer"
+        );
+
+    const databaseErrorEl =
+        document.getElementById(
+            "databaseError"
+        );
+
+    const systemStatusDot =
+        document.getElementById(
+            "systemStatusDot"
+        );
+
+    const systemStatusText =
+        document.getElementById(
+            "systemStatusText"
+        );
+
+    const userDisplay =
+        document.getElementById(
+            "userDisplay"
+        );
+
+    const roleBadge =
+        document.getElementById(
+            "roleBadge"
+        );
+
+
+    /* =====================================================
+       DATABASE ERROR HANDLING
+    ====================================================== */
+
+    function showDatabaseError(message) {
+
+        databaseErrorEl.textContent =
+            message;
+
+        databaseErrorEl.style.display =
+            "block";
+
+        systemStatusDot.classList.remove(
+            "online"
+        );
+
+        systemStatusDot.classList.add(
+            "error"
+        );
+
+        systemStatusText.textContent =
+            "Database connection error";
+    }
+
+
+    function clearDatabaseError() {
+
+        databaseErrorEl.style.display =
+            "none";
+
+    }
+
+
+    /* =====================================================
+       GENERAL HELPERS
+    ====================================================== */
+
+    function formatDate(dateValue) {
+
+        if (!dateValue) {
+
+            return "—";
+
+        }
+
+        const date =
+            new Date(dateValue);
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
+
+            return dateValue;
+
+        }
+
+        return date.toLocaleDateString(
+            undefined,
+            {
+                year: "numeric",
+                month: "short",
+                day: "numeric"
+            }
+        );
+
+    }
+
+
+    function escapeHtml(value) {
+
+        if (
+            value === null ||
+            value === undefined
+        ) {
+
+            return "";
+
+        }
+
+        return String(value)
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+            .replace(
+                /</g,
+                "&lt;"
+            )
+            .replace(
+                />/g,
+                "&gt;"
+            )
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+            .replace(
+                /'/g,
+                "&#039;"
+            );
+
+    }
+
+
+    function normalizeStatus(status) {
+
+        return String(
+            status || ""
+        )
+        .trim()
+        .toUpperCase();
+
+    }
+
+
+    function isPassed(status) {
+
+        return [
+            "PASS",
+            "PASSED",
+            "PASSING"
+        ].includes(
+            normalizeStatus(status)
+        );
+
+    }
+
+
+    function isFailed(status) {
+
+        return [
+            "FAIL",
+            "FAILED",
+            "FAILURE"
+        ].includes(
+            normalizeStatus(status)
+        );
+
+    }
+
+
+    /* =====================================================
+       LOAD CURRENT USER
+    ====================================================== */
+
+    async function loadCurrentUser() {
+
+        try {
+
+            const {
+                data,
+                error
+            } =
+                await supabaseClient
+                    .auth
+                    .getUser();
+
+
+            if (error) {
+
+                console.warn(
+                    "Auth user lookup:",
+                    error
+                );
+
+                userDisplay.textContent =
+                    "Administrator";
+
+                roleBadge.textContent =
+                    "ADMIN";
+
+                return;
 
             }
+
+
+            const user =
+                data?.user;
+
+
+            if (!user) {
+
+                userDisplay.textContent =
+                    "Administrator";
+
+                roleBadge.textContent =
+                    "ADMIN";
+
+                return;
+
+            }
+
+
+            userDisplay.textContent =
+                user.email ||
+                "User";
+
+
+            const {
+                data: profile,
+                error: profileError
+            } =
+                await supabaseClient
+                    .from("profiles")
+                    .select("role")
+                    .eq(
+                        "id",
+                        user.id
+                    )
+                    .maybeSingle();
+
+
+            if (
+                !profileError &&
+                profile
+            ) {
+
+                roleBadge.textContent =
+                    String(
+                        profile.role ||
+                        "USER"
+                    ).toUpperCase();
+
+            } else {
+
+                roleBadge.textContent =
+                    "USER";
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "Could not load current user:",
+                error
+            );
+
+            userDisplay.textContent =
+                "Administrator";
+
+            roleBadge.textContent =
+                "ADMIN";
+
+        }
+
+    }
+
+
+    /* =====================================================
+       LOAD EQUIPMENT
+    ====================================================== */
+
+    async function loadEquipment() {
+
+        const {
+            data,
+            error,
+            count
+        } =
+            await supabaseClient
+                .from("equipment")
+                .select(
+                    "*",
+                    {
+                        count: "exact"
+                    }
+                );
+
+
+        if (error) {
+
+            throw new Error(
+                "Equipment query failed: " +
+                error.message
+            );
 
         }
 
 
-        /* =====================================================
-           ESC KEY
-        ===================================================== */
+        const equipment =
+            data || [];
 
-        document.addEventListener(
-            "keydown",
-            function(event) {
+
+        const total =
+            count !== null &&
+            count !== undefined
+                ? count
+                : equipment.length;
+
+
+        totalEquipmentEl.textContent =
+            total;
+
+
+        /* -------------------------------------------------
+           DUE / OVERDUE EQUIPMENT
+
+           Correct database field:
+           next_inspection_date
+        -------------------------------------------------- */
+
+        const today =
+            new Date();
+
+        today.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+
+        let dueCount = 0;
+
+
+        equipment.forEach(
+            function(item) {
 
                 if (
-                    event.key === "Escape" &&
-                    sidebar.classList.contains("active")
+                    !item.next_inspection_date
                 ) {
 
-                    closeSidebar();
+                    return;
+
+                }
+
+
+                const dueDate =
+                    new Date(
+                        item.next_inspection_date
+                    );
+
+
+                if (
+                    Number.isNaN(
+                        dueDate.getTime()
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                dueDate.setHours(
+                    0,
+                    0,
+                    0,
+                    0
+                );
+
+
+                if (
+                    dueDate <= today
+                ) {
+
+                    dueCount++;
 
                 }
 
@@ -1622,21 +2332,754 @@
         );
 
 
-        /* =====================================================
-           PREVENT SIDEBAR CLICK FROM CLOSING IT
-        ===================================================== */
+        dueEquipmentEl.textContent =
+            dueCount;
 
-        sidebar.addEventListener(
-            "click",
-            function(event) {
 
-                event.stopPropagation();
+        return equipment;
+
+    }
+
+
+    /* =====================================================
+       LOAD INSPECTIONS
+    ====================================================== */
+
+    async function loadInspections() {
+
+        const {
+            data,
+            error,
+            count
+        } =
+            await supabaseClient
+                .from("inspections")
+                .select(
+                    `
+                        id,
+                        equipment_id,
+                        inspection_date,
+                        inspector_name,
+                        inspection_type,
+                        overall_status,
+                        notes,
+                        created_at
+                    `,
+                    {
+                        count: "exact"
+                    }
+                )
+                .order(
+                    "inspection_date",
+                    {
+                        ascending: false
+                    }
+                );
+
+
+        if (error) {
+
+            throw new Error(
+                "Inspections query failed: " +
+                error.message
+            );
+
+        }
+
+
+        const inspections =
+            data || [];
+
+
+        const total =
+            count !== null &&
+            count !== undefined
+                ? count
+                : inspections.length;
+
+
+        totalInspectionsEl.textContent =
+            total;
+
+
+        /* -------------------------------------------------
+           PASSED / FAILED INSPECTIONS
+
+           Correct database field:
+           overall_status
+        -------------------------------------------------- */
+
+        let passed = 0;
+
+        let failed = 0;
+
+
+        inspections.forEach(
+            function(item) {
+
+                if (
+                    isPassed(
+                        item.overall_status
+                    )
+                ) {
+
+                    passed++;
+
+                }
+
+
+                if (
+                    isFailed(
+                        item.overall_status
+                    )
+                ) {
+
+                    failed++;
+
+                }
 
             }
         );
 
 
-    </script>
+        passedInspectionsEl.textContent =
+            passed;
+
+
+        failedInspectionsEl.textContent =
+            failed;
+
+
+        /* -------------------------------------------------
+           RECENT INSPECTIONS
+        -------------------------------------------------- */
+
+        renderRecentInspections(
+            inspections.slice(
+                0,
+                8
+            )
+        );
+
+
+        return inspections;
+
+    }
+
+
+    /* =====================================================
+       LOAD INSPECTION ANSWERS
+       
+       THIS IS THE IMPORTANT PART FOR COMPLIANCE
+    ====================================================== */
+
+    async function loadInspectionAnswers() {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("inspection_answers")
+                .select(
+                    `
+                        id,
+                        inspection_id,
+                        item_number,
+                        inspection_requirement,
+                        answer,
+                        remarks
+                    `
+                );
+
+
+        if (error) {
+
+            throw new Error(
+                "Inspection answers query failed: " +
+                error.message
+            );
+
+        }
+
+
+        const answers =
+            data || [];
+
+
+        let passCount = 0;
+
+        let failCount = 0;
+
+        let naCount = 0;
+
+
+        answers.forEach(
+            function(item) {
+
+                const answer =
+                    normalizeStatus(
+                        item.answer
+                    );
+
+
+                if (
+                    answer === "PASS"
+                ) {
+
+                    passCount++;
+
+                }
+                else if (
+                    answer === "FAIL"
+                ) {
+
+                    failCount++;
+
+                }
+                else if (
+                    answer === "N/A" ||
+                    answer === "NA"
+                ) {
+
+                    naCount++;
+
+                }
+
+            }
+        );
+
+
+        /* -------------------------------------------------
+           CORRECT COMPLIANCE FORMULA
+
+           PASS
+           ------------------------------
+           PASS + FAIL
+
+           N/A is excluded.
+        -------------------------------------------------- */
+
+        const evaluated =
+            passCount +
+            failCount;
+
+
+        let compliance = 0;
+
+
+        if (
+            evaluated > 0
+        ) {
+
+            compliance =
+                Math.round(
+                    (
+                        passCount /
+                        evaluated
+                    ) * 100
+                );
+
+        }
+
+
+        console.log(
+            "FireSafe Track Compliance:",
+            {
+                passCount,
+                failCount,
+                naCount,
+                evaluated,
+                compliance
+            }
+        );
+
+
+        updateCompliance(
+            compliance
+        );
+
+
+        return {
+            answers,
+            passCount,
+            failCount,
+            naCount,
+            evaluated,
+            compliance
+        };
+
+    }
+
+
+    /* =====================================================
+       LOAD DEVIATIONS
+    ====================================================== */
+
+    async function loadDeviations() {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("deviations")
+                .select(
+                    "id,status,created_at"
+                );
+
+
+        if (error) {
+
+            throw new Error(
+                "Deviations query failed: " +
+                error.message
+            );
+
+        }
+
+
+        const deviations =
+            data || [];
+
+
+        let openCount = 0;
+
+
+        deviations.forEach(
+            function(item) {
+
+                const status =
+                    normalizeStatus(
+                        item.status
+                    );
+
+
+                if (
+                    status === "OPEN"
+                ) {
+
+                    openCount++;
+
+                }
+
+            }
+        );
+
+
+        openDeviationsEl.textContent =
+            openCount;
+
+
+        return deviations;
+
+    }
+
+
+    /* =====================================================
+       UPDATE COMPLIANCE DISPLAY
+    ====================================================== */
+
+    function updateCompliance(
+        percentage
+    ) {
+
+        const value =
+            Math.max(
+                0,
+                Math.min(
+                    100,
+                    Number(
+                        percentage
+                    ) || 0
+                )
+            );
+
+
+        complianceValueEl.textContent =
+            value + "%";
+
+
+        complianceSideValueEl.textContent =
+            value + "%";
+
+
+        complianceProgressEl.style.width =
+            value + "%";
+
+    }
+
+
+    /* =====================================================
+       LOAD EQUIPMENT NAMES FOR RECENT INSPECTIONS
+    ====================================================== */
+
+    async function loadEquipmentMap() {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("equipment")
+                .select(
+                    `
+                        id,
+                        name,
+                        equipment_code,
+                        area,
+                        location
+                    `
+                );
+
+
+        if (error) {
+
+            throw new Error(
+                "Equipment lookup failed: " +
+                error.message
+            );
+
+        }
+
+
+        const map = {};
+
+
+        (data || []).forEach(
+            function(item) {
+
+                map[item.id] =
+                    item;
+
+            }
+        );
+
+
+        return map;
+
+    }
+
+
+    /* =====================================================
+       RECENT INSPECTIONS
+    ====================================================== */
+
+    async function renderRecentInspections(
+        inspections
+    ) {
+
+        if (
+            !inspections ||
+            inspections.length === 0
+        ) {
+
+            recentInspectionsContainer.innerHTML = `
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">
+                        ✓
+                    </div>
+
+                    <h3>
+                        No inspections yet
+                    </h3>
+
+                    <p>
+                        Inspection records will appear here
+                        once inspections are completed.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        let equipmentMap = {};
+
+
+        try {
+
+            equipmentMap =
+                await loadEquipmentMap();
+
+        } catch (error) {
+
+            console.warn(
+                "Could not load equipment information:",
+                error
+            );
+
+        }
+
+
+        let rows = "";
+
+
+        inspections.forEach(
+            function(item) {
+
+                const equipment =
+                    equipmentMap[
+                        item.equipment_id
+                    ] || {};
+
+
+                const status =
+                    item.overall_status ||
+                    "Pending";
+
+
+                let statusClass =
+                    "status-other";
+
+
+                if (
+                    isPassed(status)
+                ) {
+
+                    statusClass =
+                        "status-pass";
+
+                }
+
+
+                if (
+                    isFailed(status)
+                ) {
+
+                    statusClass =
+                        "status-fail";
+
+                }
+
+
+                const equipmentName =
+                    equipment.name ||
+                    equipment.equipment_code ||
+                    item.equipment_id ||
+                    "—";
+
+
+                const location =
+                    equipment.location ||
+                    equipment.area ||
+                    "—";
+
+
+                const inspector =
+                    item.inspector_name ||
+                    "—";
+
+
+                rows += `
+
+                    <tr>
+
+                        <td>
+                            ${escapeHtml(
+                                equipmentName
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                location
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                inspector
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                formatDate(
+                                    item.inspection_date
+                                )
+                            )}
+                        </td>
+
+                        <td>
+
+                            <span
+                                class="status-badge ${statusClass}"
+                            >
+                                ${escapeHtml(
+                                    status
+                                )}
+                            </span>
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
+        );
+
+
+        recentInspectionsContainer.innerHTML = `
+
+            <div class="table-wrap">
+
+                <table class="inspection-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Equipment
+                            </th>
+
+                            <th>
+                                Location
+                            </th>
+
+                            <th>
+                                Inspector
+                            </th>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        ${rows}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        `;
+
+    }
+
+
+    /* =====================================================
+       LOAD DASHBOARD
+    ====================================================== */
+
+    async function loadDashboard() {
+
+        clearDatabaseError();
+
+
+        systemStatusText.textContent =
+            "Connecting to database...";
+
+
+        systemStatusDot.classList.remove(
+            "online",
+            "error"
+        );
+
+
+        try {
+
+            /* ---------------------------------------------
+               Run all database operations
+               --------------------------------------------- */
+
+            await Promise.all([
+
+                loadEquipment(),
+
+                loadInspections(),
+
+                loadInspectionAnswers(),
+
+                loadDeviations(),
+
+                loadCurrentUser()
+
+            ]);
+
+
+            /* ---------------------------------------------
+               DATABASE CONNECTED
+               --------------------------------------------- */
+
+            systemStatusDot.classList.add(
+                "online"
+            );
+
+
+            systemStatusText.textContent =
+                "Database connected";
+
+
+            console.log(
+                "FireSafe Track dashboard connected successfully."
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Dashboard loading error:",
+                error
+            );
+
+
+            showDatabaseError(
+                error.message ||
+                "Unable to load dashboard data."
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       AUTO REFRESH
+    ====================================================== */
+
+    setInterval(
+        function() {
+
+            loadDashboard();
+
+        },
+        60000
+    );
+
+
+    /* =====================================================
+       INITIAL LOAD
+    ====================================================== */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function() {
+
+            loadDashboard();
+
+        }
+    );
+
+</script>
 
 
 </body>
