@@ -1634,6 +1634,21 @@ tbody tr:hover{
 
             <!-- CHECKLIST -->
 
+
+            <div
+    id="readingSection"
+    class="form-section"
+    style="display:none;"
+>
+    <h3 class="section-title">
+        Recorded Readings
+    </h3>
+
+    <div
+        id="readingFields"
+        class="form-grid"
+    ></div>
+</div>
             <div class="checklist-wrapper">
 
                 <h3
@@ -1818,130 +1833,109 @@ let checklistAnswers = [];
 
 const INSPECTION_FORMS = {
 
-    "Fire extinguisher": [
+    "Fire extinguisher": {
 
-        "Equipment correctly identified and labelled",
-        "Correct designated location",
-        "Access to equipment is clear",
-        "Equipment securely mounted or positioned",
-        "Cylinder/body condition satisfactory",
-        "Safety pin fitted correctly",
-        "Tamper seal intact",
-        "Pressure gauge within acceptable range",
-        "Hose/nozzle condition satisfactory",
-        "Handle and operating lever condition satisfactory",
-        "Operating instructions and label legible",
-        "Inspection/service tag present and current",
-        "Equipment suitable for identified fire risk",
-        "No evidence of discharge, damage or tampering"
+        frequency: "Monthly",
 
-    ],
+        readings: [
+            "Full Mass Of Fire Extinguisher (kg)"
+        ],
 
+        checklist: [
+            "Wall/Floor Demarcated",
+            "Area Accessible & Paintwork Not Faded",
+            "Shell Not Corroded And Not Dented",
+            "Extinguisher Mounted And Bracket Intact",
+            "Gauge In Green Zone",
+            "Hose In Good Condition",
+            "Pin And Seal In Place",
+            "Adequate Symbolic Signs Visible",
+            "Instruction Label Not Faded"
+        ]
 
-    "Onboard fire suppression": [
+    },
 
-        "Equipment identification/tag is present",
-        "Components are correctly installed and secured",
-        "Agent cylinders are securely mounted",
-        "Cylinder condition is satisfactory",
-        "Cylinder pressure is acceptable",
-        "Discharge piping is secure and undamaged",
-        "Discharge nozzles are correctly positioned",
-        "Detection lines/sensors are in place and satisfactory",
-        "Manual release mechanism is accessible",
-        "Automatic release system is operational",
-        "Alarm/indication system is satisfactory",
-        "Isolation valves are in the correct operating position",
-        "Safety signage and instructions are available",
-        "Service and maintenance information is current",
-        "No leakage, damage, tampering or impairment observed"
+    "Fire hose reel": {
 
-    ],
+        frequency: "Monthly",
 
+        readings: [],
 
-    "Fire hydrant": [
+        checklist: [
+            "Hose And Reel In Good Condition",
+            "Valve And Nozzle In Good Condition",
+            "Equipment Not Corroded",
+            "Reel Operates Freely",
+            "Water In System",
+            "Adequate Symbolic Signs Visible"
+        ]
 
-        "Hydrant identification is visible",
-        "Hydrant is accessible",
-        "Hydrant body is in satisfactory condition",
-        "Outlet/coupling is in satisfactory condition",
-        "Outlet cap is fitted and serviceable",
-        "Valve operating mechanism is satisfactory",
-        "Spindle condition is satisfactory",
-        "Hydrant enclosure/box is satisfactory where applicable",
-        "Drainage around hydrant is satisfactory",
-        "Associated hose is available where applicable",
-        "Hydrant is adequately protected from damage",
-        "Hydrant signage is visible",
-        "No leakage observed",
-        "Hydrant is available for emergency use"
+    },
 
-    ],
+    "Fire hydrant": {
 
+        frequency: "Monthly",
 
-    "Fire hose reel": [
+        readings: [
+            "Pressure (+/-10 Bar)"
+        ],
 
-        "Equipment identification is visible",
-        "Access to hose reel is clear",
-        "Cabinet/enclosure is in satisfactory condition",
-        "Hose is correctly wound and stored",
-        "Hose condition is satisfactory",
-        "Hose connection is secure",
-        "Nozzle condition is satisfactory",
-        "Nozzle control operates correctly",
-        "Reel rotates freely",
-        "Isolation valve is accessible and satisfactory",
-        "Pipework and connections are secure",
-        "Cabinet/signage is clearly identified",
-        "Equipment is protected from damage",
-        "Hose reel is available for emergency use"
+        checklist: [
+            "Wall/Floor Demarcated",
+            "Area Accessible",
+            "Equipment Not Corroded",
+            "Easy To Open And Close",
+            "Water In System",
+            "Adequate Symbolic Signs Visible"
+        ]
 
-    ],
+    },
 
+    "Fire Alarm": {
 
-    "Installation control valve": [
+        frequency: "Monthly",
 
-        "Valve identification/label is visible",
-        "Valve is accessible",
-        "Access to valve is clear",
-        "Valve body is in satisfactory condition",
-        "Valve is in the normal operating position",
-        "Supervisory arrangement is satisfactory where applicable",
-        "Handwheel/operating mechanism is satisfactory",
-        "Associated pipework and fittings are satisfactory",
-        "No leakage observed",
-        "Pressure indication is satisfactory where applicable",
-        "Drain/test arrangement is satisfactory",
-        "Required signage is present",
-        "Area around valve is clean and accessible",
-        "No tampering or unnecessary isolation observed",
-        "Valve is available for emergency operation"
+        readings: [
+            "End Of Line Resistance",
+            "Full Mass Suppression Cylinders",
+            "Last Weighed Date",
+            "Main Fire Panel Voltage",
+            "GCU / ECU Voltage",
+            "Release / Discharge Voltage",
+            "Battery Voltage",
+            "Portable Fire Extinguisher Mass"
+        ],
 
-    ],
+        checklist: [
+            "Inspection Date Valid",
+            "Fire Panel ON",
+            "GCU / ECU ON",
+            "Line Termination Unit ON",
+            "Detector Response To Panel",
+            "Manual Call Point Response",
+            "Sirens Bells And Beacon Lights Functional",
+            "Monitoring System Response",
+            "Air-Con Shutdown Relay Functional",
+            "Line Interface Unit Functional",
+            "Display Screen Fault Free",
+            "Buzzer Alarm Activated",
+            "Linear Detection Wire Intact",
+            "Detonator Removed Before Servicing",
+            "Panel Reset Before Reconnecting Detonator",
+            "Nozzles Properly Positioned",
+            "Pipes Properly Secured",
+            "Detectors Properly Secured",
+            "Pipes Not Damaged",
+            "Brackets Properly Secured",
+            "Shutdown Relay Functional",
+            "Remote Monitoring Operational",
+            "Manual/Electric Actuators Functional",
+            "Pneumatic Actuators Functional"
+        ]
 
-
-    "Fire Alarm": [
-
-        "Fire alarm control panel is correctly identified",
-        "Panel is accessible",
-        "Panel indicates normal operation with no unexplained faults",
-        "Primary power supply is available",
-        "Standby battery condition is satisfactory",
-        "Zones/areas are correctly identified",
-        "Detection devices are present and unobstructed",
-        "Manual call points are accessible",
-        "Manual call points are in satisfactory condition",
-        "Sounders/visual indicators are satisfactory",
-        "Alarm indication labels are clear",
-        "No unexplained fault indications",
-        "Panel controls operate correctly",
-        "Logbook/service records are available and current",
-        "No unauthorised impairment or isolation observed"
-
-    ]
+    }
 
 };
-
 
 /* =====================================================
    SIDEBAR
@@ -2540,7 +2534,7 @@ function startInspection(
         equipment;
 
     currentChecklist =
-        checklist;
+    checklist.checklist;
 
 
     /*
@@ -2675,6 +2669,9 @@ function openInspectionForm(
         " Inspection Checklist";
 
 
+
+     renderReadingFields();
+        
     renderChecklist();
 
     updateChecklistProgress();
@@ -2702,6 +2699,62 @@ function openInspectionForm(
 /* =====================================================
    RENDER CHECKLIST
 ===================================================== */
+function renderReadingFields(){
+
+    const section =
+        document.getElementById(
+            "readingSection"
+        );
+
+    const container =
+        document.getElementById(
+            "readingFields"
+        );
+
+    const form =
+        INSPECTION_FORMS[
+            currentEquipment.equipment_type
+        ];
+
+    if(
+        !form ||
+        !form.readings ||
+        form.readings.length === 0
+    ){
+
+        section.style.display =
+            "none";
+
+        container.innerHTML = "";
+
+        return;
+
+    }
+
+    section.style.display =
+        "block";
+
+    container.innerHTML =
+        form.readings.map(
+            (reading,index) => `
+                <div class="form-group">
+
+                    <label class="form-label">
+                        ${reading}
+                    </label>
+
+                    <input
+                        id="reading-${index}"
+                        class="input"
+                        type="text"
+                    >
+
+                </div>
+            `
+        ).join("");
+
+}
+
 
 function renderChecklist(){
 
@@ -2810,12 +2863,27 @@ function renderChecklist(){
 
                     <div>
 
-                        <input
-                            id="remarks-${index}"
-                            class="remarks-input"
-                            type="text"
-                            placeholder="Remarks"
-                        >
+                        <div style="display:flex;gap:5px;">
+
+    <select
+        id="severity-${index}"
+        class="remarks-input"
+        style="max-width:110px;"
+    >
+        <option value="Low">Low</option>
+        <option value="Medium" selected>Medium</option>
+        <option value="High">High</option>
+        <option value="Critical">Critical</option>
+    </select>
+
+    <input
+        id="remarks-${index}"
+        class="remarks-input"
+        type="text"
+        placeholder="Remarks"
+    >
+
+</div>
 
                     </div>
 
@@ -3072,7 +3140,6 @@ function getChecklistAnswers(){
 
     const answers = [];
 
-
     currentChecklist.forEach(
         (requirement,index) => {
 
@@ -3087,26 +3154,37 @@ function getChecklistAnswers(){
                     ? remarksElement.value.trim()
                     : "";
 
+           const severityElement =
+    document.getElementById(
+        `severity-${index}`
+    );
+            const severity =
+                severityElement
+                    ? severityElement.value
+                    : "Medium";
 
-            answers.push({
 
-                item_number:
-                    index + 1,
+answers.push({
 
-                inspection_requirement:
-                    requirement,
+    item_number:
+        index + 1,
 
-                answer:
-                    checklistAnswers[index],
+    inspection_requirement:
+        requirement,
 
-                remarks:
-                    remarks
+    answer:
+        checklistAnswers[index],
 
-            });
+    remarks:
+        remarks,
+
+    severity:
+        severity
+
+});
 
         }
     );
-
 
     return answers;
 
@@ -3328,7 +3406,25 @@ async function saveInspection(){
 
     const answers =
         getChecklistAnswers();
+     
 
+        const failedWithoutRemarks =
+    answers.find(
+        item =>
+            item.answer === "FAIL" &&
+            !item.remarks?.trim()
+    );
+
+if(failedWithoutRemarks){
+
+    showToast(
+        `Checklist item ${failedWithoutRemarks.item_number} is marked FAIL and requires remarks.`,
+        "error"
+    );
+
+    return;
+
+}
 
     /*
      * Defensive validation.
@@ -3453,7 +3549,12 @@ async function saveInspection(){
 
                 })
             );
-
+          
+            const failedItems =
+    answers.filter(
+        item =>
+            item.answer === "FAIL"
+    );
 
         const {
             error: answersError
@@ -3484,8 +3585,101 @@ async function saveInspection(){
             throw answersError;
 
         }
+        /* =============================================
+   CREATE DEVIATIONS
+============================================= */
 
+async function createDeviations(
+    inspectionId,
+    equipmentId,
+    answers
+){
 
+    const failedItems =
+        answers.filter(
+            item => item.answer === "FAIL"
+        );
+
+    // No failed items = no deviations needed
+    if(failedItems.length === 0){
+
+        return {
+            created: 0,
+            data: []
+        };
+
+    }
+
+    const deviationRows =
+        failedItems.map((item,index)=>({
+
+            deviation_number:
+                `DEV-${Date.now()}-${index + 1}`,
+
+            inspection_id:
+                inspectionId,
+
+            equipment_id:
+                equipmentId,
+
+            item_number:
+                item.item_number,
+
+            inspection_requirement:
+                item.inspection_requirement,
+
+            deviation_description:
+                item.remarks?.trim()
+                    ? item.remarks.trim()
+                    : item.inspection_requirement,
+
+            severity:
+                item.severity || "Medium",
+
+            status:
+                "Open"
+
+        }));
+
+    console.log(
+        "Creating deviations:",
+        deviationRows
+    );
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("deviations")
+            .insert(deviationRows)
+            .select();
+
+    if(error){
+
+        console.error(
+            "Deviation creation error:",
+            error
+        );
+
+        throw new Error(
+            "Inspection was saved, but the deviation records could not be created: " +
+            error.message
+        );
+
+    }
+
+    console.log(
+        `${deviationRows.length} deviation(s) created successfully.`
+    );
+
+    return {
+        created: deviationRows.length,
+        data: data || []
+    };
+
+}
+          
         /* =============================================
            UPDATE EQUIPMENT INSPECTION DATE
         ============================================= */
@@ -3530,8 +3724,8 @@ async function saveInspection(){
             "Inspection saved successfully.",
             "success"
         );
-
-
+    
+   
         closeInspectionModal();
 
 
@@ -3593,9 +3787,9 @@ function calculateNextInspectionDate(
         );
 
 
-    date.setFullYear(
-        date.getFullYear() + 1
-    );
+   date.setMonth(
+    date.getMonth() + 1
+);
 
 
     const year =
