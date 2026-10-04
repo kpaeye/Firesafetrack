@@ -841,6 +841,16 @@ tbody tr:hover{
 
 }
 
+.overdue-row{
+    background: rgba(255,59,48,0.12);
+}
+
+.overdue-row:hover{
+    background: rgba(255,59,48,0.20);
+}
+
+
+
 </style>
 
 </head>
@@ -2426,6 +2436,11 @@ function buildTableRow(
     deviation
 ){
 
+const isOverdue =
+    deviation.target_date &&
+    deviation.status !== "Closed" &&
+    new Date(deviation.target_date) < new Date();
+
     const equipment =
         getEquipment(
             deviation.equipment_id
@@ -2468,7 +2483,7 @@ function buildTableRow(
 
     return `
 
-        <tr>
+        <tr class="${isOverdue ? 'overdue-row' : ''}">
 
             <td>
 

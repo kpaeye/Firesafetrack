@@ -2224,6 +2224,154 @@ async function loadEquipment(){
 
 
 /* =====================================================
+   INSPECTION AVAILABILITY
+===================================================== */
+
+function getInspectionAvailability(equipment){
+
+    /*
+     * Only ACTIVE equipment can be inspected.
+     */
+
+    if(
+        String(equipment.status || "")
+            .trim()
+            .toLowerCase() !== "active"
+    ){
+
+        return {
+            available:false,
+            label:"Not available",
+            reason:"Equipment is not active."
+        };
+
+    }
+
+
+    /*
+     * Equipment must have a next inspection date.
+     */
+
+    if(!equipment.next_inspection_date){
+
+        return {
+            available:false,
+            label:"No due date",
+            reason:"Next inspection date has not been set."
+        };
+
+    }
+
+
+    /*
+     * Convert the database date into a local date
+     * without introducing timezone shifts.
+     */
+
+    const today =
+        new Date(
+            getToday() + "T00:00:00"
+        );
+
+
+    const dueDate =
+        new Date(
+            equipment.next_inspection_date +
+            "T00:00:00"
+        );
+
+
+    /*
+     * Calculate the number of days between
+     * today and the inspection due date.
+     */
+
+    const millisecondsPerDay =
+        1000 * 60 * 60 * 24;
+
+
+    const daysUntilDue =
+        Math.round(
+            (
+                dueDate.getTime() -
+                today.getTime()
+            ) /
+            millisecondsPerDay
+        );
+
+
+    /*
+     * More than 3 days before due date:
+     * inspection is not yet available.
+     */
+
+    if(daysUntilDue > 3){
+
+        return {
+            available:false,
+            daysUntilDue:daysUntilDue,
+            label:`Due in ${daysUntilDue} days`,
+            reason:"Inspection window has not opened yet."
+        };
+
+    }
+
+
+    /*
+     * OVERDUE
+     */
+
+    if(daysUntilDue < 0){
+
+        const overdueDays =
+            Math.abs(daysUntilDue);
+
+
+        return {
+            available:true,
+            overdue:true,
+            daysUntilDue:daysUntilDue,
+            label:
+                `OVERDUE by ${overdueDays} day${overdueDays === 1 ? "" : "s"}`,
+            reason:"Inspection is overdue."
+        };
+
+    }
+
+
+    /*
+     * DUE TODAY
+     */
+
+    if(daysUntilDue === 0){
+
+        return {
+            available:true,
+            dueToday:true,
+            daysUntilDue:0,
+            label:"DUE TODAY",
+            reason:"Inspection is due today."
+        };
+
+    }
+
+
+    /*
+     * WITHIN 3-DAY WINDOW
+     */
+
+    return {
+        available:true,
+        daysUntilDue:daysUntilDue,
+        label:
+            `Due in ${daysUntilDue} day${daysUntilDue === 1 ? "" : "s"}`,
+        reason:"Inspection window is open."
+    };
+
+}
+
+
+/* =====================================================
    RENDER EQUIPMENT
 ===================================================== */
 
@@ -2260,6 +2408,101 @@ function renderEquipment(){
         filteredEquipment
             .map(
                 equipment => {
+
+                    const inspection =
+                        getInspectionAvailability(
+                            equipment
+                        );
+
+
+                    /*
+                     * Build the Action column.
+                     */
+
+                    let actionHtml = `
+                        <span
+                            style="
+                                color:#71859b;
+                                font-size:11px;
+                            "
+                        >
+                            Not due
+                        </span>
+                    `;
+
+
+                    /*
+                     * If inspection is available,
+                     * show the Inspect button.
+                     */
+
+                    if(
+                        inspection.available
+                    ){
+
+                        let timingClass =
+                            "";
+
+                        if(
+                            inspection.overdue
+                        ){
+
+                            timingClass =
+                                "overdue";
+
+                        }
+                        else if(
+                            inspection.dueToday
+                        ){
+
+                            timingClass =
+                                "due-today";
+
+                        }
+
+
+                        actionHtml = `
+
+                            <div
+                                style="
+                                    display:flex;
+                                    flex-direction:column;
+                                    align-items:flex-start;
+                                    gap:5px;
+                                "
+                            >
+
+                                <button
+                                    class="action-button"
+                                    onclick="startInspection('${equipment.id}')"
+                                >
+                                    Inspect
+                                </button>
+
+                                <span
+                                    style="
+                                        font-size:10px;
+                                        font-weight:bold;
+                                        color:${
+                                            inspection.overdue
+                                                ? "#ff7169"
+                                                : inspection.dueToday
+                                                    ? "#ffcc00"
+                                                    : "#54e39a"
+                                        };
+                                    "
+                                >
+                                    ${escapeHtml(
+                                        inspection.label
+                                    )}
+                                </span>
+
+                            </div>
+
+                        `;
+
+                    }
+
 
                     return `
                         <tr>
@@ -2321,12 +2564,7 @@ function renderEquipment(){
 
                             <td>
 
-                                <button
-                                    class="action-button"
-                                    onclick="startInspection('${equipment.id}')"
-                                >
-                                    Inspect
-                                </button>
+                                ${actionHtml}
 
                             </td>
 
@@ -2338,7 +2576,6 @@ function renderEquipment(){
             .join("");
 
 }
-
 
 /* =====================================================
    FILTERS
