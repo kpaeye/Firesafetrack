@@ -1109,6 +1109,8 @@
 
         }
 
+    
+
     </style>
 
 </head>
@@ -1495,6 +1497,11 @@
 
                 </div>
 
+                <div class="stat-card">
+    <h3 id="overdueCount">0</h3>
+    <p>Overdue</p>
+</div>
+
 
                 <div class="stat-card">
 
@@ -1510,8 +1517,8 @@
                     </div>
 
                     <div class="stat-note">
-                        Based on inspection results
-                    </div>
+    Based on deviations & overdue items
+</div>
 
                 </div>
 
@@ -1671,8 +1678,8 @@
                             <div class="compliance-title">
 
                                 <span>
-                                    Compliance
-                                </span>
+    Site Compliance
+</span>
 
                                 <span
                                     class="compliance-value"
@@ -1886,6 +1893,15 @@
     );
 
 
+
+const dashboardStats = {
+    totalEquipment: 0,
+    openDeviations: 0,
+    overdueEquipment: 0
+};
+
+
+
     /* =====================================================
        ELEMENT REFERENCES
     ====================================================== */
@@ -1904,6 +1920,10 @@
         document.getElementById(
             "openDeviations"
         );
+    
+        const overdueCount =
+    document.getElementById("overdueCount");
+
 
     const complianceValueEl =
         document.getElementById(
@@ -2332,8 +2352,12 @@
         );
 
 
-        dueEquipmentEl.textContent =
-            dueCount;
+        dueEquipmentEl.textContent = dueCount;
+
+dashboardStats.totalEquipment = total;
+dashboardStats.overdueEquipment = dueCount;
+
+calculateCompliance();
 
 
         return equipment;
@@ -2618,63 +2642,102 @@
 
     async function loadDeviations() {
 
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .from("deviations")
-                .select(
-                    "id,status,created_at"
-                );
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("deviations")
+            .select("*");
 
+    if (error) {
 
-        if (error) {
-
-            throw new Error(
-                "Deviations query failed: " +
-                error.message
-            );
-
-        }
-
-
-        const deviations =
-            data || [];
-
-
-        let openCount = 0;
-
-
-        deviations.forEach(
-            function(item) {
-
-                const status =
-                    normalizeStatus(
-                        item.status
-                    );
-
-
-                if (
-                    status === "OPEN"
-                ) {
-
-                    openCount++;
-
-                }
-
-            }
+        throw new Error(
+            "Deviations query failed: " +
+            error.message
         );
-
-
-        openDeviationsEl.textContent =
-            openCount;
-
-
-        return deviations;
 
     }
 
+    const deviations = data || [];
+
+    /* ----------------------------
+       OPEN DEVIATIONS
+    ---------------------------- */
+
+    const openCount =
+        deviations.filter(
+            d =>
+                String(d.status || "")
+                    .toUpperCase() === "OPEN"
+        ).length;
+
+    openDeviationsEl.textContent = openCount;
+
+dashboardStats.openDeviations = openCount;
+
+calculateCompliance();
+
+    /* ----------------------------
+       OVERDUE DEVIATIONS
+    ---------------------------- */
+
+    const overdue =
+        deviations.filter(d => {
+
+            if (!d.target_date)
+                return false;
+
+            return (
+                String(d.status || "")
+                    .toUpperCase() !== "CLOSED" &&
+                new Date(d.target_date) <
+                    new Date()
+            );
+
+        }).length;
+
+    overdueCount.textContent =
+        overdue;
+
+    return deviations;
+}
+
+
+
+function calculateCompliance() {
+
+    const total =
+        dashboardStats.totalEquipment;
+
+    const openDeviations =
+        dashboardStats.openDeviations;
+
+    const overdue =
+        dashboardStats.overdueEquipment;
+
+    if (total === 0) {
+
+        updateCompliance(100);
+
+        return;
+    }
+
+    const nonCompliant =
+        openDeviations +
+        overdue;
+
+    let compliance =
+        ((total - nonCompliant) / total) * 100;
+
+    compliance =
+        Math.max(
+            0,
+            Math.round(compliance)
+        );
+
+    updateCompliance(compliance);
+}
 
     /* =====================================================
        UPDATE COMPLIANCE DISPLAY
@@ -3006,8 +3069,6 @@
                 loadEquipment(),
 
                 loadInspections(),
-
-                loadInspectionAnswers(),
 
                 loadDeviations(),
 
