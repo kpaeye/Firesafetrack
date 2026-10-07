@@ -4601,6 +4601,44 @@ document.addEventListener(
     }
 );
 
+
+async function syncDeviationStatus(
+    deviationId,
+    status
+){
+
+    if(!deviationId){
+        return;
+    }
+
+    try{
+
+        await supabaseClient
+            .from("deviations")
+            .update({
+
+                status:
+                    status,
+
+                updated_at:
+                    new Date()
+                        .toISOString()
+
+            })
+            .eq(
+                "id",
+                deviationId
+            );
+
+    }
+    catch(error){
+
+        console.error(error);
+
+    }
+
+}
+
 </script>
 
 </body>

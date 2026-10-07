@@ -3766,26 +3766,29 @@ if(failedWithoutRemarks){
         ============================================= */
 
         const answerRows =
-            answers.map(
-                item => ({
+    answers.map(
+        item => ({
 
-                    inspection_id:
-                        inspection.id,
+            inspection_id:
+                inspection.id,
 
-                    item_number:
-                        item.item_number,
+            item_number:
+                item.item_number,
 
-                    inspection_requirement:
-                        item.inspection_requirement,
+            inspection_requirement:
+                item.inspection_requirement,
 
-                    answer:
-                        item.answer,
+            answer:
+                item.answer,
 
-                    remarks:
-                        item.remarks || null
+            remarks:
+                item.remarks || null,
 
-                })
-            );
+            severity:
+                item.severity || "Medium"
+
+        })
+    );
           
             const failedItems =
     answers.filter(
@@ -3969,6 +3972,14 @@ async function createDeviations(inspectionId, equipmentId, answers) {
         .insert(deviationRows)
         .select();
 
+        if(data){
+
+    await createCorrectiveAction(
+        data
+    );
+
+}
+
     if (error) {
 
         console.error(
@@ -3992,6 +4003,71 @@ async function createDeviations(inspectionId, equipmentId, answers) {
         data: data || []
     };
 }
+
+/* =====================================================
+   CREATE CORRECTIVE ACTION FROM DEVIATION
+===================================================== */
+
+async function createCorrectiveAction(deviation){
+
+    try{
+
+        const actionNumber =
+            await generateActionNumber();
+
+        const {
+            error
+        } =
+        await supabaseClient
+            .from("corrective_actions")
+            .insert({
+
+                action_number:
+                    actionNumber,
+
+                deviation_id:
+                    deviation.id,
+
+                equipment_id:
+                    deviation.equipment_id,
+
+                action_description:
+                    deviation.deviation_description,
+
+                priority:
+                    deviation.severity || "Medium",
+
+                status:
+                    "Open",
+
+                responsible_person:
+                    deviation.responsible_person || null,
+
+                target_date:
+                    deviation.target_date || null,
+
+                verification_required:
+                    true
+
+            });
+
+        if(error){
+            throw error;
+        }
+
+    }
+    catch(error){
+
+        console.error(
+            "Corrective Action Creation Error:",
+            error
+        );
+
+    }
+
+}
+
+
 
 /* =====================================================
    NEXT INSPECTION DATE
