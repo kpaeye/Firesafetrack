@@ -1806,6 +1806,163 @@ tr:hover td{
 
     </section>
 
+    
+<!-- =====================================================
+     DEVIATION & CORRECTIVE ACTION REPORTING
+===================================================== -->
+
+<section class="card">
+
+    <div class="card-header">
+        <h2>Deviation &amp; Corrective Action Analysis</h2>
+        <button class="btn btn-secondary" onclick="resetIssueFilters()">
+            Reset Filters
+        </button>
+    </div>
+
+    <div class="card-body">
+
+        <div class="filters" style="grid-template-columns:repeat(3,minmax(0,1fr));">
+
+            <div class="form-group">
+                <label for="issueTypeFilter">Record Type</label>
+                <select id="issueTypeFilter">
+                    <option value="both">Deviations &amp; Corrective Actions</option>
+                    <option value="deviations">Deviations Only</option>
+                    <option value="actions">Corrective Actions Only</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="issueLocationFilter">Location</label>
+                <select id="issueLocationFilter">
+                    <option value="">All Locations</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="issueAreaFilter">Area</label>
+                <select id="issueAreaFilter">
+                    <option value="">All Areas</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="issueEquipmentFilter">Equipment</label>
+                <select id="issueEquipmentFilter">
+                    <option value="">All Equipment</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="issueStatusFilter">Status</label>
+                <select id="issueStatusFilter">
+                    <option value="">All Statuses</option>
+                    <option value="Open">Open</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Awaiting Verification">Awaiting Verification</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Verified">Verified</option>
+                    <option value="Closed">Closed</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="issueSearch">Search Records</label>
+                <input id="issueSearch" type="text"
+                    placeholder="Reference, description, person...">
+            </div>
+
+            <div class="form-group">
+                <label for="issueFromDate">Raised From</label>
+                <input id="issueFromDate" type="date">
+            </div>
+
+            <div class="form-group">
+                <label for="issueToDate">Raised To</label>
+                <input id="issueToDate" type="date">
+            </div>
+
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <button class="btn btn-primary" onclick="applyIssueFilters()">
+                    Apply Filters
+                </button>
+            </div>
+
+        </div>
+
+        <div class="stats-grid" style="margin-top:22px;">
+
+            <div class="stat-card">
+                <div class="stat-label">Matching Deviations</div>
+                <div class="stat-value" id="filteredDeviationCount">0</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Matching Actions</div>
+                <div class="stat-value" id="filteredActionCount">0</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Open / In Progress</div>
+                <div class="stat-value" id="filteredOpenCount">0</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Overdue Actions</div>
+                <div class="stat-value" id="filteredOverdueCount">0</div>
+            </div>
+
+        </div>
+
+        <div class="header-actions" style="margin-bottom:18px;">
+            <button class="btn btn-success" onclick="exportFilteredDeviations()">
+                Export Filtered Deviations
+            </button>
+
+            <button class="btn btn-success" onclick="exportFilteredActions()">
+                Export Filtered Actions
+            </button>
+        </div>
+
+        <div class="preview-info">
+            <span>
+                Matching records:
+                <strong id="issueResultCount">0</strong>
+            </span>
+            <span>Location, area, equipment and date filters apply together.</span>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Record</th>
+                        <th>Reference</th>
+                        <th>Description</th>
+                        <th>Equipment</th>
+                        <th>Area</th>
+                        <th>Location</th>
+                        <th>Date Raised</th>
+                        <th>Target Date</th>
+                        <th>Status</th>
+                        <th>Responsible Person</th>
+                    </tr>
+                </thead>
+                <tbody id="issueTableBody">
+                    <tr>
+                        <td colspan="10" class="empty">
+                            Load records to begin.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</section>
+
 
 </div>
 
@@ -2211,8 +2368,11 @@ async function loadData(){
 
         updateStats();
 
-        applyFilters();
+applyFilters();
 
+populateIssueFilters();
+
+applyIssueFilters();
     }catch(error){
 
         console.error(
@@ -2644,6 +2804,12 @@ function closeInspectionReportModal(){
         .remove("show");
 
     selectedInspectionId = null;
+
+
+let filteredDeviations = [];
+let filteredCorrectiveActions = [];
+let filteredIssueRecords = [];
+
 
 }
 
@@ -3166,6 +3332,409 @@ async function generateInspectionReportById(
 }
 
 
+
+/* =====================================================
+   DEVIATION & CORRECTIVE ACTION FILTERS
+===================================================== */
+
+function getIssueDate(record) {
+    return record.created_at
+        ? String(record.created_at).slice(0, 10)
+        : "";
+}
+
+function getActionDescription(action) {
+    return action.action_description ||
+           action.title ||
+           action.description ||
+           "";
+}
+
+function getDeviationDescription(deviation) {
+    return deviation.deviation_description ||
+           deviation.description ||
+           deviation.title ||
+           deviation.inspection_requirement ||
+           "";
+}
+
+function populateIssueFilters() {
+    const locationSelect =
+        document.getElementById("issueLocationFilter");
+
+    const areaSelect =
+        document.getElementById("issueAreaFilter");
+
+    const equipmentSelect =
+        document.getElementById("issueEquipmentFilter");
+
+    const previousLocation = locationSelect.value;
+    const previousArea = areaSelect.value;
+    const previousEquipment = equipmentSelect.value;
+
+    const locations = [...new Set(
+        equipmentList.map(e => e.location).filter(Boolean)
+    )].sort();
+
+    const areas = [...new Set(
+        equipmentList.map(e => e.area).filter(Boolean)
+    )].sort();
+
+    locationSelect.innerHTML =
+        '<option value="">All Locations</option>' +
+        locations.map(location =>
+            `<option value="${escapeHtml(location)}">${escapeHtml(location)}</option>`
+        ).join("");
+
+    areaSelect.innerHTML =
+        '<option value="">All Areas</option>' +
+        areas.map(area =>
+            `<option value="${escapeHtml(area)}">${escapeHtml(area)}</option>`
+        ).join("");
+
+    equipmentSelect.innerHTML =
+        '<option value="">All Equipment</option>' +
+        equipmentList.map(equipment => {
+            const id = String(equipment.id);
+            const label =
+                equipment.equipment_code ||
+                equipment.equipment_number ||
+                equipment.name ||
+                equipment.equipment_name ||
+                id;
+
+            return `<option value="${escapeHtml(id)}">${escapeHtml(label)}</option>`;
+        }).join("");
+
+    if (locations.includes(previousLocation)) {
+        locationSelect.value = previousLocation;
+    }
+
+    if (areas.includes(previousArea)) {
+        areaSelect.value = previousArea;
+    }
+
+    if (equipmentList.some(e => String(e.id) === previousEquipment)) {
+        equipmentSelect.value = previousEquipment;
+    }
+}
+
+function recordMatchesIssueFilters(record, kind) {
+    const equipment = getEquipment(record.equipment_id);
+
+    const location =
+        document.getElementById("issueLocationFilter").value;
+
+    const area =
+        document.getElementById("issueAreaFilter").value;
+
+    const equipmentId =
+        document.getElementById("issueEquipmentFilter").value;
+
+    const status =
+        document.getElementById("issueStatusFilter").value;
+
+    const search =
+        document.getElementById("issueSearch").value
+            .trim().toLowerCase();
+
+    const fromDate =
+        document.getElementById("issueFromDate").value;
+
+    const toDate =
+        document.getElementById("issueToDate").value;
+
+    if (location && equipment?.location !== location) {
+        return false;
+    }
+
+    if (area && equipment?.area !== area) {
+        return false;
+    }
+
+    if (equipmentId &&
+        String(record.equipment_id || "") !== equipmentId) {
+        return false;
+    }
+
+    if (status &&
+        String(record.status || "").toLowerCase() !== status.toLowerCase()) {
+        return false;
+    }
+
+    const raisedDate = getIssueDate(record);
+
+    if (fromDate && (!raisedDate || raisedDate < fromDate)) {
+        return false;
+    }
+
+    if (toDate && (!raisedDate || raisedDate > toDate)) {
+        return false;
+    }
+
+    const description = kind === "deviation"
+        ? getDeviationDescription(record)
+        : getActionDescription(record);
+
+    const deviation = kind === "action"
+        ? deviationsList.find(d =>
+            String(d.id) === String(record.deviation_id)
+        )
+        : null;
+
+    const searchText = [
+        record.id,
+        record.deviation_number,
+        record.action_number,
+        record.action_description,
+        record.deviation_description,
+        record.inspection_requirement,
+        record.responsible_person,
+        record.status,
+        record.severity,
+        record.priority,
+        description,
+        deviation?.deviation_number,
+        deviation?.deviation_description,
+        equipment?.name,
+        equipment?.equipment_name,
+        equipment?.equipment_code,
+        equipment?.equipment_number,
+        equipment?.area,
+        equipment?.location
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    if (search && !searchText.includes(search)) {
+        return false;
+    }
+
+    return true;
+}
+
+function applyIssueFilters() {
+    const type =
+        document.getElementById("issueTypeFilter").value;
+
+    filteredDeviations = type === "actions"
+        ? []
+        : deviationsList.filter(d =>
+            recordMatchesIssueFilters(d, "deviation")
+        );
+
+    filteredCorrectiveActions = type === "deviations"
+        ? []
+        : correctiveActionsList.filter(a =>
+            recordMatchesIssueFilters(a, "action")
+        );
+
+    filteredIssueRecords = [
+        ...filteredDeviations.map(record => ({
+            kind: "Deviation",
+            record
+        })),
+        ...filteredCorrectiveActions.map(record => ({
+            kind: "Corrective Action",
+            record
+        }))
+    ];
+
+    renderIssueTable();
+    updateIssueStats();
+}
+
+function resetIssueFilters() {
+    [
+        "issueTypeFilter",
+        "issueLocationFilter",
+        "issueAreaFilter",
+        "issueEquipmentFilter",
+        "issueStatusFilter",
+        "issueSearch",
+        "issueFromDate",
+        "issueToDate"
+    ].forEach(id => {
+        document.getElementById(id).value = "";
+    });
+
+    document.getElementById("issueTypeFilter").value = "both";
+
+    applyIssueFilters();
+}
+
+function updateIssueStats() {
+    document.getElementById("filteredDeviationCount").textContent =
+        filteredDeviations.length;
+
+    document.getElementById("filteredActionCount").textContent =
+        filteredCorrectiveActions.length;
+
+    const openStatuses = ["open", "in progress", "awaiting verification"];
+
+    const openCount = filteredIssueRecords.filter(item =>
+        openStatuses.includes(
+            String(item.record.status || "").toLowerCase()
+        )
+    ).length;
+
+    document.getElementById("filteredOpenCount").textContent =
+        openCount;
+
+    const today = todayString();
+
+    const overdueCount = filteredCorrectiveActions.filter(action => {
+        const status = String(action.status || "").toLowerCase();
+        const targetDate = action.target_date;
+
+        return targetDate &&
+            targetDate < today &&
+            !["completed", "verified", "closed"].includes(status);
+    }).length;
+
+    document.getElementById("filteredOverdueCount").textContent =
+        overdueCount;
+
+    document.getElementById("issueResultCount").textContent =
+        filteredIssueRecords.length;
+}
+
+function renderIssueTable() {
+    const tbody = document.getElementById("issueTableBody");
+
+    if (!filteredIssueRecords.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" class="empty">
+                    No deviations or corrective actions match these filters.
+                </td>
+            </tr>`;
+        return;
+    }
+
+    tbody.innerHTML = filteredIssueRecords.map(item => {
+        const record = item.record;
+        const equipment = getEquipment(record.equipment_id);
+        const isDeviation = item.kind === "Deviation";
+
+        const reference = isDeviation
+            ? (record.deviation_number || record.id)
+            : (record.action_number || record.id);
+
+        const description = isDeviation
+            ? getDeviationDescription(record)
+            : getActionDescription(record);
+
+        const targetDate = record.target_date || "";
+
+        return `
+            <tr>
+                <td>${escapeHtml(item.kind)}</td>
+                <td>${escapeHtml(reference || "—")}</td>
+                <td>${escapeHtml(description || "—")}</td>
+                <td>${escapeHtml(
+                    equipment?.equipment_code ||
+                    equipment?.equipment_number ||
+                    equipment?.name ||
+                    equipment?.equipment_name ||
+                    "—"
+                )}</td>
+                <td>${escapeHtml(equipment?.area || "—")}</td>
+                <td>${escapeHtml(equipment?.location || "—")}</td>
+                <td>${escapeHtml(formatDate(record.created_at))}</td>
+                <td>${escapeHtml(formatDate(targetDate))}</td>
+                <td>${escapeHtml(record.status || "Open")}</td>
+                <td>${escapeHtml(record.responsible_person || "—")}</td>
+            </tr>`;
+    }).join("");
+}
+
+function exportFilteredDeviations() {
+    exportIssueWorkbook(
+        filteredDeviations,
+        "Deviation Report",
+        "FireSafe_Filtered_Deviations"
+    );
+}
+
+function exportFilteredActions() {
+    exportIssueWorkbook(
+        filteredCorrectiveActions,
+        "Corrective Actions",
+        "FireSafe_Filtered_Corrective_Actions"
+    );
+}
+
+function exportIssueWorkbook(records, sheetName, filenamePrefix) {
+    if (!records.length) {
+        showToast("No matching records to export.", "warning");
+        return;
+    }
+
+    const isDeviation = sheetName === "Deviation Report";
+
+    const rows = [[
+        "Reference",
+        "Equipment",
+        "Equipment Code",
+        "Area",
+        "Location",
+        "Description",
+        "Severity",
+        "Priority",
+        "Responsible Person",
+        "Date Raised",
+        "Target Date",
+        "Completion Date",
+        "Status",
+        "Linked Deviation ID",
+        "Notes"
+    ]];
+
+    records.forEach(record => {
+        const equipment = getEquipment(record.equipment_id);
+
+        rows.push([
+            isDeviation
+                ? (record.deviation_number || record.id || "")
+                : (record.action_number || record.id || ""),
+            equipment?.name || equipment?.equipment_name || "",
+            equipment?.equipment_code || equipment?.equipment_number || "",
+            equipment?.area || "",
+            equipment?.location || "",
+            isDeviation
+                ? getDeviationDescription(record)
+                : getActionDescription(record),
+            record.severity || "",
+            record.priority || "",
+            record.responsible_person || "",
+            record.created_at || "",
+            record.target_date || "",
+            record.completion_date || "",
+            record.status || "",
+            record.deviation_id || "",
+            record.notes || record.verification_notes || ""
+        ]);
+    });
+
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+
+    worksheet["!cols"] = [
+        {wch:24}, {wch:28}, {wch:20}, {wch:22}, {wch:24},
+        {wch:55}, {wch:16}, {wch:16}, {wch:26}, {wch:22},
+        {wch:18}, {wch:20}, {wch:22}, {wch:38}, {wch:45}
+    ];
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+    XLSX.writeFile(
+        workbook,
+        `${filenamePrefix}_${todayString()}.xlsx`
+    );
+
+    showToast(`${sheetName} Excel generated.`, "success");
+}
+
+
 /* =====================================================
    GENERATE FILTERED INSPECTION REPORT
 ===================================================== */
@@ -3631,18 +4200,9 @@ function generateInspectionSummary(){
    DEVIATION REPORT
 ===================================================== */
 
-function generateDeviationReport(){
-
-    if(!deviationsList.length){
-
-        showToast(
-            "No deviation records are available.",
-            "warning"
-        );
-
-        return;
-
-    }
+function generateDeviationReport() {
+    exportFilteredDeviations();
+}
 
 
     const rows = [
@@ -3755,26 +4315,13 @@ function generateDeviationReport(){
         "success"
     );
 
-}
-
 
 /* =====================================================
    CORRECTIVE ACTION REPORT
 ===================================================== */
 
-function generateCorrectiveActionReport(){
-
-    if(!correctiveActionsList.length){
-
-        showToast(
-            "No corrective actions are available.",
-            "warning"
-        );
-
-        return;
-
-    }
-
+function generateCorrectiveActionReport() {
+    exportFilteredActions();
 
     const rows = [
 
@@ -4366,6 +4913,33 @@ document.addEventListener(
 
     }
 );
+
+
+
+/* =====================================================
+   ISSUE FILTER EVENTS
+===================================================== */
+
+[
+    "issueTypeFilter",
+    "issueLocationFilter",
+    "issueAreaFilter",
+    "issueEquipmentFilter",
+    "issueStatusFilter",
+    "issueFromDate",
+    "issueToDate"
+].forEach(id => {
+    document.getElementById(id).addEventListener(
+        "change",
+        applyIssueFilters
+    );
+});
+
+document.getElementById("issueSearch").addEventListener(
+    "input",
+    applyIssueFilters
+);
+
 
 </script>
 
