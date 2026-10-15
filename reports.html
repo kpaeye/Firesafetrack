@@ -1419,7 +1419,7 @@ tr:hover td{
                         class="btn btn-primary"
                         onclick="openInspectionReportModal()"
                     >
-                        Generate Inspection Excel
+                        Generate Multi-Item Inspection Excel
                     </button>
 
                 </div>
@@ -1607,6 +1607,40 @@ tr:hover td{
 
                 </div>
 
+                <div class="form-group">
+                    <label for="inspectionLocationFilter">Location</label>
+                    <select id="inspectionLocationFilter" onchange="applyFilters()">
+                        <option value="">All Locations</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="inspectionAreaFilter">Area</label>
+                    <select id="inspectionAreaFilter" onchange="applyFilters()">
+                        <option value="">All Areas</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="inspectionEquipmentFilter">Equipment</label>
+                    <select id="inspectionEquipmentFilter" onchange="applyFilters()">
+                        <option value="">All Equipment</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="inspectionTypeFilter">Inspection Type</label>
+                    <select id="inspectionTypeFilter" onchange="applyFilters()">
+                        <option value="">All Inspection Types</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="inspectorFilter">Inspector</label>
+                    <select id="inspectorFilter" onchange="applyFilters()">
+                        <option value="">All Inspectors</option>
+                    </select>
+                </div>
 
                 <div class="form-group">
 
@@ -1983,7 +2017,7 @@ tr:hover td{
         <div class="modal-header">
 
             <h2>
-                Generate Inspection Excel
+                Generate Multi-Item Inspection Excel
             </h2>
 
             <button
@@ -2088,7 +2122,11 @@ let deviationsList = [];
 
 let correctiveActionsList = [];
 
-let selectedInspectionId = null;
+let selectedInspectionIds = [];
+
+let filteredDeviations = [];
+let filteredCorrectiveActions = [];
+let filteredIssueRecords = [];
 
 
 /* =====================================================
@@ -2367,10 +2405,10 @@ async function loadData(){
 
 
         updateStats();
+        populateInspectionFilters();
+        applyFilters();
 
-applyFilters();
-
-populateIssueFilters();
+        populateIssueFilters();
 
 applyIssueFilters();
     }catch(error){
@@ -2451,9 +2489,54 @@ function getEquipment(
 
     return equipmentList.find(
         equipment =>
-            equipment.id === equipmentId
+            String(equipment.id) === String(equipmentId)
     );
 
+}
+
+
+/* =====================================================
+   POPULATE INSPECTION FILTER DROPDOWNS
+===================================================== */
+
+function populateInspectionFilters() {
+    const previous = {
+        location: document.getElementById("inspectionLocationFilter").value,
+        area: document.getElementById("inspectionAreaFilter").value,
+        equipment: document.getElementById("inspectionEquipmentFilter").value,
+        type: document.getElementById("inspectionTypeFilter").value,
+        inspector: document.getElementById("inspectorFilter").value
+    };
+
+    const locations = [...new Set(equipmentList.map(e => e.location).filter(Boolean))].sort();
+    const areas = [...new Set(equipmentList.map(e => e.area).filter(Boolean))].sort();
+    const types = [...new Set(inspectionsList.map(i => i.inspection_type).filter(Boolean))].sort();
+    const inspectors = [...new Set(inspectionsList.map(i => i.inspector_name).filter(Boolean))].sort();
+
+    const equipmentSelect = document.getElementById("inspectionEquipmentFilter");
+    equipmentSelect.innerHTML = '<option value="">All Equipment</option>' +
+        equipmentList.map(e => {
+            const id = String(e.id);
+            const label = e.equipment_code || e.equipment_number || e.name || e.equipment_name || id;
+            return `<option value="${escapeHtml(id)}">${escapeHtml(label)}</option>`;
+        }).join("");
+
+    const setOptions = (id, defaultLabel, values) => {
+        document.getElementById(id).innerHTML =
+            `<option value="">${defaultLabel}</option>` +
+            values.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
+    };
+
+    setOptions("inspectionLocationFilter", "All Locations", locations);
+    setOptions("inspectionAreaFilter", "All Areas", areas);
+    setOptions("inspectionTypeFilter", "All Inspection Types", types);
+    setOptions("inspectorFilter", "All Inspectors", inspectors);
+
+    document.getElementById("inspectionLocationFilter").value = previous.location;
+    document.getElementById("inspectionAreaFilter").value = previous.area;
+    document.getElementById("inspectionEquipmentFilter").value = previous.equipment;
+    document.getElementById("inspectionTypeFilter").value = previous.type;
+    document.getElementById("inspectorFilter").value = previous.inspector;
 }
 
 
@@ -2486,9 +2569,18 @@ function applyFilters(){
 
 
     const status =
-        document.getElementById(
-            "statusFilter"
-        ).value;
+        document.getElementById("statusFilter").value;
+
+    const location =
+        document.getElementById("inspectionLocationFilter").value;
+    const area =
+        document.getElementById("inspectionAreaFilter").value;
+    const equipmentId =
+        document.getElementById("inspectionEquipmentFilter").value;
+    const inspectionType =
+        document.getElementById("inspectionTypeFilter").value;
+    const inspector =
+        document.getElementById("inspectorFilter").value;
 
 
     filteredInspections =
@@ -2510,13 +2602,11 @@ function applyFilters(){
                     inspection.overall_status,
 
                     equipment?.name,
-
+                    equipment?.equipment_name,
                     equipment?.equipment_code,
-
+                    equipment?.equipment_number,
                     equipment?.equipment_type,
-
                     equipment?.area,
-
                     equipment?.location
 
                 ]
@@ -2551,13 +2641,15 @@ function applyFilters(){
                 }
 
 
-                if(
-                    status &&
-                    inspection.overall_status !== status
-                ){
+                if(status && inspection.overall_status !== status){
                     return false;
                 }
 
+                if(location && equipment?.location !== location) return false;
+                if(area && equipment?.area !== area) return false;
+                if(equipmentId && String(inspection.equipment_id) !== equipmentId) return false;
+                if(inspectionType && inspection.inspection_type !== inspectionType) return false;
+                if(inspector && inspection.inspector_name !== inspector) return false;
 
                 return true;
 
@@ -2588,9 +2680,16 @@ function resetFilters(){
         "toDate"
     ).value = "";
 
-    document.getElementById(
-        "statusFilter"
-    ).value = "";
+    document.getElementById("statusFilter").value = "";
+    [
+        "inspectionLocationFilter",
+        "inspectionAreaFilter",
+        "inspectionEquipmentFilter",
+        "inspectionTypeFilter",
+        "inspectorFilter"
+    ].forEach(id => {
+        document.getElementById(id).value = "";
+    });
 
     applyFilters();
 
@@ -2784,11 +2883,8 @@ function openInspectionReportModal(){
             "inspectionReportModal"
         );
 
-    modal.classList.add(
-        "show"
-    );
-
-
+    selectedInspectionIds = [];
+    modal.classList.add("show");
     renderInspectionSelection();
 
 }
@@ -2803,14 +2899,7 @@ function closeInspectionReportModal(){
         .classList
         .remove("show");
 
-    selectedInspectionId = null;
-
-
-let filteredDeviations = [];
-let filteredCorrectiveActions = [];
-let filteredIssueRecords = [];
-
-
+    selectedInspectionIds = [];
 }
 
 
@@ -2860,12 +2949,10 @@ function renderInspectionSelection(){
                     >
 
                         <input
-                            type="radio"
+                            type="checkbox"
                             name="inspectionSelect"
-                            value="${escapeHtml(
-                                inspection.id
-                            )}"
-                            onchange="selectedInspectionId=this.value"
+                            value="${escapeHtml(inspection.id)}"
+                            onchange="toggleSelectedInspection(this)"
                         >
 
                         <div
@@ -2962,24 +3049,34 @@ async function getInspectionAnswers(
    GENERATE SELECTED INSPECTION
 ===================================================== */
 
-async function generateSelectedInspectionReport(){
+function toggleSelectedInspection(checkbox) {
+    const id = String(checkbox.value);
 
-    if(!selectedInspectionId){
-
-        showToast(
-            "Please select an inspection first.",
-            "warning"
+    if (checkbox.checked) {
+        if (!selectedInspectionIds.includes(id)) {
+            selectedInspectionIds.push(id);
+        }
+    } else {
+        selectedInspectionIds = selectedInspectionIds.filter(
+            selectedId => selectedId !== id
         );
+    }
+}
 
+async function generateSelectedInspectionReport() {
+    if (!selectedInspectionIds.length) {
+        showToast("Please select one or more inspections first.", "warning");
         return;
-
     }
 
-
-    await generateInspectionReportById(
-        selectedInspectionId
+    const selected = inspectionsList.filter(inspection =>
+        selectedInspectionIds.includes(String(inspection.id))
     );
 
+    await generateMultiInspectionWorkbook(
+        selected,
+        "selected"
+    );
 }
 
 
@@ -3739,139 +3836,265 @@ function exportIssueWorkbook(records, sheetName, filenamePrefix) {
    GENERATE FILTERED INSPECTION REPORT
 ===================================================== */
 
-async function generateFilteredInspectionReport(){
-
-    if(!filteredInspections.length){
-
-        showToast(
-            "There are no inspections to export.",
-            "warning"
-        );
-
+async function generateFilteredInspectionReport() {
+    if (!filteredInspections.length) {
+        showToast("There are no inspections matching the filters.", "warning");
         return;
-
     }
 
+    await generateMultiInspectionWorkbook(
+        filteredInspections,
+        "filtered"
+    );
+}
 
-    try{
 
-        showToast(
-            "Generating filtered inspection workbook...",
-            "success"
+/* =====================================================
+   MULTI-ITEM INSPECTION REPORT WORKBOOK
+   One row per inspected equipment item; each checklist
+   requirement becomes a column in the inspection matrix.
+===================================================== */
+
+async function generateMultiInspectionWorkbook(inspections, mode = "filtered") {
+    if (!Array.isArray(inspections) || !inspections.length) {
+        showToast("No inspections were selected for the report.", "warning");
+        return;
+    }
+
+    try {
+        showToast("Building multi-item inspection report...", "success");
+
+        const inspectionData = await Promise.all(
+            inspections.map(async inspection => ({
+                inspection,
+                equipment: getEquipment(inspection.equipment_id),
+                answers: await getInspectionAnswers(inspection.id)
+            }))
         );
 
+        // Build a union of actual checklist requirements from the saved answers.
+        // This allows the report to keep all observed aspects without inventing items.
+        const aspectMap = new Map();
 
-        const rows = [
+        inspectionData.forEach(({ answers }) => {
+            answers.forEach(answer => {
+                const requirement = String(
+                    answer.inspection_requirement ||
+                    answer.item_number ||
+                    "Inspection item"
+                ).trim();
 
-            [
-                "Inspection Date",
-                "Equipment",
-                "Equipment Code",
-                "Equipment Type",
-                "Area",
-                "Location",
-                "Inspector",
-                "Inspection Type",
-                "Overall Status",
-                "Notes"
-            ]
+                const itemNumber = answer.item_number ?? "";
+                const key = `${String(itemNumber).toLowerCase()}::${requirement.toLowerCase()}`;
+                if (!aspectMap.has(key)) {
+                    aspectMap.set(key, {
+                        key,
+                        itemNumber,
+                        requirement
+                    });
+                }
+            });
+        });
 
-        ];
+        const aspects = [...aspectMap.values()];
 
-
-        filteredInspections.forEach(
-            inspection => {
-
-                const equipment =
-                    getEquipment(
-                        inspection.equipment_id
-                    );
-
-
-                rows.push([
-
-                    inspection.inspection_date || "",
-
-                    equipment?.name || "",
-
-                    equipment?.equipment_code || "",
-
-                    equipment?.equipment_type || "",
-
-                    equipment?.area || "",
-
-                    equipment?.location || "",
-
-                    inspection.inspector_name || "",
-
-                    inspection.inspection_type || "",
-
-                    inspection.overall_status || "",
-
-                    inspection.notes || ""
-
-                ]);
-
-            }
-        );
-
-
-        const workbook =
-            XLSX.utils.book_new();
-
-
-        const worksheet =
-            XLSX.utils.aoa_to_sheet(
-                rows
+        if (!aspects.length) {
+            showToast(
+                "The selected inspections have no saved checklist answers in inspection_answers.",
+                "warning"
             );
+            return;
+        }
 
+        const workbook = XLSX.utils.book_new();
 
-        worksheet["!cols"] = [
-
-            { wch:18 },
-            { wch:28 },
-            { wch:18 },
-            { wch:28 },
-            { wch:22 },
-            { wch:25 },
-            { wch:25 },
-            { wch:28 },
-            { wch:18 },
-            { wch:45 }
-
+        // Sheet 1: one row per equipment inspection, checklist aspects as headers.
+        const matrixHeaders = [
+            "Inspection Date",
+            "Equipment",
+            "Equipment Code",
+            "Equipment Type",
+            "Area",
+            "Location",
+            "Inspector",
+            "Inspection Type",
+            "Overall Result",
+            ...aspects.map(aspect =>
+                aspect.itemNumber !== ""
+                    ? `${aspect.itemNumber}. ${aspect.requirement}`
+                    : aspect.requirement
+            ),
+            "Inspection Notes"
         ];
 
+        const matrixRows = [matrixHeaders];
 
-        XLSX.utils.book_append_sheet(
-            workbook,
-            worksheet,
-            "Inspections"
-        );
+        inspectionData.forEach(({ inspection, equipment, answers }) => {
+            const answersByAspect = new Map();
 
+            answers.forEach(answer => {
+                const requirement = String(
+                    answer.inspection_requirement ||
+                    answer.item_number ||
+                    "Inspection item"
+                ).trim();
+                const key = `${String(answer.item_number ?? "").toLowerCase()}::${requirement.toLowerCase()}`;
 
-        XLSX.writeFile(
-            workbook,
-            `FireSafe_Inspection_Report_${todayString()}.xlsx`
-        );
+                // Store result in the aspect column; detailed remarks are kept
+                // on the separate Checklist Details worksheet.
+                answersByAspect.set(key, answer.answer || "");
+            });
 
+            matrixRows.push([
+                inspection.inspection_date || "",
+                equipment?.name || equipment?.equipment_name || "",
+                equipment?.equipment_code || equipment?.equipment_number || "",
+                equipment?.equipment_type || inspection.inspection_type || "",
+                equipment?.area || "",
+                equipment?.location || "",
+                inspection.inspector_name || "",
+                inspection.inspection_type || "",
+                inspection.overall_status || "",
+                ...aspects.map(aspect => answersByAspect.get(aspect.key) || ""),
+                inspection.notes || ""
+            ]);
+        });
+
+        const matrixSheet = XLSX.utils.aoa_to_sheet(matrixRows);
+        matrixSheet["!cols"] = [
+            { wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 26 },
+            { wch: 22 }, { wch: 24 }, { wch: 24 }, { wch: 28 },
+            { wch: 18 },
+            ...aspects.map(() => ({ wch: 28 })),
+            { wch: 45 }
+        ];
+        matrixSheet["!autofilter"] = {
+            ref: XLSX.utils.encode_range({
+                s: { r: 0, c: 0 },
+                e: { r: Math.max(matrixRows.length - 1, 0), c: matrixHeaders.length - 1 }
+            })
+        };
+        XLSX.utils.book_append_sheet(workbook, matrixSheet, "Inspection Matrix");
+
+        // Sheet 2: detailed results and remarks, retaining every saved checklist row.
+        const detailRows = [[
+            "Inspection Date",
+            "Equipment",
+            "Equipment Code",
+            "Equipment Type",
+            "Area",
+            "Location",
+            "Inspector",
+            "Inspection Type",
+            "Item Number",
+            "Inspection Aspect / Requirement",
+            "Result",
+            "Remarks"
+        ]];
+
+        inspectionData.forEach(({ inspection, equipment, answers }) => {
+            if (!answers.length) {
+                detailRows.push([
+                    inspection.inspection_date || "",
+                    equipment?.name || equipment?.equipment_name || "",
+                    equipment?.equipment_code || equipment?.equipment_number || "",
+                    equipment?.equipment_type || inspection.inspection_type || "",
+                    equipment?.area || "",
+                    equipment?.location || "",
+                    inspection.inspector_name || "",
+                    inspection.inspection_type || "",
+                    "", "No checklist answers recorded", "", ""
+                ]);
+            } else {
+                answers.forEach(answer => {
+                    detailRows.push([
+                        inspection.inspection_date || "",
+                        equipment?.name || equipment?.equipment_name || "",
+                        equipment?.equipment_code || equipment?.equipment_number || "",
+                        equipment?.equipment_type || inspection.inspection_type || "",
+                        equipment?.area || "",
+                        equipment?.location || "",
+                        inspection.inspector_name || "",
+                        inspection.inspection_type || "",
+                        answer.item_number ?? "",
+                        answer.inspection_requirement || "",
+                        answer.answer || "",
+                        answer.remarks || ""
+                    ]);
+                });
+            }
+        });
+
+        const detailSheet = XLSX.utils.aoa_to_sheet(detailRows);
+        detailSheet["!cols"] = [
+            { wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 26 },
+            { wch: 22 }, { wch: 24 }, { wch: 24 }, { wch: 28 },
+            { wch: 12 }, { wch: 60 }, { wch: 16 }, { wch: 50 }
+        ];
+        detailSheet["!autofilter"] = {
+            ref: XLSX.utils.encode_range({
+                s: { r: 0, c: 0 },
+                e: { r: Math.max(detailRows.length - 1, 0), c: detailRows[0].length - 1 }
+            })
+        };
+        XLSX.utils.book_append_sheet(workbook, detailSheet, "Checklist Details");
+
+        // Sheet 3: inspection metadata and selected report filters context.
+        const summaryRows = [
+            ["FIRESAFE TRACK"],
+            ["MULTI-ITEM FIRE SAFETY INSPECTION REPORT"],
+            [],
+            ["Report Generated", new Date().toLocaleString()],
+            ["Inspections Included", inspectionData.length],
+            ["Checklist Aspects Found", aspects.length],
+            [],
+            ["Inspection Date", "Equipment", "Equipment Code", "Equipment Type", "Area", "Location", "Inspector", "Inspection Type", "Overall Result", "Notes"]
+        ];
+
+        inspectionData.forEach(({ inspection, equipment }) => {
+            summaryRows.push([
+                inspection.inspection_date || "",
+                equipment?.name || equipment?.equipment_name || "",
+                equipment?.equipment_code || equipment?.equipment_number || "",
+                equipment?.equipment_type || inspection.inspection_type || "",
+                equipment?.area || "",
+                equipment?.location || "",
+                inspection.inspector_name || "",
+                inspection.inspection_type || "",
+                inspection.overall_status || "",
+                inspection.notes || ""
+            ]);
+        });
+
+        const summarySheet = XLSX.utils.aoa_to_sheet(summaryRows);
+        summarySheet["!cols"] = [
+            { wch: 18 }, { wch: 28 }, { wch: 20 }, { wch: 26 },
+            { wch: 22 }, { wch: 24 }, { wch: 24 }, { wch: 28 },
+            { wch: 18 }, { wch: 45 }
+        ];
+        XLSX.utils.book_append_sheet(workbook, summarySheet, "Report Summary");
+
+        const filename = mode === "selected"
+            ? `FireSafe_Multi_Item_Inspection_Selected_${todayString()}.xlsx`
+            : `FireSafe_Multi_Item_Inspection_Filtered_${todayString()}.xlsx`;
+
+        XLSX.writeFile(workbook, filename);
+
+        if (mode === "selected") {
+            closeInspectionReportModal();
+        }
 
         showToast(
-            "Filtered inspection Excel generated.",
+            `Inspection report generated for ${inspectionData.length} inspection(s).`,
             "success"
         );
-
-
-    }catch(error){
-
-        console.error(error);
-
+    } catch (error) {
+        console.error("Multi-item inspection report error:", error);
         showToast(
-            "Unable to generate inspection Excel.",
+            error.message || "Unable to generate the multi-item inspection report.",
             "error"
         );
-
     }
-
 }
 
 
@@ -4197,243 +4420,15 @@ function generateInspectionSummary(){
 
 
 /* =====================================================
-   DEVIATION REPORT
+   DEVIATION AND CORRECTIVE ACTION REPORT SHORTCUTS
 ===================================================== */
 
 function generateDeviationReport() {
     exportFilteredDeviations();
 }
 
-
-    const rows = [
-
-        [
-            "Deviation ID",
-            "Equipment",
-            "Equipment Code",
-            "Inspection ID",
-            "Title",
-            "Description",
-            "Severity",
-            "Priority",
-            "Status",
-            "Due Date",
-            "Responsible Person",
-            "Created"
-        ]
-
-    ];
-
-
-    deviationsList.forEach(
-        deviation => {
-
-            const equipment =
-                getEquipment(
-                    deviation.equipment_id
-                );
-
-
-            rows.push([
-
-                deviation.id || "",
-
-                equipment?.name || "",
-
-                equipment?.equipment_code || "",
-
-                deviation.inspection_id || "",
-
-                deviation.title ||
-                deviation.deviation_number ||
-                deviation.name ||
-                "",
-
-                deviation.description || "",
-
-                deviation.severity || "",
-
-                deviation.priority || "",
-
-                deviation.status || "",
-
-                deviation.due_date || "",
-
-                deviation.responsible_person || "",
-
-                deviation.created_at || ""
-
-            ]);
-
-        }
-    );
-
-
-    const workbook =
-        XLSX.utils.book_new();
-
-
-    const worksheet =
-        XLSX.utils.aoa_to_sheet(
-            rows
-        );
-
-
-    worksheet["!cols"] = [
-
-        { wch:38 },
-        { wch:30 },
-        { wch:20 },
-        { wch:38 },
-        { wch:35 },
-        { wch:55 },
-        { wch:18 },
-        { wch:18 },
-        { wch:20 },
-        { wch:18 },
-        { wch:28 },
-        { wch:25 }
-
-    ];
-
-
-    XLSX.utils.book_append_sheet(
-        workbook,
-        worksheet,
-        "Deviations"
-    );
-
-
-    XLSX.writeFile(
-        workbook,
-        `FireSafe_Deviation_Report_${todayString()}.xlsx`
-    );
-
-
-    showToast(
-        "Deviation Excel generated.",
-        "success"
-    );
-
-
-/* =====================================================
-   CORRECTIVE ACTION REPORT
-===================================================== */
-
 function generateCorrectiveActionReport() {
     exportFilteredActions();
-
-    const rows = [
-
-        [
-            "Action ID",
-            "Equipment",
-            "Equipment Code",
-            "Deviation ID",
-            "Action Title",
-            "Description",
-            "Priority",
-            "Responsible Person",
-            "Due Date",
-            "Status",
-            "Completion Date",
-            "Completion Notes",
-            "Created"
-        ]
-
-    ];
-
-
-    correctiveActionsList.forEach(
-        action => {
-
-            const equipment =
-                getEquipment(
-                    action.equipment_id
-                );
-
-
-            rows.push([
-
-                action.id || "",
-
-                equipment?.name || "",
-
-                equipment?.equipment_code || "",
-
-                action.deviation_id || "",
-
-                action.title || "",
-
-                action.description || "",
-
-                action.priority || "",
-
-                action.responsible_person || "",
-
-                action.due_date || "",
-
-                action.status || "",
-
-                action.completion_date || "",
-
-                action.completion_notes || "",
-
-                action.created_at || ""
-
-            ]);
-
-        }
-    );
-
-
-    const workbook =
-        XLSX.utils.book_new();
-
-
-    const worksheet =
-        XLSX.utils.aoa_to_sheet(
-            rows
-        );
-
-
-    worksheet["!cols"] = [
-
-        { wch:38 },
-        { wch:30 },
-        { wch:20 },
-        { wch:38 },
-        { wch:35 },
-        { wch:55 },
-        { wch:18 },
-        { wch:28 },
-        { wch:18 },
-        { wch:20 },
-        { wch:20 },
-        { wch:55 },
-        { wch:25 }
-
-    ];
-
-
-    XLSX.utils.book_append_sheet(
-        workbook,
-        worksheet,
-        "Corrective Actions"
-    );
-
-
-    XLSX.writeFile(
-        workbook,
-        `FireSafe_Corrective_Actions_${todayString()}.xlsx`
-    );
-
-
-    showToast(
-        "Corrective action Excel generated.",
-        "success"
-    );
-
 }
 
 
