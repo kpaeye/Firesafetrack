@@ -17,7 +17,7 @@
     ====================================================== -->
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
 
@@ -514,13 +514,22 @@
            STAT CARDS
         ===================================================== */
 
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 18px;
-    margin-bottom: 22px;
-}
+        .stats-grid {
 
+            display: grid;
+
+            /* Five dashboard summary cards aligned on wide screens */
+            grid-template-columns:
+                repeat(5, minmax(0, 1fr));
+
+            gap: 18px;
+
+            margin-bottom: 22px;
+        }
+
+        .overdue-stat .stat-value {
+            color: #ff7169;
+        }
 
 
         .stat-card {
@@ -1016,12 +1025,13 @@
            RESPONSIVE
         ===================================================== */
 
-        
-@media (max-width: 1200px) {
-    .stats-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
+        @media (max-width: 1200px) {
+
+            .stats-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+        }
 
 
         @media (max-width: 1000px) {
@@ -1501,23 +1511,24 @@
 
                 </div>
 
-                
-<div class="stat-card">
+                <div class="stat-card overdue-stat">
 
-    <div class="stat-label">
-        Overdue Deviations
-    </div>
+                    <div class="stat-label">
+                        Overdue Deviations
+                    </div>
 
-    <div class="stat-value" id="overdueCount">
-        0
-    </div>
+                    <div
+                        class="stat-value"
+                        id="overdueCount"
+                    >
+                        0
+                    </div>
 
-    <div class="stat-note">
-        Past target date and not closed
-    </div>
+                    <div class="stat-note">
+                        Past target date and not closed
+                    </div>
 
-</div>
-
+                </div>
 
 
                 <div class="stat-card">
@@ -1793,6 +1804,89 @@
         </div>
 
     </main>
+     
+
+    
+<!-- SAFETY TRENDS & INSIGHTS -->
+<section class="trends-section">
+
+    <div class="trends-heading">
+        <div>
+            <h2>Safety Trends &amp; Insights</h2>
+            <p>Identify recurring deviations and monitor safety performance.</p>
+        </div>
+
+        <select id="trendPeriod" aria-label="Trend period">
+            <option value="30">Last 30 days</option>
+            <option value="90" selected>Last 90 days</option>
+            <option value="365">Last 12 months</option>
+            <option value="all">All records</option>
+        </select>
+    </div>
+
+    <div class="trend-grid">
+
+        <div class="card trend-card">
+            <div class="card-header">
+                <div class="card-title">Common Deviations</div>
+            </div>
+            <div class="card-body chart-container">
+                <canvas id="commonDeviationsChart"></canvas>
+                <p class="trend-empty" id="commonDeviationsEmpty"
+                   hidden>No deviation records found for this period.</p>
+            </div>
+        </div>
+
+        <div class="card trend-card">
+            <div class="card-header">
+                <div class="card-title">Deviation Trends</div>
+            </div>
+            <div class="card-body chart-container">
+                <canvas id="deviationTrendChart"></canvas>
+                <p class="trend-empty" id="deviationTrendEmpty"
+                   hidden>No dated deviation records found for this period.</p>
+            </div>
+        </div>
+
+        <div class="card trend-card">
+            <div class="card-header">
+                <div class="card-title">Deviations by Location</div>
+            </div>
+            <div class="card-body chart-container">
+                <canvas id="locationDeviationsChart"></canvas>
+                <p class="trend-empty" id="locationDeviationsEmpty"
+                   hidden>No location information is available for these records.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card repeat-card">
+        <div class="card-header">
+            <div class="card-title">Most Frequent Deviation Types</div>
+            <span class="trend-subtitle">Ranked by recorded occurrences</span>
+        </div>
+
+        <div class="table-wrap">
+            <table class="inspection-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Deviation</th>
+                        <th>Occurrences</th>
+                        <th>% of Records</th>
+                    </tr>
+                </thead>
+                <tbody id="commonDeviationRows">
+                    <tr>
+                        <td colspan="4">Loading trend analysis...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</section>
 
 
     <!-- =====================================================
@@ -2386,105 +2480,126 @@ calculateCompliance();
        LOAD INSPECTIONS
     ====================================================== */
 
-    
-async function loadInspections() {
+    async function loadInspections() {
 
-    // Fetch all inspection records.
-    // Do not delete or filter historical records out of the database.
-    const {
-        data,
-        error
-    } = await supabaseClient
-        .from("inspections")
-        .select(`
-            id,
-            equipment_id,
-            inspection_date,
-            inspector_name,
-            inspection_type,
-            overall_status,
-            notes,
-            created_at
-        `)
-        .order("inspection_date", {
-            ascending: false
-        });
+        const {
+            data,
+            error,
+            count
+        } =
+            await supabaseClient
+                .from("inspections")
+                .select(
+                    `
+                        id,
+                        equipment_id,
+                        inspection_date,
+                        inspector_name,
+                        inspection_type,
+                        overall_status,
+                        notes,
+                        created_at
+                    `,
+                    {
+                        count: "exact"
+                    }
+                )
+                .order(
+                    "inspection_date",
+                    {
+                        ascending: false
+                    }
+                );
 
-    if (error) {
-        throw new Error(
-            "Inspections query failed: " + error.message
+
+        if (error) {
+
+            throw new Error(
+                "Inspections query failed: " +
+                error.message
+            );
+
+        }
+
+
+        const inspections =
+            data || [];
+
+
+        const total =
+            count !== null &&
+            count !== undefined
+                ? count
+                : inspections.length;
+
+
+        totalInspectionsEl.textContent =
+            total;
+
+
+        /* -------------------------------------------------
+           PASSED / FAILED INSPECTIONS
+
+           Correct database field:
+           overall_status
+        -------------------------------------------------- */
+
+        let passed = 0;
+
+        let failed = 0;
+
+
+        inspections.forEach(
+            function(item) {
+
+                if (
+                    isPassed(
+                        item.overall_status
+                    )
+                ) {
+
+                    passed++;
+
+                }
+
+
+                if (
+                    isFailed(
+                        item.overall_status
+                    )
+                ) {
+
+                    failed++;
+
+                }
+
+            }
         );
+
+
+        passedInspectionsEl.textContent =
+            passed;
+
+
+        failedInspectionsEl.textContent =
+            failed;
+
+
+        /* -------------------------------------------------
+           RECENT INSPECTIONS
+        -------------------------------------------------- */
+
+        renderRecentInspections(
+            inspections.slice(
+                0,
+                8
+            )
+        );
+
+
+        return inspections;
+
     }
-
-    const inspections = data || [];
-
-    // Determine the current calendar month.
-    const now = new Date();
-
-    const monthStart = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        1
-    );
-
-    const nextMonthStart = new Date(
-        now.getFullYear(),
-        now.getMonth() + 1,
-        1
-    );
-
-    // Count inspections dated within the current month.
-    const monthlyInspections = inspections.filter(item => {
-
-        if (!item.inspection_date) {
-            return false;
-        }
-
-        const inspectionDate = new Date(
-            item.inspection_date
-        );
-
-        if (Number.isNaN(inspectionDate.getTime())) {
-            return false;
-        }
-
-        return (
-            inspectionDate >= monthStart &&
-            inspectionDate < nextMonthStart
-        );
-    });
-
-    // Display current month's inspection total.
-    totalInspectionsEl.textContent =
-        monthlyInspections.length;
-
-    // Preserve all-time passed and failed inspection totals.
-    let passed = 0;
-    let failed = 0;
-
-    inspections.forEach(item => {
-
-        if (isPassed(item.overall_status)) {
-            passed++;
-        }
-
-        if (isFailed(item.overall_status)) {
-            failed++;
-        }
-
-    });
-
-    passedInspectionsEl.textContent = passed;
-    failedInspectionsEl.textContent = failed;
-
-    // Keep recent inspections based on all records.
-    renderRecentInspections(
-        inspections.slice(0, 8)
-    );
-
-    return inspections;
-}
-
 
 
     /* =====================================================
@@ -3139,6 +3254,7 @@ function calculateCompliance() {
 </script>
 
 
+<script src="./firesafe-control-bar.js" defer></script>
 </body>
 
 </html>

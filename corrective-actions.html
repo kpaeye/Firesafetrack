@@ -1833,19 +1833,18 @@ const supabaseClient =
    STATE
 ===================================================== */
 
-let deviations = [];
+let correctiveActions = [];
 
 let equipmentList = [];
 
-let inspectionsList = [];
+let deviationsList = [];
 
-let correctiveActionsList = [];
+let filteredActions = [];
 
-let filteredDeviations = [];
+let editingActionId = null;
 
-let editingDeviationId = null;
+let deletingActionId = null;
 
-let deletingDeviationId = null;
 
 /* =====================================================
    INITIALIZE
@@ -1868,56 +1867,6 @@ document.addEventListener(
     }
 );
 
-async function loadCorrectiveActions(){
-
-    try{
-
-        const {
-            data,
-            error
-        } =
-        await supabaseClient
-            .from("corrective_actions")
-            .select(`
-                id,
-                action_number,
-                deviation_id,
-                equipment_id,
-                action_description,
-                priority,
-                status,
-                responsible_person,
-                target_date,
-                completion_date,
-                verification_required,
-                verified_by,
-                verification_date
-            `)
-            .order(
-                "created_at",
-                {
-                    ascending:false
-                }
-            );
-
-        if(error){
-            throw error;
-        }
-
-        correctiveActionsList =
-            data || [];
-
-    }
-    catch(error){
-
-        console.error(
-            "Corrective action loading error:",
-            error
-        );
-
-    }
-
-}
 
 /* =====================================================
    SIDEBAR
@@ -4652,46 +4601,9 @@ document.addEventListener(
     }
 );
 
-
-async function syncDeviationStatus(
-    deviationId,
-    status
-){
-
-    if(!deviationId){
-        return;
-    }
-
-    try{
-
-        await supabaseClient
-            .from("deviations")
-            .update({
-
-                status:
-                    status,
-
-                updated_at:
-                    new Date()
-                        .toISOString()
-
-            })
-            .eq(
-                "id",
-                deviationId
-            );
-
-    }
-    catch(error){
-
-        console.error(error);
-
-    }
-
-}
-
 </script>
 
+<script src="./firesafe-control-bar.js" defer></script>
 </body>
 
 </html>

@@ -841,16 +841,6 @@ tbody tr:hover{
 
 }
 
-.overdue-row{
-    background: rgba(255,59,48,0.12);
-}
-
-.overdue-row:hover{
-    background: rgba(255,59,48,0.20);
-}
-
-
-
 </style>
 
 </head>
@@ -1610,25 +1600,18 @@ tbody tr:hover{
         <div class="modal-footer">
 
             <button
-    class="secondary-btn"
-    onclick="closeDetailModal()"
->
-    Close
-</button>
+                class="secondary-btn"
+                onclick="closeDetailModal()"
+            >
+                Close
+            </button>
 
-<button
-    class="secondary-btn"
-    id="createActionButton"
->
-    Create Corrective Action
-</button>
-
-<button
-    class="primary-btn"
-    id="detailEditButton"
->
-    Edit Deviation
-</button>
+            <button
+                class="primary-btn"
+                id="detailEditButton"
+            >
+                Edit Deviation
+            </button>
 
         </div>
 
@@ -2443,11 +2426,6 @@ function buildTableRow(
     deviation
 ){
 
-const isOverdue =
-    deviation.target_date &&
-    deviation.status !== "Closed" &&
-    new Date(deviation.target_date) < new Date();
-
     const equipment =
         getEquipment(
             deviation.equipment_id
@@ -2490,7 +2468,7 @@ const isOverdue =
 
     return `
 
-        <tr class="${isOverdue ? 'overdue-row' : ''}">
+        <tr>
 
             <td>
 
@@ -3116,87 +3094,6 @@ async function saveDeviation(){
 
 }
 
-/* =====================================================
-   CREATE CORRECTIVE ACTION FROM DEVIATION
-===================================================== */
-
-async function createCorrectiveActionFromDeviation(
-    deviationId
-){
-
-    const deviation =
-        deviations.find(
-            d => d.id === deviationId
-        );
-
-    if(!deviation){
-        showToast(
-            "Deviation not found.",
-            "error"
-        );
-        return;
-    }
-
-    try{
-
-        const actionNumber =
-            "CA-" +
-            Date.now();
-
-        const {
-            error
-        } =
-        await supabaseClient
-            .from("corrective_actions")
-            .insert({
-
-                deviation_id:
-                    deviation.id,
-
-                action_number:
-                    actionNumber,
-
-                title:
-                    deviation.inspection_requirement ||
-                    "Corrective Action",
-
-                action_description:
-                    deviation.corrective_action ||
-                    deviation.deviation_description,
-
-                assigned_to:
-                    deviation.responsible_person,
-
-                target_date:
-                    deviation.target_date,
-
-                status:
-                    "Open"
-
-            });
-
-        if(error){
-            throw error;
-        }
-
-        showToast(
-            "Corrective Action created.",
-            "success"
-        );
-
-    }
-    catch(error){
-
-        console.error(error);
-
-        showToast(
-            error.message,
-            "error"
-        );
-
-    }
-
-}
 
 /* =====================================================
    UPDATE DEVIATION
@@ -3698,13 +3595,6 @@ function viewDeviation(id){
 
         };
 
-        document
-    .getElementById("createActionButton")
-    .onclick = function(){
-
-        createCorrectiveActionFromDeviation(id);
-
-    };
 
     document
         .getElementById("detailModal")
@@ -4270,6 +4160,7 @@ document
 
 </script>
 
+<script src="./firesafe-control-bar.js" defer></script>
 </body>
 
 </html>

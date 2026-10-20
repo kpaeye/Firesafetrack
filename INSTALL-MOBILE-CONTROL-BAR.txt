@@ -1,0 +1,16 @@
+FIRESAFE TRACK — ORIGINAL PROJECT MOBILE CONTROL BAR UPDATE
+
+This package adds the shared bottom navigation to copies of your existing HTML pages.
+It does NOT replace your project with the newer PWA package and does NOT change your Supabase setup, inspection logic, or service worker/offline setup.
+
+INSTALL
+1. Make a backup of your current Netlify project folder.
+2. Copy the HTML files in this package into the matching locations in your original project, replacing those files only after keeping your backup.
+3. Copy firesafe-control-bar.js into the same folder as those HTML files.
+4. Deploy the updated folder to Netlify.
+
+The bar is shown only when the viewport is 768px wide or less; it is hidden on desktop. Navigation links assume the HTML files are in the same folder. The “More” menu links to corrective-actions.html and locations.html.
+
+Pages included: index.html, dashboard.html, inspections.html, equipment.html, deviations.html, corrective-actions.html, reports.html, locations.html.
+
+NOTE: These pages are based on the latest original files available in this conversation/library, not a live download from Netlify. Compare with any edits made locally since those files were shared before replacing them.
