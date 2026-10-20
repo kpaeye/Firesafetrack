@@ -1125,6 +1125,10 @@ tbody tr:hover{
 
 </header>
 
+<div id="offlineQueueBar" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 22px;background:rgba(0,0,0,.22);border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;">
+  <span id="offlineQueueMessage">Offline-ready inspection queue: checking saved inspections…</span>
+  <button type="button" class="button button-secondary" id="syncNowButton" onclick="syncPendingInspections(true)">Sync pending inspections</button>
+</div>
 
 <!-- =====================================================
      MAIN CONTENT
@@ -1792,11 +1796,16 @@ const SUPABASE_URL =
 const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5aWVtamF6YmF3ZmxhdnhpYnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Njg5MzEsImV4cCI6MjEwNDU0NDkzMX0.RJ6siFDLg3LAsP2ZPDgdFVGAFasg05hK4GikdIO68PM";
 
-const supabaseClient =
-    window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-    );
+let supabaseClient = null;
+
+function ensureSupabaseClient(){
+    if(!supabaseClient && window.supabase && typeof window.supabase.createClient === "function"){
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+    return supabaseClient;
+}
+
+ensureSupabaseClient();
 
 
 /* =====================================================
@@ -1825,6 +1834,183 @@ let currentChecklist = [];
  */
 
 let checklistAnswers = [];
+
+/* =====================================================
+   OFFLINE INSPECTION QUEUE (IndexedDB)
+   Local save is confirmed separately from server sync.
+===================================================== */
+const OFFLINE_DB_NAME = "firesafe-track-offline";
+const OFFLINE_DB_VERSION = 1;
+const OFFLINE_STORE = "pendingInspections";
+let offlineDbPromise = null;
+
+function openOfflineDb(){
+    if(!("indexedDB" in window)) return Promise.reject(new Error("This browser does not support local offline storage."));
+    if(offlineDbPromise) return offlineDbPromise;
+    offlineDbPromise = new Promise((resolve,reject)=>{
+        const request = indexedDB.open(OFFLINE_DB_NAME,OFFLINE_DB_VERSION);
+        request.onupgradeneeded = () => {
+            const db = request.result;
+            if(!db.objectStoreNames.contains(OFFLINE_STORE)) db.createObjectStore(OFFLINE_STORE,{keyPath:"queueId"});
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error("Could not open local inspection storage."));
+    });
+    return offlineDbPromise;
+}
+
+async function putQueuedInspection(item){
+    const db = await openOfflineDb();
+    return new Promise((resolve,reject)=>{
+        const tx = db.transaction(OFFLINE_STORE,"readwrite");
+        tx.objectStore(OFFLINE_STORE).put(item);
+        tx.oncomplete = () => resolve(item);
+        tx.onerror = () => reject(tx.error || new Error("Could not save inspection locally."));
+        tx.onabort = () => reject(tx.error || new Error("Local inspection save was interrupted."));
+    });
+}
+
+async function getQueuedInspections(){
+    const db = await openOfflineDb();
+    return new Promise((resolve,reject)=>{
+        const tx = db.transaction(OFFLINE_STORE,"readonly");
+        const req = tx.objectStore(OFFLINE_STORE).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error || new Error("Could not read local inspection queue."));
+    });
+}
+
+async function removeQueuedInspection(queueId){
+    const db = await openOfflineDb();
+    return new Promise((resolve,reject)=>{
+        const tx = db.transaction(OFFLINE_STORE,"readwrite");
+        tx.objectStore(OFFLINE_STORE).delete(queueId);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error || new Error("Could not clear synced inspection."));
+    });
+}
+
+function makeQueueId(){
+    return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `fst-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+async function updateOfflineQueueUi(){
+    const message = document.getElementById("offlineQueueMessage");
+    const button = document.getElementById("syncNowButton");
+    if(!message || !button) return;
+    try{
+        const pending = await getQueuedInspections();
+        const waiting = pending.filter(x=>x.status !== "synced").length;
+        message.textContent = waiting ? `${waiting} inspection${waiting===1?"":"s"} saved on this device and awaiting server sync.` : (navigator.onLine ? "No pending inspections. Local offline storage is ready." : "You are offline. Completed inspections will be saved on this device until connection returns.");
+        button.disabled = waiting === 0 || !navigator.onLine;
+        button.textContent = waiting ? `Sync pending inspections (${waiting})` : "No pending inspections";
+    }catch(error){
+        message.textContent = "Offline storage unavailable: inspections require an internet connection to save.";
+        button.disabled = true;
+        console.error("Offline queue status error:",error);
+    }
+}
+
+async function syncPendingInspections(manual=false){
+    if(!navigator.onLine){
+        if(manual) showToast("You are offline. Inspections remain saved on this device.","error");
+        await updateOfflineQueueUi();
+        return;
+    }
+    const client = ensureSupabaseClient();
+    if(!client){
+        if(manual) showToast("The database library did not load. Keep this page open and try again when connected.","error");
+        await updateOfflineQueueUi();
+        return;
+    }
+    const button = document.getElementById("syncNowButton");
+    if(button){button.disabled=true;button.textContent="Syncing…";}
+    try{
+        const queue = await getQueuedInspections();
+        let synced = 0;
+        for(let item of queue){
+            try{
+                // Persist every completed stage so a refresh does not restart from step one.
+                if(!item.inspectionId){
+                    const {data,error} = await client.from("inspections").insert({
+                        equipment_id:item.equipment.id,
+                        inspection_date:item.inspectionDate,
+                        inspector_name:item.inspectorName,
+                        inspection_type:item.equipment.equipment_type,
+                        overall_status:item.overallStatus,
+                        notes:item.notes || null
+                    }).select().single();
+                    if(error) throw error;
+                    item.inspectionId = data.id;
+                    item.stage = "inspection-created";
+                    await putQueuedInspection(item);
+                }
+                if(!item.answersSaved){
+                    const answerRows = item.answers.map(a=>({
+                        inspection_id:item.inspectionId,
+                        item_number:a.item_number,
+                        inspection_requirement:a.inspection_requirement,
+                        answer:a.answer,
+                        remarks:a.remarks || null,
+                        severity:a.severity || "Medium"
+                    }));
+                    const {error} = await client.from("inspection_answers").insert(answerRows);
+                    if(error) throw error;
+                    item.answersSaved = true;
+                    item.stage = "answers-saved";
+                    await putQueuedInspection(item);
+                }
+                if(!item.deviationsSaved){
+                    const {data:existing,error:existingError} = await client.from("deviations").select("item_number").eq("inspection_id",item.inspectionId);
+                    if(existingError) throw existingError;
+                    const existingItems = new Set((existing||[]).map(d=>Number(d.item_number)));
+                    const missingFailed = item.answers.filter(a=>a.answer === "FAIL" && !existingItems.has(Number(a.item_number)));
+                    if(missingFailed.length){
+                        const result = await createDeviations(item.inspectionId,item.equipment.id,missingFailed);
+                        if(!result || result.created !== missingFailed.length) throw new Error("Not all deviations were confirmed as saved.");
+                    }
+                    item.deviationsSaved = true;
+                    item.stage = "deviations-saved";
+                    await putQueuedInspection(item);
+                }
+                if(!item.equipmentUpdated){
+                    const nextInspection = calculateNextInspectionDate(item.inspectionDate);
+                    const {error} = await client.from("equipment").update({last_inspection_date:item.inspectionDate,next_inspection_date:nextInspection}).eq("id",item.equipment.id);
+                    if(error) throw error;
+                    item.equipmentUpdated = true;
+                    item.stage = "equipment-updated";
+                    await putQueuedInspection(item);
+                }
+                await removeQueuedInspection(item.queueId);
+                synced++;
+            }catch(itemError){
+                console.error("Inspection sync paused; item remains queued:",item.queueId,itemError);
+                item.lastError = itemError.message || "Sync failed";
+                item.lastAttemptAt = new Date().toISOString();
+                await putQueuedInspection(item);
+            }
+        }
+        if(synced){
+            showToast(`${synced} inspection${synced===1?"":"s"} synced to the database.`,"success");
+            await loadEquipment();
+        }else if(manual && queue.length){
+            showToast("Some inspections are still waiting to sync. Check the connection and try again.","error");
+        }
+        if(navigator.onLine) setDatabaseStatus("online");
+    }catch(error){
+        console.error("Pending inspection sync error:",error);
+        if(manual) showToast("Could not sync pending inspections: "+(error.message||"Unknown error"),"error");
+    }finally{
+        await updateOfflineQueueUi();
+        if(button && navigator.onLine){
+            button.disabled=false;
+        }
+    }
+}
+
+window.addEventListener("online",()=>{ updateOfflineQueueUi(); syncPendingInspections(false); });
+window.addEventListener("offline",()=>{ setDatabaseStatus("offline"); updateOfflineQueueUi(); });
+window.addEventListener("pageshow",()=>{ updateOfflineQueueUi(); if(navigator.onLine) syncPendingInspections(false); });
 
 
 /* =====================================================
@@ -2113,6 +2299,18 @@ function setDatabaseStatus(
 
 async function loadEquipment(){
 
+    if(!ensureSupabaseClient()){
+        setDatabaseStatus("offline");
+        try{
+            const cached = JSON.parse(localStorage.getItem("firesafeTrackEquipmentCache") || "[]");
+            if(cached.length){equipmentList=cached;filteredEquipment=[...equipmentList];renderEquipment();await updateOfflineQueueUi();return;}
+        }catch(e){console.warn(e);}
+        const tbody = document.getElementById("equipmentTableBody");
+        if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Database library unavailable. Connect online and reload this page once before offline use.</td></tr>';
+        await updateOfflineQueueUi();
+        return;
+    }
+
     setDatabaseStatus("connecting");
 
     const tbody =
@@ -2171,33 +2369,20 @@ async function loadEquipment(){
         );
 
         setDatabaseStatus("offline");
-
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6">
-
-                    <div class="empty-state">
-
-                        Unable to load equipment.
-
-                        <br><br>
-
-                        ${escapeHtml(
-                            error.message
-                        )}
-
-                    </div>
-
-                </td>
-            </tr>
-        `;
-
-        showToast(
-            "Could not load equipment: " +
-            error.message,
-            "error"
-        );
-
+        try{
+            const cached = JSON.parse(localStorage.getItem("firesafeTrackEquipmentCache") || "[]");
+            if(cached.length){
+                equipmentList = cached;
+                filteredEquipment = [...equipmentList];
+                renderEquipment();
+                showToast("Offline mode: showing the last equipment list saved on this device.","error");
+                await updateOfflineQueueUi();
+                return;
+            }
+        }catch(cacheError){console.warn("Equipment cache unavailable:",cacheError);}
+        tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">Unable to load equipment. Connect to the internet and load this page once before using offline inspections.<br><br>${escapeHtml(error.message)}</div></td></tr>`;
+        showToast("Could not load equipment: " + error.message,"error");
+        await updateOfflineQueueUi();
         return;
 
     }
@@ -2207,6 +2392,9 @@ async function loadEquipment(){
 
     equipmentList =
         data || [];
+
+    try{localStorage.setItem("firesafeTrackEquipmentCache",JSON.stringify(equipmentList));}
+    catch(cacheError){console.warn("Could not cache equipment list:",cacheError);}
 
     filteredEquipment =
         [...equipmentList];
@@ -3526,401 +3714,50 @@ function focusFirstUnanswered(){
 ===================================================== */
 
 async function saveInspection(){
-
-    if(!currentEquipment){
-
-        showToast(
-            "No equipment selected.",
-            "error"
-        );
-
-        return;
-
+    if(!currentEquipment){ showToast("No equipment selected.","error"); return; }
+    const unansweredIndexes = getUnansweredIndexes();
+    if(unansweredIndexes.length){
+        showToast(`Inspection incomplete — ${unansweredIndexes.length} item(s) still require an answer.`,"error");
+        unansweredIndexes.forEach(index=>{const row=document.querySelector(`[data-item-index="${index}"]`);if(row)row.classList.add("unanswered");});
+        updateChecklistProgress(); focusFirstUnanswered(); return;
     }
-
-
-    /*
-     * =================================================
-     * FIRST AND MOST IMPORTANT VALIDATION
-     * =================================================
-     *
-     * Do this BEFORE creating anything in Supabase.
-     */
-
-    const unansweredIndexes =
-        getUnansweredIndexes();
-
-
-    if(
-        unansweredIndexes.length > 0
-    ){
-
-        const count =
-            unansweredIndexes.length;
-
-
-        showToast(
-            `Inspection incomplete — ${count} item${count === 1 ? "" : "s"} still require${count === 1 ? "s" : ""} an answer.`,
-            "error"
-        );
-
-
-        /*
-         * Make unanswered rows visible.
-         */
-
-        unansweredIndexes.forEach(
-            index => {
-
-                const row =
-                    document.querySelector(
-                        `[data-item-index="${index}"]`
-                    );
-
-
-                if(row){
-
-                    row.classList.add(
-                        "unanswered"
-                    );
-
-                }
-
-            }
-        );
-
-
-        updateChecklistProgress();
-
-        focusFirstUnanswered();
-
-        return;
-
-    }
-
-
-    const inspectionDate =
-        document.getElementById(
-            "inspectionDate"
-        ).value;
-
-
-    const inspectorName =
-        document.getElementById(
-            "inspectorName"
-        ).value.trim();
-
-
-    const notes =
-        document.getElementById(
-            "inspectionNotes"
-        ).value.trim();
-
-
-    if(!inspectionDate){
-
-        showToast(
-            "Please select an inspection date.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    if(!inspectorName){
-
-        showToast(
-            "Please enter the inspector name.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    const answers =
-        getChecklistAnswers();
-     
-
-        const failedWithoutRemarks =
-    answers.find(
-        item =>
-            item.answer === "FAIL" &&
-            !item.remarks?.trim()
-    );
-
-if(failedWithoutRemarks){
-
-    showToast(
-        `Checklist item ${failedWithoutRemarks.item_number} is marked FAIL and requires remarks.`,
-        "error"
-    );
-
-    return;
-
-}
-
-    /*
-     * Defensive validation.
-     *
-     * Even though the checklist state has already
-     * been checked, verify the final answer array
-     * before touching the database.
-     */
-
-    const invalidAnswers =
-        answers.filter(
-            item =>
-                ![
-                    "PASS",
-                    "FAIL",
-                    "N/A"
-                ].includes(
-                    item.answer
-                )
-        );
-
-
-    if(
-        invalidAnswers.length > 0
-    ){
-
-        showToast(
-            "Inspection cannot be saved because one or more checklist items are unanswered.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    const overallStatus =
-        calculateOverallStatus(
-            answers
-        );
-
-
-    const saveButton =
-        document.getElementById(
-            "saveInspectionButton"
-        );
-
-
-    saveButton.disabled =
-        true;
-
-    saveButton.textContent =
-        "Saving...";
-
-
+    const inspectionDate = document.getElementById("inspectionDate").value;
+    const inspectorName = document.getElementById("inspectorName").value.trim();
+    const notes = document.getElementById("inspectionNotes").value.trim();
+    if(!inspectionDate){showToast("Please select an inspection date.","error");return;}
+    if(!inspectorName){showToast("Please enter the inspector name.","error");return;}
+    const answers = getChecklistAnswers();
+    const failedWithoutRemarks = answers.find(item=>item.answer === "FAIL" && !item.remarks?.trim());
+    if(failedWithoutRemarks){showToast(`Checklist item ${failedWithoutRemarks.item_number} is marked FAIL and requires remarks.`,"error");return;}
+    if(answers.some(item=>!["PASS","FAIL","N/A"].includes(item.answer))){showToast("Inspection cannot be saved because one or more checklist items are unanswered.","error");return;}
+    const saveButton = document.getElementById("saveInspectionButton");
+    saveButton.disabled = true;
+    saveButton.textContent = "Saving on this device…";
     try{
-
-        /* =============================================
-           CREATE INSPECTION
-        ============================================= */
-
-        const {
-            data: inspection,
-            error: inspectionError
-        } =
-            await supabaseClient
-                .from("inspections")
-                .insert({
-
-                    equipment_id:
-                        currentEquipment.id,
-
-                    inspection_date:
-                        inspectionDate,
-
-                    inspector_name:
-                        inspectorName,
-
-                    inspection_type:
-                        currentEquipment.equipment_type,
-
-                    overall_status:
-                        overallStatus,
-
-                    notes:
-                        notes || null
-
-                })
-                .select()
-                .single();
-
-
-        if(inspectionError){
-
-            throw inspectionError;
-
-        }
-
-
-        /* =============================================
-           CREATE ANSWERS
-        ============================================= */
-
-        const answerRows =
-    answers.map(
-        item => ({
-
-            inspection_id:
-                inspection.id,
-
-            item_number:
-                item.item_number,
-
-            inspection_requirement:
-                item.inspection_requirement,
-
-            answer:
-                item.answer,
-
-            remarks:
-                item.remarks || null,
-
-            severity:
-                item.severity || "Medium"
-
-        })
-    );
-          
-            const failedItems =
-    answers.filter(
-        item =>
-            item.answer === "FAIL"
-    );
-
-        const {
-            error: answersError
-        } =
-            await supabaseClient
-                .from("inspection_answers")
-                .insert(
-                    answerRows
-                );
-
-
-        if(answersError){
-
-            /*
-             * Remove the inspection if the
-             * answer records failed.
-             */
-
-            await supabaseClient
-                .from("inspections")
-                .delete()
-                .eq(
-                    "id",
-                    inspection.id
-                );
-
-
-            throw answersError;
-
-        }
-                /* =============================================
-           CREATE DEVIATIONS FROM FAILED ITEMS
-        ============================================= */
-
-        const deviationResult =
-            await createDeviations(
-                inspection.id,
-                currentEquipment.id,
-                answers
-            );
-
-        console.log(
-            "Deviation creation result:",
-            deviationResult
-        );
-          
-        /* =============================================
-           UPDATE EQUIPMENT INSPECTION DATE
-        ============================================= */
-
-        const nextInspection =
-            calculateNextInspectionDate(
-                inspectionDate
-            );
-
-
-        const {
-            error: equipmentUpdateError
-        } =
-            await supabaseClient
-                .from("equipment")
-                .update({
-
-                    last_inspection_date:
-                        inspectionDate,
-
-                    next_inspection_date:
-                        nextInspection
-
-                })
-                .eq(
-                    "id",
-                    currentEquipment.id
-                );
-
-
-        if(equipmentUpdateError){
-
-            console.warn(
-                "Equipment inspection dates could not be updated:",
-                equipmentUpdateError
-            );
-
-        }
-
-
-        showToast(
-            "Inspection saved successfully.",
-            "success"
-        );
-    
-   
+        // First commit the complete inspection payload to IndexedDB, regardless of connectivity.
+        const queueItem = {
+            queueId:makeQueueId(), createdAt:new Date().toISOString(), status:"pending", stage:"local-saved",
+            equipment:{id:currentEquipment.id,name:currentEquipment.name,equipment_code:currentEquipment.equipment_code,equipment_type:currentEquipment.equipment_type},
+            inspectionDate, inspectorName, notes, answers,
+            overallStatus:calculateOverallStatus(answers),
+            inspectionId:null, answersSaved:false, deviationsSaved:false, equipmentUpdated:false
+        };
+        await putQueuedInspection(queueItem);
+        await updateOfflineQueueUi();
         closeInspectionModal();
-
-
-        await loadEquipment();
-
+        if(navigator.onLine && ensureSupabaseClient()){
+            showToast("Inspection safely saved on this device. Syncing to the database…","success");
+            await syncPendingInspections(false);
+        }else{
+            showToast("Inspection saved on this device. It will sync when internet returns.","success");
+        }
+    }catch(error){
+        console.error("Local inspection save error:",error);
+        showToast("Inspection was NOT saved: "+(error.message||"Local storage error"),"error");
+    }finally{
+        saveButton.disabled = false;
+        saveButton.textContent = "Save Inspection";
     }
-    catch(error){
-
-        console.error(
-            "Inspection save error:",
-            error
-        );
-
-
-        showToast(
-            "Inspection could not be saved: " +
-            (
-                error.message ||
-                "Unknown database error."
-            ),
-            "error"
-        );
-
-    }
-    finally{
-
-        saveButton.disabled =
-            false;
-
-        saveButton.textContent =
-            "Save Inspection";
-
-    }
-
 }
 
 /* =====================================================
@@ -3942,8 +3779,18 @@ async function createDeviations(inspectionId, equipmentId, answers) {
         };
     }
 
-    // Build deviation records
-    const deviationRows = failedItems.map((item, index) => ({
+    // Avoid recreating deviations if a previous sync stopped after a partial insert.
+    const {data:existingDeviations,error:existingDeviationError} = await supabaseClient
+        .from("deviations").select("item_number").eq("inspection_id",inspectionId);
+    if(existingDeviationError) throw existingDeviationError;
+    const existingNumbers = new Set((existingDeviations || []).map(item=>Number(item.item_number)));
+    const missingFailedItems = failedItems.filter(item=>!existingNumbers.has(Number(item.item_number)));
+    if(missingFailedItems.length === 0){
+        return {created:0,data:[]};
+    }
+
+    // Build deviation records only for failed items not already saved.
+    const deviationRows = missingFailedItems.map((item, index) => ({
         deviation_number: `DEV-${Date.now()}-${index + 1}`,
 
         inspection_id: inspectionId,
@@ -4008,63 +3855,23 @@ async function createDeviations(inspectionId, equipmentId, answers) {
    CREATE CORRECTIVE ACTION FROM DEVIATION
 ===================================================== */
 
-async function createCorrectiveAction(deviation){
-
+async function createCorrectiveAction(deviations){
     try{
-
-        const actionNumber =
-            await generateActionNumber();
-
-        const {
-            error
-        } =
-        await supabaseClient
-            .from("corrective_actions")
-            .insert({
-
-                action_number:
-                    actionNumber,
-
-                deviation_id:
-                    deviation.id,
-
-                equipment_id:
-                    deviation.equipment_id,
-
-                action_description:
-                    deviation.deviation_description,
-
-                priority:
-                    deviation.severity || "Medium",
-
-                status:
-                    "Open",
-
-                responsible_person:
-                    deviation.responsible_person || null,
-
-                target_date:
-                    deviation.target_date || null,
-
-                verification_required:
-                    true
-
+        const list = Array.isArray(deviations) ? deviations : [deviations];
+        for(const deviation of list){
+            if(!deviation || !deviation.id) continue;
+            const {data:existing,error:lookupError} = await supabaseClient.from("corrective_actions").select("id").eq("deviation_id",deviation.id).limit(1);
+            if(lookupError) throw lookupError;
+            if(existing && existing.length) continue;
+            const actionNumber = await generateActionNumber();
+            const {error} = await supabaseClient.from("corrective_actions").insert({
+                action_number:actionNumber,deviation_id:deviation.id,equipment_id:deviation.equipment_id,
+                action_description:deviation.deviation_description,priority:deviation.severity || "Medium",status:"Open",
+                responsible_person:deviation.responsible_person || null,target_date:deviation.target_date || null,verification_required:true
             });
-
-        if(error){
-            throw error;
+            if(error) throw error;
         }
-
-    }
-    catch(error){
-
-        console.error(
-            "Corrective Action Creation Error:",
-            error
-        );
-
-    }
-
+    }catch(error){console.error("Corrective Action Creation Error:",error);}
 }
 
 
@@ -4522,6 +4329,11 @@ document.addEventListener(
 
 
         loadEquipment();
+        updateOfflineQueueUi();
+        if("serviceWorker" in navigator){
+            navigator.serviceWorker.register("./firesafe-sw.js").catch(error=>console.warn("Offline page caching could not be enabled:",error));
+        }
+        if(navigator.onLine) syncPendingInspections(false);
 
     }
 );
