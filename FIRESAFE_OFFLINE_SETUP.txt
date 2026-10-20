@@ -1,0 +1,22 @@
+FIRESAFE TRACK — OFFLINE APP ACCESS + INSPECTION QUEUE
+
+FILES
+- inspections.html: updated inspection page with local queue
+- firesafe-sw.js: caches the app pages and Supabase browser library
+
+INSTALL
+1. Back up the current website files.
+2. Upload/replace inspections.html and firesafe-sw.js at the SAME website root as dashboard.html.
+3. Make sure the website is served over HTTPS (Netlify provides HTTPS).
+4. Connect to the internet and open dashboard.html, then open inspections.html once. Keep the site open for a short time so the service worker can install and cache pages/resources. Open the other pages once too if your deployment has changed filenames or has additional pages not listed in firesafe-sw.js.
+5. In Edge/Chrome, reload the page after the service worker installs. If an older service worker was active, close/reopen the tab or use DevTools > Application > Service Workers to check that firesafe-sw.js is activated.
+6. While still online, open the equipment list so the latest equipment is cached by the inspection page.
+7. Test: open dashboard.html online, then disconnect Wi-Fi/network and refresh or navigate to inspections.html. The page shell should open, but live database functions require connectivity. Previously loaded equipment and locally queued inspections can be used/saved offline.
+8. Reconnect and use “Sync pending inspections”. Verify the inspection, answers, deviations and corrective actions in Supabase.
+
+IMPORTANT LIMITS
+- Offline page access works only after the service worker has installed and cached the files while online. The first-ever visit cannot work offline.
+- Add any new app pages or external JavaScript/CSS libraries to the cache strategy before expecting them to work offline.
+- Supabase data queries, login/session validation and live database updates still need internet. This update caches the interface; it does not make the database itself available offline.
+- Do not clear site data/browser storage while pending inspections are on the device.
+- Test on a staging deployment first. Confirm each synced inspection and its related records before relying on this for operational safety records.

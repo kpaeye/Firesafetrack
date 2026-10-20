@@ -1833,18 +1833,19 @@ const supabaseClient =
    STATE
 ===================================================== */
 
-let correctiveActions = [];
+let deviations = [];
 
 let equipmentList = [];
 
-let deviationsList = [];
+let inspectionsList = [];
 
-let filteredActions = [];
+let correctiveActionsList = [];
 
-let editingActionId = null;
+let filteredDeviations = [];
 
-let deletingActionId = null;
+let editingDeviationId = null;
 
+let deletingDeviationId = null;
 
 /* =====================================================
    INITIALIZE
@@ -1867,6 +1868,56 @@ document.addEventListener(
     }
 );
 
+async function loadCorrectiveActions(){
+
+    try{
+
+        const {
+            data,
+            error
+        } =
+        await supabaseClient
+            .from("corrective_actions")
+            .select(`
+                id,
+                action_number,
+                deviation_id,
+                equipment_id,
+                action_description,
+                priority,
+                status,
+                responsible_person,
+                target_date,
+                completion_date,
+                verification_required,
+                verified_by,
+                verification_date
+            `)
+            .order(
+                "created_at",
+                {
+                    ascending:false
+                }
+            );
+
+        if(error){
+            throw error;
+        }
+
+        correctiveActionsList =
+            data || [];
+
+    }
+    catch(error){
+
+        console.error(
+            "Corrective action loading error:",
+            error
+        );
+
+    }
+
+}
 
 /* =====================================================
    SIDEBAR
