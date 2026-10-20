@@ -514,17 +514,13 @@
            STAT CARDS
         ===================================================== */
 
-        .stats-grid {
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 22px;
+}
 
-            display: grid;
-
-            grid-template-columns:
-                repeat(4, minmax(0, 1fr));
-
-            gap: 18px;
-
-            margin-bottom: 22px;
-        }
 
 
         .stat-card {
@@ -1020,6 +1016,14 @@
            RESPONSIVE
         ===================================================== */
 
+        
+@media (max-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+
         @media (max-width: 1000px) {
 
             .stats-grid {
@@ -1497,10 +1501,23 @@
 
                 </div>
 
-                <div class="stat-card">
-    <h3 id="overdueCount">0</h3>
-    <p>Overdue</p>
+                
+<div class="stat-card">
+
+    <div class="stat-label">
+        Overdue Deviations
+    </div>
+
+    <div class="stat-value" id="overdueCount">
+        0
+    </div>
+
+    <div class="stat-note">
+        Past target date and not closed
+    </div>
+
 </div>
+
 
 
                 <div class="stat-card">
@@ -2369,126 +2386,105 @@ calculateCompliance();
        LOAD INSPECTIONS
     ====================================================== */
 
-    async function loadInspections() {
+    
+async function loadInspections() {
 
-        const {
-            data,
-            error,
-            count
-        } =
-            await supabaseClient
-                .from("inspections")
-                .select(
-                    `
-                        id,
-                        equipment_id,
-                        inspection_date,
-                        inspector_name,
-                        inspection_type,
-                        overall_status,
-                        notes,
-                        created_at
-                    `,
-                    {
-                        count: "exact"
-                    }
-                )
-                .order(
-                    "inspection_date",
-                    {
-                        ascending: false
-                    }
-                );
+    // Fetch all inspection records.
+    // Do not delete or filter historical records out of the database.
+    const {
+        data,
+        error
+    } = await supabaseClient
+        .from("inspections")
+        .select(`
+            id,
+            equipment_id,
+            inspection_date,
+            inspector_name,
+            inspection_type,
+            overall_status,
+            notes,
+            created_at
+        `)
+        .order("inspection_date", {
+            ascending: false
+        });
 
+    if (error) {
+        throw new Error(
+            "Inspections query failed: " + error.message
+        );
+    }
 
-        if (error) {
+    const inspections = data || [];
 
-            throw new Error(
-                "Inspections query failed: " +
-                error.message
-            );
+    // Determine the current calendar month.
+    const now = new Date();
 
+    const monthStart = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        1
+    );
+
+    const nextMonthStart = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        1
+    );
+
+    // Count inspections dated within the current month.
+    const monthlyInspections = inspections.filter(item => {
+
+        if (!item.inspection_date) {
+            return false;
         }
 
-
-        const inspections =
-            data || [];
-
-
-        const total =
-            count !== null &&
-            count !== undefined
-                ? count
-                : inspections.length;
-
-
-        totalInspectionsEl.textContent =
-            total;
-
-
-        /* -------------------------------------------------
-           PASSED / FAILED INSPECTIONS
-
-           Correct database field:
-           overall_status
-        -------------------------------------------------- */
-
-        let passed = 0;
-
-        let failed = 0;
-
-
-        inspections.forEach(
-            function(item) {
-
-                if (
-                    isPassed(
-                        item.overall_status
-                    )
-                ) {
-
-                    passed++;
-
-                }
-
-
-                if (
-                    isFailed(
-                        item.overall_status
-                    )
-                ) {
-
-                    failed++;
-
-                }
-
-            }
+        const inspectionDate = new Date(
+            item.inspection_date
         );
 
+        if (Number.isNaN(inspectionDate.getTime())) {
+            return false;
+        }
 
-        passedInspectionsEl.textContent =
-            passed;
-
-
-        failedInspectionsEl.textContent =
-            failed;
-
-
-        /* -------------------------------------------------
-           RECENT INSPECTIONS
-        -------------------------------------------------- */
-
-        renderRecentInspections(
-            inspections.slice(
-                0,
-                8
-            )
+        return (
+            inspectionDate >= monthStart &&
+            inspectionDate < nextMonthStart
         );
+    });
 
+    // Display current month's inspection total.
+    totalInspectionsEl.textContent =
+        monthlyInspections.length;
 
-        return inspections;
+    // Preserve all-time passed and failed inspection totals.
+    let passed = 0;
+    let failed = 0;
 
-    }
+    inspections.forEach(item => {
+
+        if (isPassed(item.overall_status)) {
+            passed++;
+        }
+
+        if (isFailed(item.overall_status)) {
+            failed++;
+        }
+
+    });
+
+    passedInspectionsEl.textContent = passed;
+    failedInspectionsEl.textContent = failed;
+
+    // Keep recent inspections based on all records.
+    renderRecentInspections(
+        inspections.slice(0, 8)
+    );
+
+    return inspections;
+}
+
 
 
     /* =====================================================
