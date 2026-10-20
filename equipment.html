@@ -16,6 +16,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+<script src="./firesafe-control-bar.js" defer></script>
 <style>
 
 *{
@@ -865,6 +866,16 @@ input[type="checkbox"]{
         flex:1;
     }
 
+}
+
+@media (max-width: 768px) {
+    body {
+        padding-bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+    }
+
+    html {
+        scroll-padding-bottom: calc(112px + env(safe-area-inset-bottom));
+    }
 }
 
 </style>
