@@ -1,1870 +1,1387 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Equipment Register | FireSafe Track</title>
+<head>
+
+<meta charset="UTF-8">
 
 <meta
-    name="description"
-    content="FireSafe Track Equipment Register - Fire safety equipment management and inspection tracking."
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
 >
 
-<!-- =====================================================
-     SUPABASE
-===================================================== -->
+<title>FireSafe Track | Equipment Register</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<!-- =====================================================
-     AUTHENTICATION
-===================================================== -->
-<script src="auth.js"></script>
-
-<!-- =====================================================
-     FONT
-===================================================== -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet"
->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
 
-:root {
-    --black: #0B0D0F;
-    --black-2: #111417;
-    --black-3: #181C20;
-
-    --panel: #20252A;
-    --panel-light: #272D33;
-
-    --red: #E53935;
-    --red-dark: #B71C1C;
-    --red-light: #FF5A56;
-
-    --white: #FFFFFF;
-    --text: #E8EAED;
-    --text-soft: #C5CBD1;
-
-    --muted: #9AA1A8;
-    --muted-2: #6F777F;
-
-    --line: rgba(255,255,255,.08);
-    --line-light: rgba(255,255,255,.12);
-
-    --green: #43A047;
-    --green-light: #66BB6A;
-
-    --amber: #FFB300;
-    --amber-light: #FFD166;
-
-    --danger: #EF5350;
-
-    --sidebar-width: 240px;
+*{
+    box-sizing:border-box;
 }
 
-/* =====================================================
-   RESET
-===================================================== */
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+html{
+    scroll-behavior:smooth;
 }
 
-html,
-body {
-    min-height: 100%;
-}
-
-body {
-    font-family: "Poppins", sans-serif;
-    background: var(--black);
-    color: var(--text);
-    font-size: 13px;
-}
-
-button,
-input,
-select,
-textarea {
-    font-family: inherit;
-}
-
-button {
-    cursor: pointer;
-}
-
-a {
-    text-decoration: none;
-    color: inherit;
-}
-
-/* =====================================================
-   APP SHELL
-===================================================== */
-
-.app {
-    min-height: 100vh;
+body{
+    margin:0;
+    min-height:100vh;
+    font-family:Arial,sans-serif;
+    background:linear-gradient(135deg,#0b1f3a,#142d4c);
+    color:#fff;
 }
 
 /* =====================================================
    SIDEBAR
 ===================================================== */
 
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-
-    width: var(--sidebar-width);
-
-    background: var(--black-2);
-    border-right: 1px solid var(--line);
-
-    display: flex;
-    flex-direction: column;
-
-    z-index: 1000;
+.sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:270px;
+    height:100vh;
+    background:#0a192d;
+    border-right:1px solid rgba(255,255,255,.12);
+    z-index:1000;
+    transform:translateX(-100%);
+    transition:transform .25s ease;
+    box-shadow:8px 0 25px rgba(0,0,0,.3);
 }
 
-/* Brand */
-
-.brand {
-    height: 78px;
-
-    display: flex;
-    align-items: center;
-
-    padding: 0 20px;
-
-    border-bottom: 1px solid var(--line);
+.sidebar.open{
+    transform:translateX(0);
 }
 
-.brand-mark {
-    width: 38px;
-    height: 38px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: var(--red);
-    color: white;
-
-    border-radius: 8px;
-
-    font-size: 14px;
-    font-weight: 700;
-
-    margin-right: 11px;
-
-    box-shadow: 0 5px 15px rgba(229,57,53,.18);
+.sidebar-header{
+    height:74px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+    border-bottom:1px solid rgba(255,255,255,.1);
 }
 
-.brand-text {
-    line-height: 1.15;
+.brand{
+    font-size:21px;
+    font-weight:700;
 }
 
-.brand-name {
-    color: var(--white);
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: -.2px;
+.brand span{
+    color:#ff3b30;
 }
 
-.brand-by {
-    color: var(--muted);
-    font-size: 9px;
-    margin-top: 4px;
+.sidebar-close{
+    border:none;
+    background:none;
+    color:#fff;
+    font-size:25px;
+    cursor:pointer;
 }
 
-/* Navigation */
-
-.sidebar-nav {
-    flex: 1;
-    padding: 18px 12px;
-    overflow-y: auto;
+.sidebar-nav{
+    padding:18px 12px;
 }
 
-.nav-section {
-    margin-bottom: 23px;
+.sidebar-nav a{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:13px 14px;
+    margin-bottom:5px;
+    color:#d8e0ea;
+    text-decoration:none;
+    border-radius:8px;
+    font-size:14px;
+    transition:.2s;
 }
 
-.nav-section-title {
-    padding: 0 10px;
-    margin-bottom: 8px;
-
-    color: var(--muted-2);
-
-    font-size: 9px;
-    font-weight: 600;
-
-    text-transform: uppercase;
-    letter-spacing: .9px;
+.sidebar-nav a:hover{
+    background:rgba(255,255,255,.08);
+    color:#fff;
 }
 
-.nav-item {
-    display: flex;
-    align-items: center;
-
-    min-height: 42px;
-
-    padding: 0 11px;
-
-    margin-bottom: 4px;
-
-    border-radius: 7px;
-
-    color: var(--text-soft);
-
-    font-size: 12px;
-    font-weight: 500;
-
-    transition: .18s ease;
+.sidebar-nav a.active{
+    background:#ff3b30;
+    color:#fff;
 }
 
-.nav-item:hover {
-    background: var(--black-3);
-    color: var(--white);
-}
-
-.nav-item.active {
-    background: rgba(229,57,53,.13);
-    color: var(--red-light);
-}
-
-.nav-icon {
-    width: 27px;
-
-    display: inline-flex;
-    justify-content: center;
-
-    margin-right: 5px;
-
-    font-size: 15px;
-}
-
-.sidebar-footer {
-    padding: 14px 18px;
-
-    border-top: 1px solid var(--line);
-
-    color: var(--muted-2);
-
-    font-size: 9px;
+.nav-icon{
+    width:22px;
+    text-align:center;
 }
 
 /* =====================================================
-   MAIN
+   OVERLAY
 ===================================================== */
 
-.main {
-    min-height: 100vh;
+.sidebar-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.58);
+    z-index:999;
+    display:none;
+}
 
-    margin-left: var(--sidebar-width);
-
-    background:
-        radial-gradient(
-            circle at top right,
-            rgba(229,57,53,.035),
-            transparent 32%
-        ),
-        var(--black);
+.sidebar-overlay.show{
+    display:block;
 }
 
 /* =====================================================
    TOPBAR
 ===================================================== */
 
-.topbar {
-    height: 78px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding: 0 30px;
-
-    border-bottom: 1px solid var(--line);
-
-    background: rgba(11,13,15,.92);
-
-    position: sticky;
-    top: 0;
-
-    z-index: 100;
+.topbar{
+    height:74px;
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 24px;
+    background:rgba(0,0,0,.3);
+    border-bottom:1px solid rgba(255,255,255,.1);
+    position:sticky;
+    top:0;
+    z-index:500;
 }
 
-.page-title {
-    display: flex;
-    flex-direction: column;
+.topbar-left{
+    display:flex;
+    align-items:center;
+    gap:16px;
 }
 
-.page-title h1 {
-    font-size: 20px;
-    font-weight: 600;
-
-    color: var(--white);
-
-    letter-spacing: -.3px;
+.menu-button{
+    width:42px;
+    height:42px;
+    border:none;
+    border-radius:8px;
+    background:rgba(255,255,255,.09);
+    color:#fff;
+    font-size:23px;
+    cursor:pointer;
 }
 
-.page-title p {
-    margin-top: 3px;
-
-    color: var(--muted);
-
-    font-size: 11px;
+.menu-button:hover{
+    background:rgba(255,255,255,.15);
 }
 
-.topbar-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.topbar-title{
+    font-size:18px;
+    font-weight:600;
 }
 
-/* =====================================================
-   CONTENT
-===================================================== */
-
-.content {
-    padding: 26px 30px 40px;
+.topbar-user{
+    color:#cbd5e1;
+    font-size:14px;
 }
 
 /* =====================================================
-   BUTTONS
+   MAIN
 ===================================================== */
 
-.btn {
-    min-height: 36px;
-
-    padding: 0 14px;
-
-    border: 1px solid transparent;
-    border-radius: 6px;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    gap: 7px;
-
-    font-size: 11px;
-    font-weight: 600;
-
-    transition: .18s ease;
+.main{
+    width:100%;
+    padding:28px;
 }
 
-.btn-primary {
-    background: var(--red);
-    color: white;
-    border-color: var(--red);
+.page-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:20px;
+    margin-bottom:20px;
 }
 
-.btn-primary:hover {
-    background: var(--red-light);
-    border-color: var(--red-light);
+.page-header h1{
+    margin:0 0 7px;
+    font-size:30px;
 }
 
-.btn-secondary {
-    background: var(--panel);
-    color: var(--text-soft);
-    border-color: var(--line-light);
+.page-header p{
+    margin:0;
+    color:#b8c4d2;
+    font-size:14px;
 }
 
-.btn-secondary:hover {
-    background: var(--panel-light);
-    color: var(--white);
+.primary-button{
+    border:none;
+    background:#ff3b30;
+    color:#fff;
+    padding:12px 18px;
+    border-radius:7px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
 }
 
-.btn-danger {
-    background: rgba(239,83,80,.1);
-    color: var(--danger);
-    border-color: rgba(239,83,80,.2);
+.primary-button:hover{
+    background:#cc2f26;
 }
 
-.btn-danger:hover {
-    background: rgba(239,83,80,.18);
+.secondary-button{
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.07);
+    color:#fff;
+    padding:10px 14px;
+    border-radius:7px;
+    font-size:13px;
+    cursor:pointer;
 }
 
-.btn:disabled {
-    opacity: .45;
-    cursor: not-allowed;
+.secondary-button:hover{
+    background:rgba(255,255,255,.12);
 }
 
-.btn-sm {
-    min-height: 30px;
-    padding: 0 9px;
-    font-size: 10px;
+.warning-button{
+    border:1px solid rgba(255,204,0,.35);
+    background:rgba(255,204,0,.10);
+    color:#ffcc00;
+    padding:10px 14px;
+    border-radius:7px;
+    font-size:13px;
+    cursor:pointer;
+}
+
+.warning-button:hover{
+    background:rgba(255,204,0,.17);
+}
+
+.danger-button{
+    border:1px solid rgba(255,59,48,.35);
+    background:rgba(255,59,48,.10);
+    color:#ff8b84;
+    padding:10px 14px;
+    border-radius:7px;
+    font-size:13px;
+    cursor:pointer;
 }
 
 /* =====================================================
-   STATS
+   DATABASE STATUS
 ===================================================== */
 
-.stats-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
-    gap: 14px;
-
-    margin-bottom: 20px;
+.database-status{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:11px 14px;
+    margin-bottom:20px;
+    border-radius:8px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.09);
+    color:#cbd5e1;
+    font-size:13px;
 }
 
-.stat-card {
-    background: var(--panel);
-
-    border: 1px solid var(--line);
-
-    border-radius: 8px;
-
-    padding: 17px 18px;
-
-    min-height: 92px;
-
-    position: relative;
-    overflow: hidden;
+.status-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#ffcc00;
 }
 
-.stat-card::before {
-    content: "";
-
-    position: absolute;
-
-    top: 0;
-    left: 0;
-
-    width: 3px;
-    height: 100%;
-
-    background: var(--red);
-
-    opacity: .7;
+.status-dot.connected{
+    background:#22c55e;
 }
 
-.stat-label {
-    color: var(--muted);
-
-    font-size: 10px;
-    font-weight: 500;
-
-    text-transform: uppercase;
-    letter-spacing: .4px;
-}
-
-.stat-value {
-    margin-top: 8px;
-
-    color: var(--white);
-
-    font-size: 25px;
-    font-weight: 600;
-
-    line-height: 1;
-}
-
-.stat-card.active-stat::before {
-    background: var(--green);
-}
-
-.stat-card.inactive-stat::before {
-    background: var(--amber);
-}
-
-.stat-card.due-stat::before {
-    background: var(--danger);
+.status-dot.error{
+    background:#ff3b30;
 }
 
 /* =====================================================
-   TOOLBAR
+   STAT CARDS
 ===================================================== */
 
-.toolbar {
-    background: var(--panel);
-
-    border: 1px solid var(--line);
-
-    border-radius: 8px;
-
-    padding: 13px;
-
-    margin-bottom: 14px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 12px;
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+    margin-bottom:20px;
 }
 
-.toolbar-left,
-.toolbar-right {
-    display: flex;
-    align-items: center;
-
-    gap: 8px;
+.stat-card{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:10px;
+    padding:19px;
 }
 
-.search-box {
-    position: relative;
+.stat-label{
+    color:#aebccc;
+    font-size:13px;
+    margin-bottom:9px;
 }
 
-.search-box input {
-    width: 240px;
-
-    height: 36px;
-
-    padding: 0 12px 0 35px;
-
-    background: var(--black-3);
-
-    border: 1px solid var(--line-light);
-    border-radius: 6px;
-
-    color: var(--text);
-
-    outline: none;
-
-    font-size: 11px;
+.stat-value{
+    font-size:29px;
+    font-weight:700;
 }
 
-.search-box input:focus {
-    border-color: rgba(229,57,53,.55);
-}
-
-.search-icon {
-    position: absolute;
-
-    left: 12px;
-    top: 50%;
-
-    transform: translateY(-50%);
-
-    color: var(--muted);
-
-    font-size: 13px;
-}
-
-.filter-select {
-    height: 36px;
-
-    min-width: 130px;
-
-    padding: 0 10px;
-
-    background: var(--black-3);
-
-    border: 1px solid var(--line-light);
-    border-radius: 6px;
-
-    color: var(--text-soft);
-
-    outline: none;
-
-    font-size: 10px;
-}
-
-.filter-select:focus {
-    border-color: rgba(229,57,53,.55);
+.stat-accent{
+    margin-top:7px;
+    font-size:11px;
+    color:#ffcc00;
 }
 
 /* =====================================================
-   TABLE CARD
+   CARDS
 ===================================================== */
 
-.table-card {
-    background: var(--panel);
-
-    border: 1px solid var(--line);
-
-    border-radius: 8px;
-
-    overflow: hidden;
+.card{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:10px;
+    padding:20px;
+    margin-bottom:20px;
 }
 
-.table-header {
-    padding: 15px 17px;
-
-    border-bottom: 1px solid var(--line);
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.table-header-title {
-    color: var(--white);
-
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.table-header-count {
-    color: var(--muted);
-
-    font-size: 10px;
-}
-
-.table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-}
-
-table {
-    width: 100%;
-
-    border-collapse: collapse;
-
-    min-width: 1050px;
-}
-
-thead th {
-    background: var(--black-3);
-
-    color: var(--muted);
-
-    padding: 11px 10px;
-
-    text-align: left;
-
-    font-size: 9px;
-    font-weight: 600;
-
-    text-transform: uppercase;
-    letter-spacing: .45px;
-
-    white-space: nowrap;
-
-    border-bottom: 1px solid var(--line);
-}
-
-tbody td {
-    padding: 12px 10px;
-
-    border-bottom: 1px solid var(--line);
-
-    color: var(--text-soft);
-
-    font-size: 10px;
-
-    white-space: nowrap;
-}
-
-tbody tr:hover {
-    background: rgba(255,255,255,.018);
-}
-
-tbody tr:last-child td {
-    border-bottom: 0;
-}
-
-.checkbox-cell {
-    width: 38px;
-    text-align: center;
-}
-
-input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
-
-    accent-color: var(--red);
-
-    cursor: pointer;
-}
-
-.equipment-number {
-    color: var(--white);
-    font-weight: 600;
-}
-
-.equipment-name {
-    color: var(--text);
-    font-weight: 500;
-}
-
-.muted-cell {
-    color: var(--muted);
+.card-title{
+    margin:0 0 16px;
+    font-size:16px;
+    font-weight:600;
 }
 
 /* =====================================================
-   STATUS
+   FILTERS
 ===================================================== */
 
-.status-pill {
-    display: inline-flex;
-    align-items: center;
-
-    min-height: 23px;
-
-    padding: 0 8px;
-
-    border-radius: 20px;
-
-    font-size: 9px;
-    font-weight: 600;
+.filter-grid{
+    display:grid;
+    grid-template-columns:2fr 1.4fr 1.4fr 1.4fr 1.2fr auto;
+    gap:12px;
+    align-items:end;
 }
 
-.status-active {
-    background: rgba(67,160,71,.13);
-    color: var(--green-light);
+.form-group{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
 }
 
-.status-inactive {
-    background: rgba(255,179,0,.12);
-    color: var(--amber-light);
+.form-group label{
+    font-size:12px;
+    color:#b8c4d2;
 }
 
-.status-out {
-    background: rgba(239,83,80,.12);
-    color: var(--danger);
+.form-control{
+    width:100%;
+    min-height:42px;
+    padding:10px 12px;
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:7px;
+    background:rgba(0,0,0,.22);
+    color:#fff;
+    outline:none;
+    font-size:13px;
 }
 
-.due-ok {
-    color: var(--green-light);
+.form-control:focus{
+    border-color:#ff3b30;
 }
 
-.due-warning {
-    color: var(--amber-light);
+select.form-control option{
+    background:#10243d;
+    color:#fff;
 }
 
-.due-danger {
-    color: var(--danger);
-}
-
-.due-none {
-    color: var(--muted);
+textarea.form-control{
+    min-height:100px;
+    resize:vertical;
 }
 
 /* =====================================================
-   ACTIONS
+   REGISTER
 ===================================================== */
 
-.row-actions {
-    display: flex;
-    align-items: center;
-    gap: 5px;
+.register-card{
+    overflow:hidden;
 }
 
-.icon-btn {
-    width: 29px;
-    height: 29px;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    border: 1px solid var(--line-light);
-    border-radius: 5px;
-
-    background: var(--black-3);
-
-    color: var(--muted);
-
-    font-size: 12px;
-
-    transition: .18s ease;
+.register-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:15px;
+    flex-wrap:wrap;
 }
 
-.icon-btn:hover {
-    color: var(--white);
-    background: var(--panel-light);
+.register-title{
+    font-size:17px;
+    font-weight:600;
 }
 
-.icon-btn.edit:hover {
-    color: var(--amber-light);
-    border-color: rgba(255,179,0,.25);
+.register-count{
+    color:#aebccc;
+    font-size:13px;
+    margin-top:4px;
 }
 
-.icon-btn.delete:hover {
-    color: var(--danger);
-    border-color: rgba(239,83,80,.25);
+.register-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
 }
 
-.icon-btn.view:hover {
-    color: var(--red-light);
-    border-color: rgba(229,57,53,.25);
+.selection-info{
+    color:#ffcc00;
+    font-size:13px;
+    font-weight:600;
+    padding:9px 11px;
+    background:rgba(255,204,0,.08);
+    border:1px solid rgba(255,204,0,.18);
+    border-radius:7px;
 }
 
 /* =====================================================
-   EMPTY / LOADING
+   TABLE
 ===================================================== */
 
-.empty-state {
-    padding: 60px 20px;
-
-    text-align: center;
+.table-wrapper{
+    width:100%;
+    overflow-x:auto;
 }
 
-.empty-icon {
-    font-size: 28px;
-
-    margin-bottom: 12px;
-
-    opacity: .55;
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1080px;
 }
 
-.empty-title {
-    color: var(--text);
-
-    font-size: 13px;
-    font-weight: 600;
+thead th{
+    text-align:left;
+    padding:13px 12px;
+    color:#aebccc;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    background:rgba(0,0,0,.18);
+    border-bottom:1px solid rgba(255,255,255,.10);
+    white-space:nowrap;
 }
 
-.empty-text {
-    color: var(--muted);
-
-    font-size: 10px;
-
-    margin-top: 5px;
+tbody td{
+    padding:13px 12px;
+    font-size:13px;
+    border-bottom:1px solid rgba(255,255,255,.07);
+    color:#e5ebf2;
 }
 
-.loading-state {
-    padding: 50px;
+tbody tr:hover{
+    background:rgba(255,255,255,.035);
+}
 
-    text-align: center;
+.checkbox-cell{
+    width:44px;
+    text-align:center;
+}
 
-    color: var(--muted);
+input[type="checkbox"]{
+    width:16px;
+    height:16px;
+    accent-color:#ff3b30;
+    cursor:pointer;
+}
 
-    font-size: 11px;
+.equipment-name{
+    font-weight:600;
+    color:#fff;
+}
+
+.equipment-code{
+    display:block;
+    margin-top:4px;
+    color:#94a3b8;
+    font-size:11px;
+}
+
+.status-badge{
+    display:inline-block;
+    padding:5px 9px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:600;
+    white-space:nowrap;
+}
+
+.status-active{
+    background:rgba(34,197,94,.12);
+    color:#65e58b;
+}
+
+.status-due{
+    background:rgba(255,204,0,.12);
+    color:#ffcc00;
+}
+
+.status-overdue{
+    background:rgba(255,120,0,.14);
+    color:#ff9b4a;
+}
+
+.status-out{
+    background:rgba(255,59,48,.13);
+    color:#ff8179;
+}
+
+.status-inactive{
+    background:rgba(148,163,184,.14);
+    color:#cbd5e1;
+}
+
+.action-buttons{
+    display:flex;
+    gap:6px;
+    white-space:nowrap;
+}
+
+.icon-button{
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.05);
+    color:#fff;
+    width:34px;
+    height:34px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:14px;
+}
+
+.icon-button:hover{
+    background:rgba(255,255,255,.11);
+}
+
+.icon-button.inspect{
+    border-color:rgba(34,197,94,.28);
+    background:rgba(34,197,94,.08);
+}
+
+.icon-button.inspect:hover{
+    background:rgba(34,197,94,.18);
+}
+
+.icon-button.delete:hover{
+    background:rgba(255,59,48,.18);
+    color:#ff8b84;
+}
+
+.empty-state{
+    text-align:center;
+    padding:50px 20px;
+    color:#9eacbb;
+}
+
+.empty-state strong{
+    display:block;
+    color:#dbe4ee;
+    font-size:15px;
+    margin-bottom:6px;
 }
 
 /* =====================================================
-   REGISTER BREAKDOWN
+   INSPECTION INDICATOR
 ===================================================== */
 
-.breakdown-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-    margin-bottom: 20px;
+.inspection-indicator{
+    display:block;
+    margin-top:5px;
+    font-size:10px;
+    color:#94a3b8;
 }
 
-.breakdown-card {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    overflow: hidden;
+.inspection-indicator.due{
+    color:#ffcc00;
 }
 
-.breakdown-header {
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--line);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.breakdown-title {
-    color: var(--white);
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.breakdown-subtitle {
-    color: var(--muted);
-    font-size: 9px;
-    margin-top: 3px;
-}
-
-.breakdown-total {
-    color: var(--red-light);
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.breakdown-list {
-    max-height: 260px;
-    overflow-y: auto;
-}
-
-.breakdown-row {
-    width: 100%;
-    padding: 10px 16px;
-    border: 0;
-    border-bottom: 1px solid var(--line);
-    background: transparent;
-    color: var(--text-soft);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    text-align: left;
-    font-size: 10px;
-}
-
-.breakdown-row:last-child {
-    border-bottom: 0;
-}
-
-.breakdown-row:hover {
-    background: rgba(255,255,255,.025);
-    color: var(--white);
-}
-
-.breakdown-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.breakdown-count {
-    min-width: 30px;
-    padding: 3px 7px;
-    border-radius: 12px;
-    background: var(--black-3);
-    color: var(--white);
-    text-align: center;
-    font-size: 9px;
-    font-weight: 600;
-}
-
-.breakdown-empty {
-    padding: 25px 16px;
-    color: var(--muted);
-    font-size: 10px;
-    text-align: center;
-}
-
-@media (max-width: 1050px) {
-    .breakdown-grid {
-        grid-template-columns: 1fr;
-    }
+.inspection-indicator.overdue{
+    color:#ff9b4a;
 }
 
 /* =====================================================
-   MODAL
+   MODALS
 ===================================================== */
 
-.modal-overlay {
-    position: fixed;
-
-    inset: 0;
-
-    background: rgba(0,0,0,.72);
-
-    backdrop-filter: blur(4px);
-
-    display: none;
-    align-items: center;
-    justify-content: center;
-
-    padding: 20px;
-
-    z-index: 3000;
+.modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.68);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:1200;
 }
 
-.modal-overlay.show {
-    display: flex;
+.modal-overlay.show{
+    display:flex;
 }
 
-.modal {
-    width: min(620px, 100%);
-
-    max-height: 90vh;
-
-    overflow-y: auto;
-
-    background: var(--panel);
-
-    border: 1px solid var(--line-light);
-
-    border-radius: 9px;
-
-    box-shadow: 0 25px 70px rgba(0,0,0,.55);
-
-    animation: modalIn .16s ease;
+.modal{
+    width:min(850px,100%);
+    max-height:92vh;
+    overflow-y:auto;
+    background:#10243d;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:12px;
+    box-shadow:0 25px 70px rgba(0,0,0,.5);
 }
 
-.modal.modal-small {
-    width: min(520px, 100%);
+.modal-header{
+    padding:18px 20px;
+    border-bottom:1px solid rgba(255,255,255,.10);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
 }
 
-@keyframes modalIn {
-    from {
-        opacity: 0;
-        transform: translateY(8px) scale(.985);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+.modal-header h2{
+    margin:0;
+    font-size:19px;
 }
 
-.modal-header {
-    min-height: 62px;
-
-    padding: 0 18px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    border-bottom: 1px solid var(--line);
+.close-button{
+    border:none;
+    background:none;
+    color:#fff;
+    font-size:25px;
+    cursor:pointer;
 }
 
-.modal-title {
-    color: var(--white);
-
-    font-size: 14px;
-    font-weight: 600;
+.modal-body{
+    padding:20px;
 }
 
-.modal-subtitle {
-    color: var(--muted);
-
-    font-size: 9px;
-
-    margin-top: 3px;
+.modal-footer{
+    padding:15px 20px;
+    border-top:1px solid rgba(255,255,255,.10);
+    display:flex;
+    justify-content:flex-end;
+    gap:9px;
 }
 
-.close-modal {
-    width: 30px;
-    height: 30px;
-
-    border: 1px solid var(--line-light);
-
-    border-radius: 5px;
-
-    background: var(--black-3);
-
-    color: var(--muted);
-
-    font-size: 16px;
+.form-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
 }
 
-.close-modal:hover {
-    color: var(--white);
-    background: var(--panel-light);
+.form-grid .full{
+    grid-column:1 / -1;
 }
 
-.modal-body {
-    padding: 20px;
+.required{
+    color:#ff3b30;
 }
 
-.modal-footer {
-    padding: 14px 20px;
-
-    border-top: 1px solid var(--line);
-
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-
-    gap: 8px;
+.profile-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
 }
 
-/* =====================================================
-   FORM
-===================================================== */
-
-.form-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-
-    gap: 15px;
+.detail-box{
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.08);
+    padding:13px;
+    border-radius:8px;
 }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+.detail-label{
+    color:#94a3b8;
+    font-size:11px;
+    margin-bottom:5px;
+    text-transform:uppercase;
 }
 
-.form-group.full {
-    grid-column: 1 / -1;
+.detail-value{
+    color:#fff;
+    font-size:13px;
+    word-break:break-word;
 }
 
-.form-label {
-    color: var(--text-soft);
-
-    font-size: 10px;
-    font-weight: 500;
+.profile-section{
+    margin-top:22px;
 }
 
-.form-label .required {
-    color: var(--red-light);
+.profile-section h3{
+    margin:0 0 10px;
+    font-size:15px;
 }
 
-.form-control {
-    width: 100%;
-
-    min-height: 38px;
-
-    padding: 0 11px;
-
-    background: var(--black-3);
-
-    border: 1px solid var(--line-light);
-
-    border-radius: 6px;
-
-    color: var(--text);
-
-    outline: none;
-
-    font-size: 11px;
+.history-empty{
+    padding:18px;
+    border-radius:8px;
+    background:rgba(255,255,255,.04);
+    color:#94a3b8;
+    font-size:13px;
 }
 
-textarea.form-control {
-    min-height: 90px;
-    padding: 10px 11px;
-    resize: vertical;
+.history-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
 }
 
-.form-control:focus {
-    border-color: rgba(229,57,53,.65);
-
-    box-shadow: 0 0 0 2px rgba(229,57,53,.06);
+.history-item{
+    padding:12px;
+    border-radius:8px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.07);
 }
 
-.form-control::placeholder {
-    color: var(--muted-2);
+.history-item-title{
+    font-weight:600;
+    font-size:13px;
+    margin-bottom:4px;
 }
 
-select.form-control {
-    cursor: pointer;
-}
-
-input[type="date"].form-control {
-    color-scheme: dark;
-}
-
-/* =====================================================
-   VIEW DETAILS
-===================================================== */
-
-.details-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-
-    gap: 1px;
-
-    background: var(--line);
-
-    border: 1px solid var(--line);
-
-    border-radius: 6px;
-
-    overflow: hidden;
-}
-
-.detail-item {
-    background: var(--black-3);
-
-    padding: 13px;
-}
-
-.detail-label {
-    color: var(--muted);
-
-    font-size: 9px;
-
-    text-transform: uppercase;
-    letter-spacing: .35px;
-}
-
-.detail-value {
-    color: var(--text);
-
-    font-size: 11px;
-    font-weight: 500;
-
-    margin-top: 4px;
+.history-item-meta{
+    color:#94a3b8;
+    font-size:11px;
 }
 
 /* =====================================================
    TOAST
 ===================================================== */
 
-.toast-container {
-    position: fixed;
-
-    top: 22px;
-    right: 22px;
-
-    z-index: 5000;
-
-    display: flex;
-    flex-direction: column;
-
-    gap: 8px;
+.toast-container{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    z-index:3000;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
 }
 
-.toast {
-    min-width: 290px;
-    max-width: 420px;
-
-    padding: 12px 14px;
-
-    background: var(--panel);
-
-    border: 1px solid var(--line-light);
-
-    border-left: 3px solid var(--red);
-
-    border-radius: 6px;
-
-    box-shadow: 0 15px 35px rgba(0,0,0,.35);
-
-    color: var(--text);
-
-    font-size: 10px;
-
-    animation: toastIn .2s ease;
+.toast{
+    min-width:280px;
+    max-width:380px;
+    padding:13px 15px;
+    border-radius:8px;
+    background:#10243d;
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 12px 35px rgba(0,0,0,.35);
+    font-size:13px;
 }
 
-.toast.success {
-    border-left-color: var(--green);
+.toast.success{
+    border-left:4px solid #22c55e;
 }
 
-.toast.warning {
-    border-left-color: var(--amber);
+.toast.error{
+    border-left:4px solid #ff3b30;
 }
 
-.toast.error {
-    border-left-color: var(--danger);
-}
-
-@keyframes toastIn {
-    from {
-        opacity: 0;
-        transform: translateX(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-/* =====================================================
-   USER ROLE
-===================================================== */
-
-.role-badge {
-    display: inline-flex;
-    align-items: center;
-
-    min-height: 25px;
-
-    padding: 0 9px;
-
-    border: 1px solid var(--line-light);
-
-    border-radius: 20px;
-
-    color: var(--muted);
-
-    font-size: 9px;
+.toast.warning{
+    border-left:4px solid #ffcc00;
 }
 
 /* =====================================================
    RESPONSIVE
 ===================================================== */
 
-@media (max-width: 1100px) {
+@media(max-width:1100px){
 
-    .stats-grid {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
+    .filter-grid{
+        grid-template-columns:repeat(3,1fr);
+    }
+
+    .stats-grid{
+        grid-template-columns:repeat(2,1fr);
     }
 
 }
 
-@media (max-width: 800px) {
+@media(max-width:750px){
 
-    :root {
-        --sidebar-width: 0px;
+    .main{
+        padding:18px;
     }
 
-    .sidebar {
-        display: none;
+    .topbar{
+        padding:0 16px;
     }
 
-    .main {
-        margin-left: 0;
+    .page-header{
+        flex-direction:column;
     }
 
-    .topbar {
-        padding: 0 18px;
+    .page-header .primary-button{
+        width:100%;
     }
 
-    .content {
-        padding: 20px 16px 30px;
+    .filter-grid{
+        grid-template-columns:1fr;
     }
 
-    .toolbar {
-        align-items: stretch;
-        flex-direction: column;
+    .stats-grid{
+        grid-template-columns:1fr 1fr;
     }
 
-    .toolbar-left,
-    .toolbar-right {
-        width: 100%;
-        flex-wrap: wrap;
+    .form-grid{
+        grid-template-columns:1fr;
     }
 
-    .search-box,
-    .search-box input {
-        width: 100%;
+    .form-grid .full{
+        grid-column:auto;
     }
 
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .form-group.full {
-        grid-column: auto;
+    .profile-grid{
+        grid-template-columns:1fr;
     }
 
 }
 
-@media (max-width: 520px) {
+@media(max-width:480px){
 
-    .stats-grid {
-        grid-template-columns: 1fr;
+    .stats-grid{
+        grid-template-columns:1fr;
     }
 
-    .topbar-actions {
-        display: none;
+    .topbar-user{
+        display:none;
     }
 
-    .modal-overlay {
-        padding: 10px;
+    .main{
+        padding:14px;
     }
 
-    .modal-body {
-        padding: 15px;
+    .page-header h1{
+        font-size:25px;
     }
 
-    .modal-footer {
-        padding: 12px 15px;
+    .register-actions{
+        width:100%;
     }
 
-}
+    .register-actions button{
+        flex:1;
+    }
 
-/* =====================================================
-   ACCESSIBILITY
-===================================================== */
-
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-a:focus-visible {
-    outline: 2px solid var(--red-light);
-    outline-offset: 2px;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<div class="app">
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
 
-    <!-- =================================================
-         SIDEBAR
-    ================================================== -->
+<aside class="sidebar" id="sidebar">
 
-    <aside class="sidebar">
+    <div class="sidebar-header">
 
         <div class="brand">
-
-            <div class="brand-mark">
-                FS
-            </div>
-
-            <div class="brand-text">
-
-                <div class="brand-name">
-                    FireSafe Track
-                </div>
-
-                <div class="brand-by">
-                    by A-eye Group
-                </div>
-
-            </div>
-
+            Fire<span>Safe</span> Track
         </div>
 
-
-        <nav class="sidebar-nav">
-
-            <div class="nav-section">
-
-                <div class="nav-section-title">
-                    Safety Management
-                </div>
-
-                <a
-                    href="equipment.html"
-                    class="nav-item active"
-                >
-                    <span class="nav-icon">▣</span>
-                    <span>Equipment</span>
-                </a>
-
-                <a
-                    href="inspections.html"
-                    class="nav-item"
-                >
-                    <span class="nav-icon">✓</span>
-                    <span>Inspections</span>
-                </a>
-
-                <a
-                    href="deviations.html"
-                    class="nav-item"
-                >
-                    <span class="nav-icon">!</span>
-                    <span>Deviations</span>
-                </a>
-
-                <a
-                    href="reports.html"
-                    class="nav-item"
-                >
-                    <span class="nav-icon">▤</span>
-                    <span>Reports</span>
-                </a>
-
-            </div>
-
-
-            <div class="nav-section">
-
-                <div class="nav-section-title">
-                    Account
-                </div>
-
-                <a
-                    href="#"
-                    class="nav-item"
-                    id="logoutLink"
-                >
-                    <span class="nav-icon">↪</span>
-                    <span>Logout</span>
-                </a>
-
-            </div>
-
-        </nav>
-
-
-        <div class="sidebar-footer">
-            FireSafe Track System
-        </div>
-
-    </aside>
-
-
-    <!-- =================================================
-         MAIN
-    ================================================== -->
-
-    <main class="main">
-
-        <!-- TOPBAR -->
-
-        <header class="topbar">
-
-            <div class="page-title">
-
-                <h1>
-                    Equipment Register
-                </h1>
-
-                <p>
-                    Manage fire safety equipment and inspection schedules
-                </p>
-
-            </div>
-
-
-            <div class="topbar-actions">
-
-                <span
-                    class="role-badge"
-                    id="roleBadge"
-                >
-                    Loading...
-                </span>
-
-            </div>
-
-        </header>
-
-
-        <!-- CONTENT -->
-
-        <section class="content">
-
-            <!-- =================================================
-                 STATS
-            ================================================== -->
-
-            <div class="stats-grid">
-
-                <div class="stat-card">
-
-                    <div class="stat-label">
-                        Total Equipment
-                    </div>
-
-                    <div
-                        class="stat-value"
-                        id="totalEquipment"
-                    >
-                        0
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card active-stat">
-
-                    <div class="stat-label">
-                        Active
-                    </div>
-
-                    <div
-                        class="stat-value"
-                        id="activeEquipment"
-                    >
-                        0
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card inactive-stat">
-
-                    <div class="stat-label">
-                        Inactive
-                    </div>
-
-                    <div
-                        class="stat-value"
-                        id="inactiveEquipment"
-                    >
-                        0
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card due-stat">
-
-                    <div class="stat-label">
-                        Inspection Due
-                    </div>
-
-                    <div
-                        class="stat-value"
-                        id="dueEquipment"
-                    >
-                        0
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- =================================================
-                 TOOLBAR
-            ================================================== -->
-
-            <div class="toolbar">
-
-                <div class="toolbar-left">
-
-                    <div class="search-box">
-
-                        <span class="search-icon">
-                            ⌕
-                        </span>
-
-                        <input
-                            type="search"
-                            id="searchInput"
-                            placeholder="Search equipment..."
-                            autocomplete="off"
-                        >
-
-                    </div>
-
-
-                    <select
-                        id="typeFilter"
-                        class="filter-select"
-                    >
-                        <option value="">
-                            All Types
-                        </option>
-                    </select>
-
-
-                    <select
-                        id="areaFilter"
-                        class="filter-select"
-                    >
-                        <option value="">
-                            All Areas
-                        </option>
-                    </select>
-
-
-                    <select
-                        id="locationFilter"
-                        class="filter-select"
-                    >
-                        <option value="">
-                            All Locations
-                        </option>
-                    </select>
-
-
-                    <select
-                        id="statusFilter"
-                        class="filter-select"
-                    >
-                        <option value="">
-                            All Statuses
-                        </option>
-
-                        <option value="Active">
-                            Active
-                        </option>
-
-                        <option value="Inactive">
-                            Inactive
-                        </option>
-
-                        <option value="Out of Service">
-                            Out of Service
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="toolbar-right">
-
-                    <button
-                        type="button"
-                        class="btn btn-secondary"
-                        id="exportExcelBtn"
-                    >
-                        ⇩ Export Excel
-                    </button>
-
-
-                    <button
-                        type="button"
-                        class="btn btn-secondary"
-                        id="refreshBtn"
-                    >
-                        ↻ Refresh
-                    </button>
-
-
-                    <button
-                        type="button"
-                        class="btn btn-secondary"
-                        id="generateReportBtn"
-                    >
-                        ▤ Generate Report
-                    </button>
-
-
-                    <button
-                        type="button"
-                        class="btn btn-primary"
-                        id="addEquipmentBtn"
-                    >
-                        + Add Equipment
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <!-- =================================================
-                 REGISTER BREAKDOWN
-            ================================================== -->
-
-            <div class="breakdown-grid">
-
-                <div class="breakdown-card">
-                    <div class="breakdown-header">
-                        <div>
-                            <div class="breakdown-title">Equipment by Type</div>
-                            <div class="breakdown-subtitle">Count of registered equipment</div>
-                        </div>
-                        <div class="breakdown-total" id="typeBreakdownTotal">0</div>
-                    </div>
-                    <div class="breakdown-list" id="typeBreakdownList">
-                        <div class="breakdown-empty">Loading...</div>
-                    </div>
-                </div>
-
-                <div class="breakdown-card">
-                    <div class="breakdown-header">
-                        <div>
-                            <div class="breakdown-title">Equipment by Area</div>
-                            <div class="breakdown-subtitle">Count of registered equipment</div>
-                        </div>
-                        <div class="breakdown-total" id="areaBreakdownTotal">0</div>
-                    </div>
-                    <div class="breakdown-list" id="areaBreakdownList">
-                        <div class="breakdown-empty">Loading...</div>
-                    </div>
-                </div>
-
-                <div class="breakdown-card">
-                    <div class="breakdown-header">
-                        <div>
-                            <div class="breakdown-title">Equipment by Location</div>
-                            <div class="breakdown-subtitle">Count of registered equipment</div>
-                        </div>
-                        <div class="breakdown-total" id="locationBreakdownTotal">0</div>
-                    </div>
-                    <div class="breakdown-list" id="locationBreakdownList">
-                        <div class="breakdown-empty">Loading...</div>
-                    </div>
-                </div>
-
-            </div>
-
-
-            <!-- =================================================
-                 TABLE
-            ================================================== -->
-
-            <div class="table-card">
-
-                <div class="table-header">
-
-                    <div class="table-header-title">
-                        Equipment Register
-                    </div>
-
-                    <div
-                        class="table-header-count"
-                        id="tableCount"
-                    >
-                        0 equipment
-                    </div>
-
-                </div>
-
-
-                <div class="table-wrapper">
-
-                    <table>
-
-                        <thead>
-
-                            <tr>
-
-                                <th class="checkbox-cell">
-                                    <input
-                                        type="checkbox"
-                                        id="selectAll"
-                                        title="Select all"
-                                    >
-                                </th>
-
-                                <th>
-                                    Equipment No.
-                                </th>
-
-                                <th>
-                                    Name
-                                </th>
-
-                                <th>
-                                    Type
-                                </th>
-
-                                <th>
-                                    Area
-                                </th>
-
-                                <th>
-                                    Location
-                                </th>
-
-                                <th>
-                                    Status
-                                </th>
-
-                                <th>
-                                    Last Inspection
-                                </th>
-
-                                <th>
-                                    Next Due
-                                </th>
-
-                                <th>
-                                    Actions
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody id="equipmentTableBody">
-
-                            <tr>
-
-                                <td colspan="10">
-
-                                    <div class="loading-state">
-                                        Loading equipment...
-                                    </div>
-
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </section>
-
-    </main>
-
-</div>
+        <button
+            class="sidebar-close"
+            id="sidebarClose"
+            type="button"
+        >
+            ×
+        </button>
+
+    </div>
+
+    <nav class="sidebar-nav">
+
+        <a href="dashboard.html">
+            <span class="nav-icon">▣</span>
+            Dashboard
+        </a>
+
+        <a
+            href="equipment.html"
+            class="active"
+        >
+            <span class="nav-icon">🧯</span>
+            Equipment Register
+        </a>
+
+        <a href="equipment-types.html">
+            <span class="nav-icon">☷</span>
+            Equipment Types
+        </a>
+
+        <a href="locations.html">
+            <span class="nav-icon">⌖</span>
+            Locations
+        </a>
+
+        <a href="inspections.html">
+            <span class="nav-icon">✓</span>
+            Inspections
+        </a>
+
+        <a href="deviations.html">
+            <span class="nav-icon">!</span>
+            Deviations
+        </a>
+
+        <a href="corrective-actions.html">
+            <span class="nav-icon">↻</span>
+            Corrective Actions
+        </a>
+
+        <a href="reports.html">
+            <span class="nav-icon">▤</span>
+            Inspection Reports
+        </a>
+
+        <a href="users.html">
+            <span class="nav-icon">♙</span>
+            Users
+        </a>
+
+        <a href="settings.html">
+            <span class="nav-icon">⚙</span>
+            Settings
+        </a>
+
+    </nav>
+
+</aside>
+
+<div
+    class="sidebar-overlay"
+    id="sidebarOverlay"
+></div>
 
 
 <!-- =====================================================
-     ADD / EDIT EQUIPMENT MODAL
+     TOPBAR
+===================================================== -->
+
+<header class="topbar">
+
+    <div class="topbar-left">
+
+        <button
+            class="menu-button"
+            id="menuButton"
+            type="button"
+            aria-label="Open menu"
+        >
+            ☰
+        </button>
+
+        <div class="topbar-title">
+            Equipment Register
+        </div>
+
+    </div>
+
+    <div class="topbar-user">
+        Administrator
+    </div>
+
+</header>
+
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main class="main">
+
+    <div class="page-header">
+
+        <div>
+
+            <h1>
+                Equipment Register
+            </h1>
+
+            <p>
+                Manage and monitor fire safety equipment across operational areas.
+            </p>
+
+        </div>
+
+        <button
+            class="primary-button"
+            type="button"
+            onclick="openAddModal()"
+        >
+            + Add Equipment
+        </button>
+
+    </div>
+
+
+    <!-- DATABASE STATUS -->
+
+    <div class="database-status">
+
+        <span
+            class="status-dot"
+            id="databaseStatusDot"
+        ></span>
+
+        <span id="databaseStatusText">
+            Connecting to database...
+        </span>
+
+    </div>
+
+
+    <!-- =================================================
+         STATISTICS
+    ================================================== -->
+
+    <section class="stats-grid">
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Total Equipment
+            </div>
+
+            <div
+                class="stat-value"
+                id="totalEquipment"
+            >
+                0
+            </div>
+
+            <div class="stat-accent">
+                Registered items
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Active
+            </div>
+
+            <div
+                class="stat-value"
+                id="activeEquipment"
+            >
+                0
+            </div>
+
+            <div class="stat-accent">
+                Currently operational
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Inspection Due
+            </div>
+
+            <div
+                class="stat-value"
+                id="dueEquipment"
+            >
+                0
+            </div>
+
+            <div class="stat-accent">
+                Requires attention
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Out of Service
+            </div>
+
+            <div
+                class="stat-value"
+                id="outOfServiceEquipment"
+            >
+                0
+            </div>
+
+            <div class="stat-accent">
+                Not operational
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         FILTERS
+    ================================================== -->
+
+    <section class="card">
+
+        <h2 class="card-title">
+            Search & Filters
+        </h2>
+
+        <div class="filter-grid">
+
+            <div class="form-group">
+
+                <label for="searchFilter">
+                    General Search
+                </label>
+
+                <input
+                    id="searchFilter"
+                    class="form-control"
+                    type="text"
+                    placeholder="Search equipment, code, manufacturer..."
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="locationFilter">
+                    Location
+                </label>
+
+                <input
+                    id="locationFilter"
+                    class="form-control"
+                    list="locationOptions"
+                    type="text"
+                    placeholder="Search location..."
+                >
+
+                <datalist id="locationOptions"></datalist>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="typeFilter">
+                    Equipment Type
+                </label>
+
+                <select
+                    id="typeFilter"
+                    class="form-control"
+                >
+
+                    <option value="">
+                        All Equipment Types
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="areaFilter">
+                    Area
+                </label>
+
+                <select
+                    id="areaFilter"
+                    class="form-control"
+                >
+
+                    <option value="">
+                        All Areas
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="statusFilter">
+                    Status
+                </label>
+
+                <select
+                    id="statusFilter"
+                    class="form-control"
+                >
+
+                    <option value="">
+                        All Statuses
+                    </option>
+
+                    <option value="Active">
+                        Active
+                    </option>
+
+                    <option value="Due Today">
+                        Due Today
+                    </option>
+
+                    <option value="Overdue">
+                        Overdue
+                    </option>
+
+                    <option value="Inspection Due">
+                        Inspection Due
+                    </option>
+
+                    <option value="Out of Service">
+                        Out of Service
+                    </option>
+
+                    <option value="Inactive">
+                        Inactive
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <button
+                class="secondary-button"
+                type="button"
+                onclick="resetFilters()"
+            >
+                Reset Filters
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         REGISTER
+    ================================================== -->
+
+    <section class="card register-card">
+
+        <div class="register-header">
+
+            <div>
+
+                <div class="register-title">
+                    Equipment Register
+                </div>
+
+                <div
+                    class="register-count"
+                    id="recordCount"
+                >
+                    0 records
+                </div>
+
+            </div>
+
+
+            <div class="register-actions">
+
+                <div
+                    class="selection-info"
+                    id="selectionInfo"
+                >
+                    0 selected
+                </div>
+
+                <button
+                    class="secondary-button"
+                    type="button"
+                    onclick="clearSelection()"
+                >
+                    Clear Selection
+                </button>
+
+                <button
+                    class="warning-button"
+                    type="button"
+                    onclick="exportSelectedEquipment()"
+                >
+                    Generate Excel Register
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th class="checkbox-cell">
+
+                            <input
+                                type="checkbox"
+                                id="selectAllCheckbox"
+                                title="Select all visible equipment"
+                            >
+
+                        </th>
+
+                        <th>
+                            Equipment
+                        </th>
+
+                        <th>
+                            Type
+                        </th>
+
+                        <th>
+                            Area
+                        </th>
+
+                        <th>
+                            Location
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="equipmentTableBody"></tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- =====================================================
+     ADD / EDIT MODAL
 ===================================================== -->
 
 <div
@@ -1872,36 +1389,18 @@ a:focus-visible {
     id="equipmentModal"
 >
 
-    <div
-        class="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="equipmentModalTitle"
-    >
+    <div class="modal">
 
         <div class="modal-header">
 
-            <div>
-
-                <div
-                    class="modal-title"
-                    id="equipmentModalTitle"
-                >
-                    Add Equipment
-                </div>
-
-                <div class="modal-subtitle">
-                    Register fire safety equipment
-                </div>
-
-            </div>
-
+            <h2 id="equipmentModalTitle">
+                Add Equipment
+            </h2>
 
             <button
+                class="close-button"
                 type="button"
-                class="close-modal"
-                id="closeEquipmentModal"
-                aria-label="Close"
+                onclick="closeEquipmentModal()"
             >
                 ×
             </button>
@@ -1909,248 +1408,295 @@ a:focus-visible {
         </div>
 
 
-        <form id="equipmentForm">
+        <div class="modal-body">
 
-            <div class="modal-body">
+            <div class="form-grid">
 
-                <div class="form-grid">
+                <div class="form-group">
 
-                    <!-- Equipment Number -->
+                    <label for="equipmentName">
+                        Equipment Name
+                        <span class="required">*</span>
+                    </label>
 
-                    <div class="form-group">
+                    <input
+                        id="equipmentName"
+                        class="form-control"
+                        type="text"
+                        placeholder="e.g. Fire Extinguisher FE-001"
+                    >
 
-                        <label
-                            class="form-label"
-                            for="equipmentNumber"
-                        >
-                            Equipment Number
-                            <span class="required">*</span>
-                        </label>
-
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="equipmentNumber"
-                            placeholder="e.g. FE-001"
-                            required
-                            maxlength="100"
-                        >
-
-                    </div>
+                </div>
 
 
-                    <!-- Equipment Name -->
+                <div class="form-group">
 
-                    <div class="form-group">
+                    <label for="equipmentCode">
+                        Equipment Code
+                        <span class="required">*</span>
+                    </label>
 
-                        <label
-                            class="form-label"
-                            for="equipmentName"
-                        >
-                            Equipment Name
-                            <span class="required">*</span>
-                        </label>
+                    <input
+                        id="equipmentCode"
+                        class="form-control"
+                        type="text"
+                        placeholder="e.g. FE-001"
+                    >
 
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="equipmentName"
-                            placeholder="e.g. Fire Extinguisher"
-                            required
-                            maxlength="200"
-                        >
-
-                    </div>
+                </div>
 
 
-                    <!-- Equipment Type -->
+                <div class="form-group">
 
-                    <div class="form-group">
+                    <label for="equipmentType">
+                        Equipment Type
+                        <span class="required">*</span>
+                    </label>
 
-                        <label
-                            class="form-label"
-                            for="equipmentType"
-                        >
-                            Equipment Type
-                            <span class="required">*</span>
-                        </label>
+                    <select
+                        id="equipmentType"
+                        class="form-control"
+                    >
 
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="equipmentType"
-                            list="equipmentTypes"
-                            placeholder="Select or enter type"
-                            required
-                            maxlength="150"
-                        >
+                        <option value="">
+                            Select equipment type
+                        </option>
 
-                        <datalist id="equipmentTypes">
+                    </select>
 
-                            <option value="Fire Extinguisher">
-                            <option value="Fire Hose Reel">
-                            <option value="Fire Hydrant">
-                            <option value="Fire Alarm">
-                            <option value="Fire Blanket">
-                            <option value="Emergency Shower">
-                            <option value="Emergency Eye Wash">
-                            <option value="Fire Door">
-                            <option value="Fire Pump">
-                            <option value="Sprinkler System">
-                            <option value="Fire Suppression System">
-                            <option value="Other">
-
-                        </datalist>
-
-                    </div>
+                </div>
 
 
-                    <!-- Area -->
+                <div class="form-group">
 
-                    <div class="form-group">
+                    <label for="equipmentStatus">
+                        Database Status
+                        <span class="required">*</span>
+                    </label>
 
-                        <label
-                            class="form-label"
-                            for="equipmentArea"
-                        >
-                            Area
-                            <span class="required">*</span>
-                        </label>
+                    <select
+                        id="equipmentStatus"
+                        class="form-control"
+                    >
 
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="equipmentArea"
-                            placeholder="e.g. Plant Area"
-                            required
-                            maxlength="150"
-                        >
+                        <option value="Active">
+                            Active
+                        </option>
 
-                    </div>
+                        <option value="Inspection Due">
+                            Inspection Due
+                        </option>
 
+                        <option value="Out of Service">
+                            Out of Service
+                        </option>
 
-                    <!-- Location -->
+                        <option value="Inactive">
+                            Inactive
+                        </option>
 
-                    <div class="form-group">
+                    </select>
 
-                        <label
-                            class="form-label"
-                            for="equipmentLocation"
-                        >
-                            Location
-                            <span class="required">*</span>
-                        </label>
-
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="equipmentLocation"
-                            placeholder="e.g. Workshop Bay 2"
-                            required
-                            maxlength="200"
-                        >
-
-                    </div>
+                </div>
 
 
-                    <!-- Status -->
+                <div class="form-group">
 
-                    <div class="form-group">
+                    <label for="manufactureDate">
+                        Manufacture Date
+                    </label>
 
-                        <label
-                            class="form-label"
-                            for="equipmentStatus"
-                        >
-                            Status
-                        </label>
+                    <input
+                        id="manufactureDate"
+                        class="form-control"
+                        type="date"
+                    >
 
-                        <select
-                            class="form-control"
-                            id="equipmentStatus"
-                        >
-
-                            <option value="Active">
-                                Active
-                            </option>
-
-                            <option value="Inactive">
-                                Inactive
-                            </option>
-
-                            <option value="Out of Service">
-                                Out of Service
-                            </option>
-
-                        </select>
-
-                    </div>
+                </div>
 
 
-                    <!-- Last Inspection -->
+                <div class="form-group">
 
-                    <div class="form-group">
+                    <label for="installationDate">
+                        Installation Date
+                    </label>
 
-                        <label
-                            class="form-label"
-                            for="lastInspection"
-                        >
-                            Last Inspection
-                        </label>
+                    <input
+                        id="installationDate"
+                        class="form-control"
+                        type="date"
+                    >
 
-                        <input
-                            type="date"
-                            class="form-control"
-                            id="lastInspection"
-                        >
-
-                    </div>
+                </div>
 
 
-                    <!-- Next Inspection -->
+                <div class="form-group">
 
-                    <div class="form-group">
+                    <label for="equipmentArea">
+                        Area
+                    </label>
 
-                        <label
-                            class="form-label"
-                            for="nextInspectionDue"
-                        >
-                            Next Inspection Due
-                        </label>
+                    <input
+                        id="equipmentArea"
+                        class="form-control"
+                        type="text"
+                        list="areaOptions"
+                        placeholder="e.g. Plant Area"
+                    >
 
-                        <input
-                            type="date"
-                            class="form-control"
-                            id="nextInspectionDue"
-                        >
+                    <datalist id="areaOptions"></datalist>
 
-                    </div>
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="equipmentLocation">
+                        Location
+                    </label>
+
+                    <input
+                        id="equipmentLocation"
+                        class="form-control"
+                        type="text"
+                        list="locationOptions"
+                        placeholder="Specific location"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="manufacturer">
+                        Manufacturer
+                    </label>
+
+                    <input
+                        id="manufacturer"
+                        class="form-control"
+                        type="text"
+                        placeholder="Manufacturer"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="equipmentModel">
+                        Model
+                    </label>
+
+                    <input
+                        id="equipmentModel"
+                        class="form-control"
+                        type="text"
+                        placeholder="Model"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="serialNumber">
+                        Serial Number
+                    </label>
+
+                    <input
+                        id="serialNumber"
+                        class="form-control"
+                        type="text"
+                        placeholder="Serial number"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="lastInspectionDate">
+                        Last Inspection
+                    </label>
+
+                    <input
+                        id="lastInspectionDate"
+                        class="form-control"
+                        type="date"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="nextInspectionDate">
+                        Next Inspection
+                    </label>
+
+                    <input
+                        id="nextInspectionDate"
+                        class="form-control"
+                        type="date"
+                    >
+
+                </div>
+
+
+                <div class="form-group full">
+
+                    <label for="equipmentDescription">
+                        Description
+                    </label>
+
+                    <textarea
+                        id="equipmentDescription"
+                        class="form-control"
+                        placeholder="Equipment description..."
+                    ></textarea>
+
+                </div>
+
+
+                <div class="form-group full">
+
+                    <label for="equipmentNotes">
+                        Notes
+                    </label>
+
+                    <textarea
+                        id="equipmentNotes"
+                        class="form-control"
+                        placeholder="Additional notes..."
+                    ></textarea>
 
                 </div>
 
             </div>
 
+        </div>
 
-            <div class="modal-footer">
 
-                <button
-                    type="button"
-                    class="btn btn-secondary"
-                    id="cancelEquipmentBtn"
-                >
-                    Cancel
-                </button>
+        <div class="modal-footer">
 
-                <button
-                    type="submit"
-                    class="btn btn-primary"
-                    id="saveEquipmentBtn"
-                >
-                    Save Equipment
-                </button>
+            <button
+                class="secondary-button"
+                type="button"
+                onclick="closeEquipmentModal()"
+            >
+                Cancel
+            </button>
 
-            </div>
+            <button
+                class="primary-button"
+                type="button"
+                onclick="saveEquipment()"
+            >
+                Save Equipment
+            </button>
 
-        </form>
+        </div>
 
     </div>
 
@@ -2158,44 +1704,26 @@ a:focus-visible {
 
 
 <!-- =====================================================
-     VIEW EQUIPMENT MODAL
+     PROFILE MODAL
 ===================================================== -->
 
 <div
     class="modal-overlay"
-    id="viewEquipmentModal"
+    id="profileModal"
 >
 
-    <div
-        class="modal modal-small"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="viewModalTitle"
-    >
+    <div class="modal">
 
         <div class="modal-header">
 
-            <div>
-
-                <div
-                    class="modal-title"
-                    id="viewModalTitle"
-                >
-                    Equipment Details
-                </div>
-
-                <div class="modal-subtitle">
-                    Equipment register information
-                </div>
-
-            </div>
-
+            <h2>
+                Equipment Profile
+            </h2>
 
             <button
+                class="close-button"
                 type="button"
-                class="close-modal"
-                id="closeViewModal"
-                aria-label="Close"
+                onclick="closeProfileModal()"
             >
                 ×
             </button>
@@ -2206,10 +1734,42 @@ a:focus-visible {
         <div class="modal-body">
 
             <div
-                class="details-grid"
-                id="equipmentDetails"
-            >
-                <!-- Generated by JS -->
+                class="profile-grid"
+                id="profileDetails"
+            ></div>
+
+
+            <div class="profile-section">
+
+                <h3>
+                    Inspection History
+                </h3>
+
+                <div id="inspectionHistory">
+
+                    <div class="history-empty">
+                        Loading inspection history...
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="profile-section">
+
+                <h3>
+                    Deviation History
+                </h3>
+
+                <div id="deviationHistory">
+
+                    <div class="history-empty">
+                        Loading deviation history...
+                    </div>
+
+                </div>
+
             </div>
 
         </div>
@@ -2218,19 +1778,11 @@ a:focus-visible {
         <div class="modal-footer">
 
             <button
+                class="secondary-button"
                 type="button"
-                class="btn btn-secondary"
-                id="closeViewBtn"
+                onclick="closeProfileModal()"
             >
                 Close
-            </button>
-
-            <button
-                type="button"
-                class="btn btn-primary"
-                id="startInspectionBtn"
-            >
-                Start Inspection
             </button>
 
         </div>
@@ -2253,121 +1805,380 @@ a:focus-visible {
 <script>
 
 /* =====================================================
+   SUPABASE
+===================================================== */
+
+const SUPABASE_URL =
+    "https://syiemjazbawflavxibzv.supabase.co";
+
+const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5aWVtamF6YmF3ZmxhdnhpYnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Njg5MzEsImV4cCI6MjEwNDU0NDkzMX0.RJ6siFDLg3LAsP2ZPDgdFVGAFasg05hK4GikdIO68PM";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+/* =====================================================
+   FALLBACK VALUES
+===================================================== */
+
+const DEFAULT_EQUIPMENT_TYPES = [
+
+    "Fire extinguisher",
+    "Onboard fire suppression",
+    "Fire hydrant",
+    "Fire hose reel",
+    "Installation control valve",
+    "Fire Alarm"
+
+];
+
+const STATUS_OPTIONS = [
+
+    "Active",
+    "Inspection Due",
+    "Out of Service",
+    "Inactive"
+
+];
+
+
+/* =====================================================
    STATE
 ===================================================== */
 
 let equipmentList = [];
+
 let filteredEquipment = [];
 
 let editingEquipmentId = null;
-let currentViewEquipmentId = null;
 
-/*
- * IMPORTANT:
- * Do not declare `currentUser` here.
- * auth.js may already use that name.
- */
-let authenticatedUser = null;
+let selectedEquipment = null;
+
+let selectedEquipmentIds = new Set();
+
+let equipmentTypes = [
+    ...DEFAULT_EQUIPMENT_TYPES
+];
+
+let locationRecords = [];
+
+let locationNames = [];
 
 
 /* =====================================================
-   SUPABASE SAFETY
+   DOM READY
 ===================================================== */
 
-function getSupabaseClient() {
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
 
-    if (
-        typeof supabase === "undefined" ||
-        !supabase ||
-        typeof supabase.from !== "function"
-    ) {
+        setupSidebar();
 
-        throw new Error(
-            "Supabase client is not available. Check the Supabase configuration."
-        );
+        setupFilters();
+
+        setupSelectAll();
+
+        populateEquipmentTypeControls();
+
+        await loadReferenceData();
+
+        await loadEquipment();
 
     }
+);
 
-    return supabase;
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+function setupSidebar(){
+
+    const menuButton =
+        document.getElementById(
+            "menuButton"
+        );
+
+    const sidebar =
+        document.getElementById(
+            "sidebar"
+        );
+
+    const overlay =
+        document.getElementById(
+            "sidebarOverlay"
+        );
+
+    const closeButton =
+        document.getElementById(
+            "sidebarClose"
+        );
+
+
+    menuButton.addEventListener(
+        "click",
+        () => {
+
+            sidebar.classList.toggle(
+                "open"
+            );
+
+            overlay.classList.toggle(
+                "show",
+                sidebar.classList.contains(
+                    "open"
+                )
+            );
+
+        }
+    );
+
+
+    closeButton.addEventListener(
+        "click",
+        closeSidebar
+    );
+
+
+    overlay.addEventListener(
+        "click",
+        closeSidebar
+    );
+
+
+    document
+        .querySelectorAll(
+            ".sidebar-nav a"
+        )
+        .forEach(
+            link => {
+
+                link.addEventListener(
+                    "click",
+                    closeSidebar
+                );
+
+            }
+        );
+
+}
+
+
+function closeSidebar(){
+
+    document
+        .getElementById("sidebar")
+        .classList.remove("open");
+
+    document
+        .getElementById("sidebarOverlay")
+        .classList.remove("show");
+
 }
 
 
 /* =====================================================
-   AUTHENTICATION
+   FILTER SETUP
 ===================================================== */
 
-async function initializePage() {
+function setupFilters(){
 
-    try {
+    document
+        .getElementById("searchFilter")
+        .addEventListener(
+            "input",
+            applyFilters
+        );
 
-        if (typeof checkAuth !== "function") {
 
-            throw new Error(
-                "checkAuth() was not found. Make sure auth.js is loaded correctly."
+    document
+        .getElementById("locationFilter")
+        .addEventListener(
+            "input",
+            applyFilters
+        );
+
+
+    document
+        .getElementById("typeFilter")
+        .addEventListener(
+            "change",
+            applyFilters
+        );
+
+
+    document
+        .getElementById("areaFilter")
+        .addEventListener(
+            "change",
+            applyFilters
+        );
+
+
+    document
+        .getElementById("statusFilter")
+        .addEventListener(
+            "change",
+            applyFilters
+        );
+
+}
+
+
+/* =====================================================
+   SELECT ALL
+===================================================== */
+
+function setupSelectAll(){
+
+    document
+        .getElementById(
+            "selectAllCheckbox"
+        )
+        .addEventListener(
+            "change",
+            event => {
+
+                const visibleIds =
+                    filteredEquipment.map(
+                        item => item.id
+                    );
+
+
+                if(event.target.checked){
+
+                    visibleIds.forEach(
+                        id =>
+                            selectedEquipmentIds.add(
+                                id
+                            )
+                    );
+
+                }else{
+
+                    visibleIds.forEach(
+                        id =>
+                            selectedEquipmentIds.delete(
+                                id
+                            )
+                    );
+
+                }
+
+
+                renderEquipment();
+
+                updateSelectionInfo();
+
+            }
+        );
+
+}
+
+
+/* =====================================================
+   REFERENCE DATA
+===================================================== */
+
+async function loadReferenceData(){
+
+    await loadEquipmentTypes();
+
+    await loadLocations();
+
+}
+
+
+/* =====================================================
+   LOAD EQUIPMENT TYPES
+===================================================== */
+
+async function loadEquipmentTypes(){
+
+    try{
+
+        const {
+            data,
+            error
+        } = await supabaseClient
+            .from("equipment_types")
+            .select("*")
+            .order(
+                "created_at",
+                {
+                    ascending:true
+                }
             );
 
-        }
 
-
-        /*
-         * Authenticate FIRST.
-         *
-         * This is important because the old page attempted
-         * permission checks before authentication was ready.
-         */
-
-        authenticatedUser = await checkAuth();
-
-
-        if (!authenticatedUser) {
+        if(error){
 
             console.warn(
-                "FireSafe Track: no authenticated user."
+                "Equipment types table could not be loaded:",
+                error
             );
+
+            equipmentTypes =
+                [...DEFAULT_EQUIPMENT_TYPES];
+
+            populateEquipmentTypeControls();
 
             return;
 
         }
 
 
-        /*
-         * Keep compatibility with auth.js implementations
-         * that expect window.currentUser.
-         */
+        const values =
+            (data || [])
+                .map(
+                    row =>
+                        extractReferenceName(
+                            row,
+                            [
+                                "name",
+                                "type_name",
+                                "equipment_type",
+                                "title",
+                                "label"
+                            ]
+                        )
+                )
+                .filter(Boolean);
 
-        try {
 
-            window.currentUser = authenticatedUser;
-
-        } catch (error) {
-
-            console.warn(
-                "Could not expose authenticated user globally.",
-                error
+        equipmentTypes =
+            [
+                ...new Set(
+                    [
+                        ...values,
+                        ...DEFAULT_EQUIPMENT_TYPES
+                    ]
+                )
+            ]
+            .sort(
+                (a,b) =>
+                    a.localeCompare(b)
             );
 
-        }
 
+        populateEquipmentTypeControls();
 
-        updateManagementUI();
+    }catch(error){
 
-        setupEventListeners();
-
-        await loadEquipment();
-
-        updateManagementUI();
-
-    } catch (error) {
-
-        console.error(
-            "Equipment page initialization failed:",
+        console.warn(
+            "Equipment type loading failed:",
             error
         );
 
-        showToast(
-            error.message || "Unable to initialise Equipment Register.",
-            "error"
-        );
+        equipmentTypes =
+            [...DEFAULT_EQUIPMENT_TYPES];
+
+        populateEquipmentTypeControls();
 
     }
 
@@ -2375,426 +2186,259 @@ async function initializePage() {
 
 
 /* =====================================================
-   ROLE
+   LOAD LOCATIONS
 ===================================================== */
 
-function getCurrentRole() {
+async function loadLocations(){
 
-    const user =
-        authenticatedUser ||
-        window.currentUser ||
-        null;
+    try{
 
+        const {
+            data,
+            error
+        } = await supabaseClient
+            .from("locations")
+            .select("*");
 
-    return String(
-        user?.profile?.role ||
-        user?.role ||
-        ""
-    )
-        .trim()
-        .toLowerCase();
 
-}
+        if(error){
 
-
-/* =====================================================
-   MANAGEMENT PERMISSION
-===================================================== */
-
-function canManageEquipment() {
-
-    const role = getCurrentRole();
-
-    return [
-        "admin",
-        "administrator",
-        "supervisor"
-    ].includes(role);
-
-}
-
-
-/* =====================================================
-   UPDATE UI PERMISSIONS
-===================================================== */
-
-function updateManagementUI() {
-
-    const addButton =
-        document.getElementById("addEquipmentBtn");
-
-    const roleBadge =
-        document.getElementById("roleBadge");
-
-
-    const role =
-        getCurrentRole();
-
-
-    if (roleBadge) {
-
-        roleBadge.textContent =
-            role
-                ? formatRole(role)
-                : "Role unavailable";
-
-    }
-
-
-    if (addButton) {
-
-        /*
-         * Keep the button visible.
-         * If the user is not authorised, clicking it gives
-         * a clear explanation instead of appearing broken.
-         */
-
-        addButton.disabled = false;
-
-        addButton.title =
-            canManageEquipment()
-                ? "Add new equipment"
-                : "Only administrators and supervisors can add equipment";
-
-    }
-
-}
-
-
-/* =====================================================
-   FORMAT ROLE
-===================================================== */
-
-function formatRole(role) {
-
-    if (!role) {
-        return "Unknown";
-    }
-
-    return role
-        .split(/[_\s-]+/)
-        .map(word =>
-            word.charAt(0).toUpperCase() +
-            word.slice(1)
-        )
-        .join(" ");
-
-}
-
-
-/* =====================================================
-   EVENT LISTENERS
-===================================================== */
-
-function setupEventListeners() {
-
-    /*
-     * ADD EQUIPMENT
-     *
-     * This is deliberately attached with addEventListener
-     * instead of relying only on inline onclick.
-     */
-
-    const addButton =
-        document.getElementById("addEquipmentBtn");
-
-    if (addButton) {
-
-        addButton.addEventListener(
-            "click",
-            function(event) {
-
-                event.preventDefault();
-
-                openAddModal();
-
-            }
-        );
-
-    }
-
-
-    /* Form */
-
-    const form =
-        document.getElementById("equipmentForm");
-
-    if (form) {
-
-        form.addEventListener(
-            "submit",
-            function(event) {
-
-                event.preventDefault();
-
-                saveEquipment();
-
-            }
-        );
-
-    }
-
-
-    /* Cancel */
-
-    document
-        .getElementById("cancelEquipmentBtn")
-        ?.addEventListener(
-            "click",
-            closeEquipmentModal
-        );
-
-
-    /* Close add/edit */
-
-    document
-        .getElementById("closeEquipmentModal")
-        ?.addEventListener(
-            "click",
-            closeEquipmentModal
-        );
-
-
-    /* Close view */
-
-    document
-        .getElementById("closeViewModal")
-        ?.addEventListener(
-            "click",
-            closeViewModal
-        );
-
-
-    document
-        .getElementById("closeViewBtn")
-        ?.addEventListener(
-            "click",
-            closeViewModal
-        );
-
-
-    /* Start inspection */
-
-    document
-        .getElementById("startInspectionBtn")
-        ?.addEventListener(
-            "click",
-            startInspection
-        );
-
-
-    /* Export register to Excel-compatible CSV */
-
-    document
-        .getElementById("exportExcelBtn")
-        ?.addEventListener(
-            "click",
-            exportEquipmentToExcel
-        );
-
-
-    /* Refresh */
-
-    document
-        .getElementById("refreshBtn")
-        ?.addEventListener(
-            "click",
-            loadEquipment
-        );
-
-
-    /* Report */
-
-    document
-        .getElementById("generateReportBtn")
-        ?.addEventListener(
-            "click",
-            generateReport
-        );
-
-
-    /* Search */
-
-    document
-        .getElementById("searchInput")
-        ?.addEventListener(
-            "input",
-            applyFilters
-        );
-
-
-    /* Filters */
-
-    [
-        "typeFilter",
-        "areaFilter",
-        "locationFilter",
-        "statusFilter"
-    ].forEach(id => {
-
-        document
-            .getElementById(id)
-            ?.addEventListener(
-                "change",
-                applyFilters
+            console.warn(
+                "Locations table could not be loaded:",
+                error
             );
 
-    });
+            locationRecords = [];
+
+            return;
+
+        }
 
 
-    /* Select all */
+        locationRecords =
+            Array.isArray(data)
+                ? data
+                : [];
 
-    document
-        .getElementById("selectAll")
-        ?.addEventListener(
-            "change",
-            toggleSelectAll
+
+        locationNames =
+            locationRecords
+                .map(
+                    row =>
+                        extractReferenceName(
+                            row,
+                            [
+                                "name",
+                                "location_name",
+                                "location",
+                                "title",
+                                "label"
+                            ]
+                        )
+                )
+                .filter(Boolean);
+
+
+        locationNames =
+            [
+                ...new Set(
+                    locationNames
+                )
+            ]
+            .sort(
+                (a,b) =>
+                    a.localeCompare(b)
+            );
+
+
+        populateLocationDatalist();
+
+    }catch(error){
+
+        console.warn(
+            "Location loading failed:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   REFERENCE NAME HELPER
+===================================================== */
+
+function extractReferenceName(
+    row,
+    fields
+){
+
+    if(!row){
+
+        return "";
+
+    }
+
+
+    for(
+        const field of fields
+    ){
+
+        if(
+            row[field] !== null &&
+            row[field] !== undefined &&
+            String(row[field]).trim()
+        ){
+
+            return String(
+                row[field]
+            ).trim();
+
+        }
+
+    }
+
+
+    return "";
+
+}
+
+
+/* =====================================================
+   EQUIPMENT TYPE CONTROLS
+===================================================== */
+
+function populateEquipmentTypeControls(){
+
+    const filter =
+        document.getElementById(
+            "typeFilter"
+        );
+
+    const input =
+        document.getElementById(
+            "equipmentType"
         );
 
 
-    /* Logout */
+    const currentFilter =
+        filter.value;
 
-    document
-        .getElementById("logoutLink")
-        ?.addEventListener(
-            "click",
-            async function(event) {
-
-                event.preventDefault();
-
-                if (typeof logout === "function") {
-
-                    await logout();
-
-                } else {
-
-                    console.warn(
-                        "logout() was not found in auth.js"
-                    );
-
-                }
-
-            }
-        );
+    const currentInput =
+        input.value;
 
 
-    /* Modal outside click */
+    filter.innerHTML = `
 
-    document
-        .getElementById("equipmentModal")
-        ?.addEventListener(
-            "click",
-            function(event) {
+        <option value="">
+            All Equipment Types
+        </option>
 
-                if (event.target === this) {
-
-                    closeEquipmentModal();
-
-                }
-
-            }
-        );
+    `;
 
 
-    document
-        .getElementById("viewEquipmentModal")
-        ?.addEventListener(
-            "click",
-            function(event) {
+    input.innerHTML = `
 
-                if (event.target === this) {
+        <option value="">
+            Select equipment type
+        </option>
 
-                    closeViewModal();
-
-                }
-
-            }
-        );
+    `;
 
 
-    /* Escape */
+    equipmentTypes.forEach(
+        type => {
 
-    document.addEventListener(
-        "keydown",
-        function(event) {
+            const filterOption =
+                document.createElement(
+                    "option"
+                );
 
-            if (event.key !== "Escape") {
-                return;
-            }
+            filterOption.value = type;
 
-            closeEquipmentModal();
-            closeViewModal();
+            filterOption.textContent = type;
+
+            filter.appendChild(
+                filterOption
+            );
+
+
+            const inputOption =
+                document.createElement(
+                    "option"
+                );
+
+            inputOption.value = type;
+
+            inputOption.textContent = type;
+
+            input.appendChild(
+                inputOption
+            );
 
         }
     );
 
-}
 
+    if(
+        equipmentTypes.includes(
+            currentFilter
+        )
+    ){
 
-/* =====================================================
-   TOAST
-===================================================== */
+        filter.value =
+            currentFilter;
 
-function showToast(
-    message,
-    type = "success"
-) {
-
-    const container =
-        document.getElementById("toastContainer");
-
-
-    if (!container) {
-        alert(message);
-        return;
     }
 
 
-    const toast =
-        document.createElement("div");
+    if(
+        equipmentTypes.includes(
+            currentInput
+        )
+    ){
 
+        input.value =
+            currentInput;
 
-    toast.className =
-        `toast ${type}`;
-
-
-    toast.textContent =
-        message;
-
-
-    container.appendChild(toast);
-
-
-    setTimeout(
-        () => {
-
-            toast.style.opacity = "0";
-
-            toast.style.transform =
-                "translateX(10px)";
-
-            toast.style.transition =
-                ".2s ease";
-
-            setTimeout(
-                () => toast.remove(),
-                220
-            );
-
-        },
-        4000
-    );
+    }
 
 }
 
 
 /* =====================================================
-   SETUP FILTERS
+   LOCATION DATALIST
 ===================================================== */
 
-function setupFilters() {
+function populateLocationDatalist(){
 
-    applyFilters();
+    const datalist =
+        document.getElementById(
+            "locationOptions"
+        );
+
+
+    datalist.innerHTML = "";
+
+
+    locationNames.forEach(
+        location => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                location;
+
+            datalist.appendChild(
+                option
+            );
+
+        }
+    );
 
 }
 
@@ -2803,53 +2447,34 @@ function setupFilters() {
    LOAD EQUIPMENT
 ===================================================== */
 
-async function loadEquipment() {
+async function loadEquipment(){
 
-    const tbody =
-        document.getElementById(
-            "equipmentTableBody"
-        );
-
-
-    if (tbody) {
-
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="10">
-                    <div class="loading-state">
-                        Loading equipment...
-                    </div>
-                </td>
-            </tr>
-        `;
-
-    }
+    setDatabaseStatus(
+        "loading",
+        "Connecting to database..."
+    );
 
 
-    try {
-
-        const client =
-            getSupabaseClient();
-
+    try{
 
         const {
             data,
             error
-        } = await client
+        } = await supabaseClient
             .from("equipment")
             .select("*")
             .order(
-                "equipment_number",
+                "created_at",
                 {
-                    ascending: true
+                    ascending:false
                 }
             );
 
 
-        if (error) {
+        if(error){
 
             console.error(
-                "Supabase equipment load error:",
+                "Equipment load error:",
                 error
             );
 
@@ -2864,63 +2489,60 @@ async function loadEquipment() {
                 : [];
 
 
-        buildFilterOptions();
+        const existingIds =
+            new Set(
+                equipmentList.map(
+                    item => item.id
+                )
+            );
+
+
+        selectedEquipmentIds =
+            new Set(
+                [...selectedEquipmentIds]
+                    .filter(
+                        id =>
+                            existingIds.has(id)
+                    )
+            );
+
+
+        populateFilterDropdowns();
+
+        populateDatalist();
 
         applyFilters();
 
-        updateStats();
+        updateStatistics();
 
-    } catch (error) {
+        updateSelectionInfo();
 
-        console.error(
-            "Unable to load equipment:",
-            error
+
+        setDatabaseStatus(
+            "connected",
+            `Database connected • ${equipmentList.length} equipment records`
         );
 
+    }catch(error){
+
+        console.error(error);
 
         equipmentList = [];
 
         filteredEquipment = [];
 
+        renderEquipment();
 
-        if (tbody) {
+        updateStatistics();
 
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="10">
-
-                        <div class="empty-state">
-
-                            <div class="empty-icon">
-                                ⚠
-                            </div>
-
-                            <div class="empty-title">
-                                Unable to load equipment
-                            </div>
-
-                            <div class="empty-text">
-                                ${escapeHtml(
-                                    error?.message ||
-                                    "An unexpected database error occurred."
-                                )}
-                            </div>
-
-                        </div>
-
-                    </td>
-                </tr>
-            `;
-
-        }
-
-
-        updateStats();
+        setDatabaseStatus(
+            "error",
+            "Database connection failed"
+        );
 
 
         showToast(
-            error?.message ||
-            "Unable to load equipment.",
+            "Unable to load equipment. Check Supabase table permissions.",
             "error"
         );
 
@@ -2930,140 +2552,198 @@ async function loadEquipment() {
 
 
 /* =====================================================
-   BUILD FILTER OPTIONS
+   DATABASE STATUS
 ===================================================== */
 
-function buildFilterOptions() {
+function setDatabaseStatus(
+    state,
+    text
+){
 
-    const currentType =
-        document.getElementById("typeFilter")?.value || "";
+    const dot =
+        document.getElementById(
+            "databaseStatusDot"
+        );
 
-    const currentArea =
-        document.getElementById("areaFilter")?.value || "";
-
-    const currentLocation =
-        document.getElementById("locationFilter")?.value || "";
-
-
-    const types =
-        uniqueValues(
-            equipmentList,
-            "equipment_type"
+    const label =
+        document.getElementById(
+            "databaseStatusText"
         );
 
 
-    const areas =
-        uniqueValues(
-            equipmentList,
-            "area"
+    dot.className =
+        "status-dot";
+
+
+    if(state === "connected"){
+
+        dot.classList.add(
+            "connected"
         );
 
-
-    const locations =
-        uniqueValues(
-            equipmentList,
-            "location"
-        );
-
-
-    populateSelect(
-        "typeFilter",
-        "All Types",
-        types,
-        currentType
-    );
-
-
-    populateSelect(
-        "areaFilter",
-        "All Areas",
-        areas,
-        currentArea
-    );
-
-
-    populateSelect(
-        "locationFilter",
-        "All Locations",
-        locations,
-        currentLocation
-    );
-
-}
-
-
-/* =====================================================
-   UNIQUE VALUES
-===================================================== */
-
-function uniqueValues(
-    list,
-    field
-) {
-
-    return [
-        ...new Set(
-            list
-                .map(item =>
-                    String(item?.[field] || "").trim()
-                )
-                .filter(Boolean)
-        )
-    ].sort(
-        (a, b) =>
-            a.localeCompare(b)
-    );
-
-}
-
-
-/* =====================================================
-   POPULATE SELECT
-===================================================== */
-
-function populateSelect(
-    id,
-    placeholder,
-    values,
-    selectedValue
-) {
-
-    const select =
-        document.getElementById(id);
-
-
-    if (!select) {
-        return;
     }
 
 
-    select.innerHTML = "";
+    if(state === "error"){
+
+        dot.classList.add(
+            "error"
+        );
+
+    }
 
 
-    const firstOption =
-        document.createElement("option");
+    label.textContent =
+        text;
 
-    firstOption.value = "";
-    firstOption.textContent = placeholder;
-
-    select.appendChild(firstOption);
+}
 
 
-    values.forEach(value => {
+/* =====================================================
+   FILTER DROPDOWNS
+===================================================== */
 
-        const option =
-            document.createElement("option");
+function populateFilterDropdowns(){
 
-        option.value = value;
-        option.textContent = value;
+    const areaFilter =
+        document.getElementById(
+            "areaFilter"
+        );
 
-        if (value === selectedValue) {
-            option.selected = true;
+
+    const currentArea =
+        areaFilter.value;
+
+
+    const areas =
+        [
+            ...new Set(
+                equipmentList
+                    .map(
+                        item =>
+                            String(
+                                item.area || ""
+                            ).trim()
+                    )
+                    .filter(Boolean)
+            )
+        ]
+        .sort(
+            (a,b) =>
+                a.localeCompare(b)
+        );
+
+
+    areaFilter.innerHTML = `
+
+        <option value="">
+            All Areas
+        </option>
+
+    `;
+
+
+    areas.forEach(
+        area => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                area;
+
+            option.textContent =
+                area;
+
+            areaFilter.appendChild(
+                option
+            );
+
         }
+    );
 
-        select.appendChild(option);
 
-    });
+    if(
+        areas.includes(
+            currentArea
+        )
+    ){
+
+        areaFilter.value =
+            currentArea;
+
+    }
+
+}
+
+
+/* =====================================================
+   AREA DATALIST
+===================================================== */
+
+function populateDatalist(){
+
+    const datalist =
+        document.getElementById(
+            "areaOptions"
+        );
+
+
+    datalist.innerHTML = "";
+
+
+    const areas =
+        [
+            ...new Set(
+                [
+                    ...equipmentList
+                        .map(
+                            item =>
+                                String(
+                                    item.area || ""
+                                ).trim()
+                        ),
+
+                    ...locationRecords
+                        .map(
+                            row =>
+                                extractReferenceName(
+                                    row,
+                                    [
+                                        "area",
+                                        "area_name"
+                                    ]
+                                )
+                        )
+                ]
+                .filter(Boolean)
+            )
+        ]
+        .sort(
+            (a,b) =>
+                a.localeCompare(b)
+        );
+
+
+    areas.forEach(
+        area => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                area;
+
+            datalist.appendChild(
+                option
+            );
+
+        }
+    );
 
 }
 
@@ -3072,89 +2752,460 @@ function populateSelect(
    APPLY FILTERS
 ===================================================== */
 
-function applyFilters() {
+function applyFilters(){
 
     const search =
-        String(
-            document.getElementById("searchInput")?.value ||
-            ""
-        )
+        document
+            .getElementById(
+                "searchFilter"
+            )
+            .value
+            .trim()
+            .toLowerCase();
+
+
+    const location =
+        document
+            .getElementById(
+                "locationFilter"
+            )
+            .value
             .trim()
             .toLowerCase();
 
 
     const type =
-        document.getElementById("typeFilter")?.value ||
-        "";
+        document
+            .getElementById(
+                "typeFilter"
+            )
+            .value;
 
 
     const area =
-        document.getElementById("areaFilter")?.value ||
-        "";
-
-
-    const location =
-        document.getElementById("locationFilter")?.value ||
-        "";
+        document
+            .getElementById(
+                "areaFilter"
+            )
+            .value;
 
 
     const status =
-        document.getElementById("statusFilter")?.value ||
-        "";
+        document
+            .getElementById(
+                "statusFilter"
+            )
+            .value;
 
 
     filteredEquipment =
-        equipmentList.filter(item => {
+        equipmentList.filter(
+            item => {
 
-            const searchable = [
-                item?.equipment_number,
-                item?.equipment_name,
-                item?.equipment_type,
-                item?.area,
-                item?.location,
-                item?.status
-            ]
-                .join(" ")
-                .toLowerCase();
-
-
-            const matchesSearch =
-                !search ||
-                searchable.includes(search);
-
-
-            const matchesType =
-                !type ||
-                item?.equipment_type === type;
-
-
-            const matchesArea =
-                !area ||
-                item?.area === area;
+                const searchableText =
+                    [
+                        item.name,
+                        item.equipment_code,
+                        item.equipment_type,
+                        item.area,
+                        item.location,
+                        item.manufacturer,
+                        item.model,
+                        item.serial_number,
+                        item.status
+                    ]
+                    .map(
+                        value =>
+                            String(
+                                value || ""
+                            ).toLowerCase()
+                    )
+                    .join(" ");
 
 
-            const matchesLocation =
-                !location ||
-                item?.location === location;
+                const matchesSearch =
+                    !search ||
+                    searchableText.includes(
+                        search
+                    );
 
 
-            const matchesStatus =
-                !status ||
-                item?.status === status;
+                const matchesLocation =
+                    !location ||
+                    String(
+                        item.location || ""
+                    )
+                    .toLowerCase()
+                    .includes(
+                        location
+                    );
 
 
-            return (
-                matchesSearch &&
-                matchesType &&
-                matchesArea &&
-                matchesLocation &&
-                matchesStatus
-            );
+                const matchesType =
+                    !type ||
+                    item.equipment_type === type;
 
-        });
+
+                const matchesArea =
+                    !area ||
+                    item.area === area;
+
+
+                const intelligentStatus =
+                    getInspectionState(
+                        item
+                    );
+
+
+                const matchesStatus =
+                    !status ||
+                    statusMatches(
+                        item,
+                        status,
+                        intelligentStatus
+                    );
+
+
+                return (
+                    matchesSearch &&
+                    matchesLocation &&
+                    matchesType &&
+                    matchesArea &&
+                    matchesStatus
+                );
+
+            }
+        );
 
 
     renderEquipment();
+
+    updateSelectAllState();
+
+}
+
+
+/* =====================================================
+   STATUS FILTER
+===================================================== */
+
+function statusMatches(
+    item,
+    selectedStatus,
+    intelligentStatus
+){
+
+    if(
+        selectedStatus === "Due Today"
+    ){
+
+        return intelligentStatus ===
+            "Due Today";
+
+    }
+
+
+    if(
+        selectedStatus === "Overdue"
+    ){
+
+        return intelligentStatus ===
+            "Overdue";
+
+    }
+
+
+    if(
+        selectedStatus === "Inspection Due"
+    ){
+
+        return (
+            intelligentStatus === "Due Today" ||
+            intelligentStatus === "Overdue" ||
+            item.status === "Inspection Due"
+        );
+
+    }
+
+
+    return item.status === selectedStatus;
+
+}
+
+
+/* =====================================================
+   RESET FILTERS
+===================================================== */
+
+function resetFilters(){
+
+    document
+        .getElementById("searchFilter")
+        .value = "";
+
+    document
+        .getElementById("locationFilter")
+        .value = "";
+
+    document
+        .getElementById("typeFilter")
+        .value = "";
+
+    document
+        .getElementById("areaFilter")
+        .value = "";
+
+    document
+        .getElementById("statusFilter")
+        .value = "";
+
+    applyFilters();
+
+}
+
+
+/* =====================================================
+   STATISTICS
+===================================================== */
+
+function updateStatistics(){
+
+    const total =
+        equipmentList.length;
+
+
+    const active =
+        equipmentList.filter(
+            item =>
+                item.status === "Active"
+        ).length;
+
+
+    const due =
+        equipmentList.filter(
+            item => {
+
+                const state =
+                    getInspectionState(
+                        item
+                    );
+
+                return (
+                    state === "Due Today" ||
+                    state === "Overdue" ||
+                    item.status === "Inspection Due"
+                );
+
+            }
+        ).length;
+
+
+    const out =
+        equipmentList.filter(
+            item =>
+                item.status ===
+                "Out of Service"
+        ).length;
+
+
+    document
+        .getElementById(
+            "totalEquipment"
+        )
+        .textContent =
+            total;
+
+
+    document
+        .getElementById(
+            "activeEquipment"
+        )
+        .textContent =
+            active;
+
+
+    document
+        .getElementById(
+            "dueEquipment"
+        )
+        .textContent =
+            due;
+
+
+    document
+        .getElementById(
+            "outOfServiceEquipment"
+        )
+        .textContent =
+            out;
+
+}
+
+
+/* =====================================================
+   INTELLIGENT INSPECTION STATE
+===================================================== */
+
+function getInspectionState(
+    item
+){
+
+    if(
+        item.status ===
+        "Out of Service"
+    ){
+
+        return "Out of Service";
+
+    }
+
+
+    if(
+        item.status ===
+        "Inactive"
+    ){
+
+        return "Inactive";
+
+    }
+
+
+    if(
+        !item.next_inspection_date
+    ){
+
+        return "Active";
+
+    }
+
+
+    const inspectionDate =
+        parseDateOnly(
+            item.next_inspection_date
+        );
+
+
+    if(!inspectionDate){
+
+        return "Active";
+
+    }
+
+
+    const today =
+        new Date();
+
+    today.setHours(
+        0,
+        0,
+        0,
+        0
+    );
+
+
+    const difference =
+        Math.round(
+            (
+                inspectionDate -
+                today
+            ) /
+            86400000
+        );
+
+
+    if(difference < 0){
+
+        return "Overdue";
+
+    }
+
+
+    if(difference === 0){
+
+        return "Due Today";
+
+    }
+
+
+    if(
+        item.status ===
+        "Inspection Due"
+    ){
+
+        return "Inspection Due";
+
+    }
+
+
+    return "Active";
+
+}
+
+
+/* =====================================================
+   DATE PARSER
+===================================================== */
+
+function parseDateOnly(
+    value
+){
+
+    if(!value){
+
+        return null;
+
+    }
+
+
+    const text =
+        String(value)
+            .substring(
+                0,
+                10
+            );
+
+
+    if(
+        !/^\d{4}-\d{2}-\d{2}$/.test(
+            text
+        )
+    ){
+
+        return null;
+
+    }
+
+
+    const [
+        year,
+        month,
+        day
+    ] =
+        text
+            .split("-")
+            .map(Number);
+
+
+    const date =
+        new Date(
+            year,
+            month - 1,
+            day
+        );
+
+
+    if(
+        Number.isNaN(
+            date.getTime()
+        )
+    ){
+
+        return null;
+
+    }
+
+
+    return date;
 
 }
 
@@ -3163,7 +3214,7 @@ function applyFilters() {
    RENDER EQUIPMENT
 ===================================================== */
 
-function renderEquipment() {
+function renderEquipment(){
 
     const tbody =
         document.getElementById(
@@ -3171,58 +3222,47 @@ function renderEquipment() {
         );
 
 
-    const tableCount =
+    const count =
         document.getElementById(
-            "tableCount"
+            "recordCount"
         );
 
 
-    if (!tbody) {
-        return;
-    }
+    count.textContent =
+        `${filteredEquipment.length} ${
+            filteredEquipment.length === 1
+                ? "record"
+                : "records"
+        }`;
 
 
-    if (tableCount) {
-
-        tableCount.textContent =
-            `${filteredEquipment.length} ${
-                filteredEquipment.length === 1
-                    ? "equipment"
-                    : "equipment"
-            }`;
-
-    }
-
-
-    if (!filteredEquipment.length) {
+    if(
+        !filteredEquipment.length
+    ){
 
         tbody.innerHTML = `
+
             <tr>
-                <td colspan="10">
 
-                    <div class="empty-state">
+                <td
+                    colspan="7"
+                    class="empty-state"
+                >
 
-                        <div class="empty-icon">
-                            ▣
-                        </div>
+                    <strong>
+                        No equipment found
+                    </strong>
 
-                        <div class="empty-title">
-                            No equipment found
-                        </div>
-
-                        <div class="empty-text">
-                            ${
-                                equipmentList.length
-                                    ? "Try changing your search or filters."
-                                    : "Click Add Equipment to register your first item."
-                            }
-                        </div>
-
-                    </div>
+                    Try changing your search or filters,
+                    or add a new equipment record.
 
                 </td>
+
             </tr>
+
         `;
+
+        updateSelectAllState();
 
         return;
 
@@ -3231,33 +3271,73 @@ function renderEquipment() {
 
     tbody.innerHTML =
         filteredEquipment
-            .map(renderEquipmentRow)
+            .map(
+                createEquipmentRow
+            )
             .join("");
 
 
     updateSelectAllState();
 
+    updateSelectionInfo();
+
 }
 
 
 /* =====================================================
-   RENDER ROW
+   CREATE TABLE ROW
 ===================================================== */
 
-function renderEquipmentRow(item) {
+function createEquipmentRow(
+    item
+){
 
-    const status =
-        item?.status || "Active";
+    const selected =
+        selectedEquipmentIds.has(
+            item.id
+        );
+
+
+    const state =
+        getInspectionState(
+            item
+        );
 
 
     const statusClass =
-        getStatusClass(status);
-
-
-    const dueClass =
-        getDueClass(
-            item?.next_inspection_due
+        getStatusClass(
+            item
         );
+
+
+    const canInspect =
+        state === "Due Today" ||
+        state === "Overdue" ||
+        item.status === "Inspection Due";
+
+
+    let inspectionText = "";
+
+    if(state === "Overdue"){
+
+        inspectionText =
+            "Inspection overdue";
+
+    }else if(state === "Due Today"){
+
+        inspectionText =
+            "Inspection due today";
+
+    }else if(
+        item.next_inspection_date
+    ){
+
+        inspectionText =
+            `Next: ${formatDate(
+                item.next_inspection_date
+            )}`;
+
+    }
 
 
     return `
@@ -3268,8 +3348,12 @@ function renderEquipmentRow(item) {
 
                 <input
                     type="checkbox"
-                    class="equipment-checkbox"
-                    value="${escapeHtml(item?.id || "")}"
+                    ${selected ? "checked" : ""}
+                    onchange="toggleEquipmentSelection(
+                        '${escapeAttribute(item.id)}',
+                        this.checked
+                    )"
+                    aria-label="Select equipment"
                 >
 
             </td>
@@ -3277,9 +3361,17 @@ function renderEquipmentRow(item) {
 
             <td>
 
-                <span class="equipment-number">
+                <div class="equipment-name">
                     ${escapeHtml(
-                        item?.equipment_number || "—"
+                        item.name ||
+                        "Unnamed Equipment"
+                    )}
+                </div>
+
+                <span class="equipment-code">
+                    ${escapeHtml(
+                        item.equipment_code ||
+                        "No code"
                     )}
                 </span>
 
@@ -3287,101 +3379,112 @@ function renderEquipmentRow(item) {
 
 
             <td>
+                ${escapeHtml(
+                    item.equipment_type ||
+                    "—"
+                )}
+            </td>
 
-                <span class="equipment-name">
+
+            <td>
+                ${escapeHtml(
+                    item.area ||
+                    "—"
+                )}
+            </td>
+
+
+            <td>
+                ${escapeHtml(
+                    item.location ||
+                    "—"
+                )}
+            </td>
+
+
+            <td>
+
+                <span
+                    class="status-badge ${statusClass}"
+                >
                     ${escapeHtml(
-                        item?.equipment_name || "—"
+                        getDisplayStatus(
+                            item
+                        )
                     )}
                 </span>
 
-            </td>
-
-
-            <td>
-                ${escapeHtml(
-                    item?.equipment_type || "—"
-                )}
-            </td>
-
-
-            <td>
-                ${escapeHtml(
-                    item?.area || "—"
-                )}
-            </td>
-
-
-            <td>
-                ${escapeHtml(
-                    item?.location || "—"
-                )}
-            </td>
-
-
-            <td>
-
-                <span class="status-pill ${statusClass}">
-                    ${escapeHtml(status)}
-                </span>
-
-            </td>
-
-
-            <td class="muted-cell">
-
-                ${formatDate(
-                    item?.last_inspection
-                )}
-
-            </td>
-
-
-            <td class="${dueClass}">
-
-                ${formatDate(
-                    item?.next_inspection_due
-                )}
+                ${
+                    inspectionText
+                        ? `
+                            <span
+                                class="inspection-indicator ${
+                                    state === "Overdue"
+                                        ? "overdue"
+                                        : state === "Due Today"
+                                            ? "due"
+                                            : ""
+                                }"
+                            >
+                                ${escapeHtml(
+                                    inspectionText
+                                )}
+                            </span>
+                        `
+                        : ""
+                }
 
             </td>
 
 
             <td>
 
-                <div class="row-actions">
+                <div class="action-buttons">
 
                     <button
+                        class="icon-button"
                         type="button"
-                        class="icon-btn view"
-                        title="View"
-                        onclick="viewEquipment('${escapeJs(item?.id || "")}')"
+                        title="View profile"
+                        onclick="openProfileModal('${escapeAttribute(item.id)}')"
                     >
-                        ◉
+                        👁
                     </button>
 
 
                     ${
-                        canManageEquipment()
+                        canInspect
                             ? `
                                 <button
+                                    class="icon-button inspect"
                                     type="button"
-                                    class="icon-btn edit"
-                                    title="Edit"
-                                    onclick="editEquipment('${escapeJs(item?.id || "")}')"
+                                    title="Inspect equipment"
+                                    onclick="inspectEquipment('${escapeAttribute(item.id)}')"
                                 >
-                                    ✎
-                                </button>
-
-                                <button
-                                    type="button"
-                                    class="icon-btn delete"
-                                    title="Delete"
-                                    onclick="deleteEquipment('${escapeJs(item?.id || "")}')"
-                                >
-                                    ×
+                                    ✓
                                 </button>
                             `
                             : ""
                     }
+
+
+                    <button
+                        class="icon-button"
+                        type="button"
+                        title="Edit equipment"
+                        onclick="openEditModal('${escapeAttribute(item.id)}')"
+                    >
+                        ✎
+                    </button>
+
+
+                    <button
+                        class="icon-button delete"
+                        type="button"
+                        title="Delete equipment"
+                        onclick="deleteEquipment('${escapeAttribute(item.id)}')"
+                    >
+                        🗑
+                    </button>
 
                 </div>
 
@@ -3395,335 +3498,485 @@ function renderEquipmentRow(item) {
 
 
 /* =====================================================
+   DISPLAY STATUS
+===================================================== */
+
+function getDisplayStatus(
+    item
+){
+
+    const state =
+        getInspectionState(
+            item
+        );
+
+
+    if(
+        state === "Overdue"
+    ){
+
+        return "Overdue";
+
+    }
+
+
+    if(
+        state === "Due Today"
+    ){
+
+        return "Due Today";
+
+    }
+
+
+    return item.status ||
+        "Unknown";
+
+}
+
+
+/* =====================================================
    STATUS CLASS
 ===================================================== */
 
-function getStatusClass(status) {
+function getStatusClass(
+    item
+){
 
-    const value =
-        String(status || "")
-            .toLowerCase();
+    const state =
+        getInspectionState(
+            item
+        );
 
 
-    if (value === "active") {
+    if(
+        state === "Out of Service"
+    ){
+
+        return "status-out";
+
+    }
+
+
+    if(
+        state === "Overdue"
+    ){
+
+        return "status-overdue";
+
+    }
+
+
+    if(
+        state === "Due Today" ||
+        state === "Inspection Due"
+    ){
+
+        return "status-due";
+
+    }
+
+
+    if(
+        state === "Active"
+    ){
+
         return "status-active";
+
     }
 
 
-    if (value === "inactive") {
-        return "status-inactive";
-    }
-
-
-    return "status-out";
+    return "status-inactive";
 
 }
 
 
 /* =====================================================
-   DUE CLASS
+   SELECTION
 ===================================================== */
 
-function getDueClass(dateValue) {
+function toggleEquipmentSelection(
+    id,
+    checked
+){
 
-    if (!dateValue) {
-        return "due-none";
+    if(checked){
+
+        selectedEquipmentIds.add(
+            id
+        );
+
+    }else{
+
+        selectedEquipmentIds.delete(
+            id
+        );
+
     }
 
 
-    const date =
-        new Date(dateValue);
+    updateSelectionInfo();
+
+    updateSelectAllState();
+
+}
 
 
-    if (Number.isNaN(date.getTime())) {
-        return "due-none";
+function updateSelectionInfo(){
+
+    document
+        .getElementById(
+            "selectionInfo"
+        )
+        .textContent =
+            `${selectedEquipmentIds.size} selected`;
+
+}
+
+
+function updateSelectAllState(){
+
+    const checkbox =
+        document.getElementById(
+            "selectAllCheckbox"
+        );
+
+
+    if(
+        !filteredEquipment.length
+    ){
+
+        checkbox.checked = false;
+
+        checkbox.indeterminate = false;
+
+        return;
+
     }
 
 
-    const today =
+    const visibleSelected =
+        filteredEquipment.filter(
+            item =>
+                selectedEquipmentIds.has(
+                    item.id
+                )
+        ).length;
+
+
+    if(
+        visibleSelected ===
+        filteredEquipment.length
+    ){
+
+        checkbox.checked = true;
+
+        checkbox.indeterminate = false;
+
+    }else if(
+        visibleSelected > 0
+    ){
+
+        checkbox.checked = false;
+
+        checkbox.indeterminate = true;
+
+    }else{
+
+        checkbox.checked = false;
+
+        checkbox.indeterminate = false;
+
+    }
+
+}
+
+
+function clearSelection(){
+
+    selectedEquipmentIds.clear();
+
+    renderEquipment();
+
+    updateSelectionInfo();
+
+}
+
+
+/* =====================================================
+   INSPECT EQUIPMENT
+===================================================== */
+
+function inspectEquipment(
+    id
+){
+
+    const item =
+        equipmentList.find(
+            equipment =>
+                String(
+                    equipment.id
+                ) === String(id)
+        );
+
+
+    if(!item){
+
+        showToast(
+            "Equipment record could not be found.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const state =
+        getInspectionState(
+            item
+        );
+
+
+    if(
+        state !== "Due Today" &&
+        state !== "Overdue" &&
+        item.status !== "Inspection Due"
+    ){
+
+        showToast(
+            "This equipment is not currently due for inspection.",
+            "warning"
+        );
+
+        return;
+
+    }
+
+
+    /*
+       The inspection page receives the equipment ID.
+       inspections.html can use this parameter to
+       automatically open the correct inspection workflow.
+    */
+
+    window.location.href =
+        "inspections.html?equipment_id=" +
+        encodeURIComponent(
+            item.id
+        );
+
+}
+
+
+/* =====================================================
+   EXCEL EXPORT
+===================================================== */
+
+function exportSelectedEquipment(){
+
+    if(
+        typeof XLSX === "undefined"
+    ){
+
+        showToast(
+            "Excel export library could not be loaded.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if(
+        selectedEquipmentIds.size === 0
+    ){
+
+        showToast(
+            "Select at least one equipment item before generating the Excel register.",
+            "warning"
+        );
+
+        return;
+
+    }
+
+
+    const selectedRecords =
+        equipmentList.filter(
+            item =>
+                selectedEquipmentIds.has(
+                    item.id
+                )
+        );
+
+
+    const rows =
+        selectedRecords.map(
+            item => ({
+
+                "Equipment Name":
+                    item.name || "",
+
+                "Equipment Code":
+                    item.equipment_code || "",
+
+                "Equipment Type":
+                    item.equipment_type || "",
+
+                "Manufacture Date":
+                    formatExcelDate(
+                        item.manufacture_date
+                    ),
+
+                "Area":
+                    item.area || "",
+
+                "Location":
+                    item.location || "",
+
+                "Database Status":
+                    item.status || "",
+
+                "Inspection Status":
+                    getDisplayStatus(
+                        item
+                    ),
+
+                "Manufacturer":
+                    item.manufacturer || "",
+
+                "Model":
+                    item.model || "",
+
+                "Serial Number":
+                    item.serial_number || "",
+
+                "Installation Date":
+                    formatExcelDate(
+                        item.installation_date
+                    ),
+
+                "Last Inspection Date":
+                    formatExcelDate(
+                        item.last_inspection_date
+                    ),
+
+                "Next Inspection Date":
+                    formatExcelDate(
+                        item.next_inspection_date
+                    ),
+
+                "Description":
+                    item.description || "",
+
+                "Notes":
+                    item.notes || "",
+
+                "Record Created":
+                    formatExcelDateTime(
+                        item.created_at
+                    ),
+
+                "Last Updated":
+                    formatExcelDateTime(
+                        item.updated_at
+                    )
+
+            })
+        );
+
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(
+            rows
+        );
+
+
+    worksheet["!cols"] =
+        [
+            28,
+            18,
+            30,
+            18,
+            20,
+            25,
+            18,
+            20,
+            22,
+            20,
+            24,
+            20,
+            22,
+            22,
+            38,
+            38,
+            24,
+            24
+        ]
+        .map(
+            width => ({
+                wch:width
+            })
+        );
+
+
+    const range =
+        XLSX.utils.decode_range(
+            worksheet["!ref"]
+        );
+
+
+    worksheet["!autofilter"] = {
+
+        ref:
+            XLSX.utils.encode_range(
+                range
+            )
+
+    };
+
+
+    const workbook =
+        XLSX.utils.book_new();
+
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Equipment Register"
+    );
+
+
+    const now =
         new Date();
 
 
-    today.setHours(
-        0,
-        0,
-        0,
-        0
+    const fileDate =
+        now.getFullYear() +
+        "-" +
+        String(
+            now.getMonth() + 1
+        ).padStart(2,"0") +
+        "-" +
+        String(
+            now.getDate()
+        ).padStart(2,"0");
+
+
+    XLSX.writeFile(
+        workbook,
+        `FireSafe_Equipment_Register_${fileDate}.xlsx`
     );
 
-
-    date.setHours(
-        0,
-        0,
-        0,
-        0
-    );
-
-
-    const difference =
-        Math.ceil(
-            (
-                date.getTime() -
-                today.getTime()
-            ) /
-            (1000 * 60 * 60 * 24)
-        );
-
-
-    if (difference < 0) {
-        return "due-danger";
-    }
-
-
-    if (difference <= 30) {
-        return "due-warning";
-    }
-
-
-    return "due-ok";
-
-}
-
-
-/* =====================================================
-   UPDATE STATS
-===================================================== */
-
-function updateStats() {
-
-    const total =
-        equipmentList.length;
-
-
-    const active =
-        equipmentList.filter(
-            item =>
-                String(item?.status || "")
-                    .toLowerCase() === "active"
-        ).length;
-
-
-    const inactive =
-        equipmentList.filter(
-            item =>
-                String(item?.status || "")
-                    .toLowerCase() !== "active"
-        ).length;
-
-
-    const due =
-        equipmentList.filter(item =>
-            isInspectionDue(
-                item?.next_inspection_due
-            )
-        ).length;
-
-
-    const totalEl =
-        document.getElementById(
-            "totalEquipment"
-        );
-
-
-    const activeEl =
-        document.getElementById(
-            "activeEquipment"
-        );
-
-
-    const inactiveEl =
-        document.getElementById(
-            "inactiveEquipment"
-        );
-
-
-    const dueEl =
-        document.getElementById(
-            "dueEquipment"
-        );
-
-
-    if (totalEl) {
-        totalEl.textContent = total;
-    }
-
-
-    if (activeEl) {
-        activeEl.textContent = active;
-    }
-
-
-    if (inactiveEl) {
-        inactiveEl.textContent = inactive;
-    }
-
-
-    if (dueEl) {
-        dueEl.textContent = due;
-    }
-
-    updateRegisterBreakdowns();
-
-}
-
-
-/* =====================================================
-   REGISTER BREAKDOWNS
-===================================================== */
-
-function countByField(list, field) {
-
-    const counts = {};
-
-    list.forEach(item => {
-
-        const value =
-            String(item?.[field] || "Unspecified").trim() ||
-            "Unspecified";
-
-        counts[value] = (counts[value] || 0) + 1;
-
-    });
-
-    return Object.entries(counts)
-        .sort((a, b) => {
-            if (b[1] !== a[1]) return b[1] - a[1];
-            return a[0].localeCompare(b[0]);
-        });
-
-}
-
-
-function renderBreakdownList(listId, totalId, entries, filterId) {
-
-    const list = document.getElementById(listId);
-    const total = document.getElementById(totalId);
-
-    if (!list || !total) return;
-
-    const count = entries.reduce((sum, entry) => sum + entry[1], 0);
-    total.textContent = count;
-
-    if (!entries.length) {
-        list.innerHTML = '<div class="breakdown-empty">No equipment recorded.</div>';
-        return;
-    }
-
-    list.innerHTML = entries.map(([name, value]) => `
-        <button
-            type="button"
-            class="breakdown-row"
-            title="Filter register by ${escapeHtml(name)}"
-            onclick="selectBreakdownFilter('${filterId}', '${escapeJs(name)}')"
-        >
-            <span class="breakdown-name">${escapeHtml(name)}</span>
-            <span class="breakdown-count">${value}</span>
-        </button>
-    `).join('');
-
-}
-
-
-function updateRegisterBreakdowns() {
-
-    renderBreakdownList(
-        "typeBreakdownList",
-        "typeBreakdownTotal",
-        countByField(equipmentList, "equipment_type"),
-        "typeFilter"
-    );
-
-    renderBreakdownList(
-        "areaBreakdownList",
-        "areaBreakdownTotal",
-        countByField(equipmentList, "area"),
-        "areaFilter"
-    );
-
-    renderBreakdownList(
-        "locationBreakdownList",
-        "locationBreakdownTotal",
-        countByField(equipmentList, "location"),
-        "locationFilter"
-    );
-
-}
-
-
-function selectBreakdownFilter(filterId, value) {
-
-    const select = document.getElementById(filterId);
-
-    if (!select) return;
-
-    select.value = value;
-    applyFilters();
-
-    const toolbar = document.querySelector('.toolbar');
-    if (toolbar) {
-        toolbar.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-}
-
-
-function exportEquipmentToExcel() {
-
-    const rows = filteredEquipment.length
-        ? filteredEquipment
-        : equipmentList;
-
-    if (!rows.length) {
-        showToast("There is no equipment to export.", "warning");
-        return;
-    }
-
-    const headers = [
-        "Equipment Number",
-        "Equipment Name",
-        "Equipment Type",
-        "Area",
-        "Location",
-        "Status",
-        "Last Inspection",
-        "Next Inspection Due"
-    ];
-
-    const csvEscape = value => {
-        const text = String(value ?? "");
-        return '"' + text.replace(/"/g, '""') + '"';
-    };
-
-    const csv = [
-        headers,
-        ...rows.map(item => [
-            item.equipment_number,
-            item.equipment_name,
-            item.equipment_type,
-            item.area,
-            item.location,
-            item.status,
-            item.last_inspection,
-            item.next_inspection_due
-        ])
-    ]
-    .map(row => row.map(csvEscape).join(','))
-    .join('\r\n');
-
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    const date = new Date().toISOString().slice(0, 10);
-
-    link.href = url;
-    link.download = `FireSafe_Track_Equipment_Register_${date}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
 
     showToast(
-        `${rows.length} equipment records exported. The CSV opens directly in Excel.`,
+        `${selectedRecords.length} equipment ${
+            selectedRecords.length === 1
+                ? "record"
+                : "records"
+        } exported to Excel.`,
         "success"
     );
 
@@ -3731,159 +3984,71 @@ function exportEquipmentToExcel() {
 
 
 /* =====================================================
-   INSPECTION DUE
+   ADD EQUIPMENT
 ===================================================== */
 
-function isInspectionDue(dateValue) {
-
-    if (!dateValue) {
-        return false;
-    }
-
-
-    const date =
-        new Date(dateValue);
-
-
-    if (Number.isNaN(date.getTime())) {
-        return false;
-    }
-
-
-    const today =
-        new Date();
-
-
-    today.setHours(
-        0,
-        0,
-        0,
-        0
-    );
-
-
-    date.setHours(
-        0,
-        0,
-        0,
-        0
-    );
-
-
-    return date <= today;
-
-}
-
-
-/* =====================================================
-   OPEN ADD MODAL
-===================================================== */
-
-function openAddModal() {
-
-    /*
-     * Permission is checked here, but this function is now
-     * guaranteed to be attached to the actual button.
-     */
-
-    if (!canManageEquipment()) {
-
-        showToast(
-            "Only administrators and supervisors can add equipment.",
-            "warning"
-        );
-
-        return;
-
-    }
-
+function openAddModal(){
 
     editingEquipmentId = null;
 
 
-    const form =
-        document.getElementById(
-            "equipmentForm"
-        );
+    document
+        .getElementById(
+            "equipmentModalTitle"
+        )
+        .textContent =
+            "Add Equipment";
 
 
-    if (form) {
-        form.reset();
-    }
+    clearEquipmentForm();
 
 
-    document.getElementById(
-        "equipmentStatus"
-    ).value = "Active";
-
-
-    document.getElementById(
-        "equipmentModalTitle"
-    ).textContent =
-        "Add Equipment";
-
-
-    const modal =
-        document.getElementById(
+    document
+        .getElementById(
             "equipmentModal"
+        )
+        .classList.add(
+            "show"
         );
 
-
-    modal.classList.add("show");
-
-    document.body.style.overflow = "hidden";
-
-
-    /*
-     * Focus after the modal is rendered.
-     */
 
     setTimeout(
         () => {
 
             document
                 .getElementById(
-                    "equipmentNumber"
+                    "equipmentName"
                 )
-                ?.focus();
+                .focus();
 
         },
-        80
+        100
     );
 
 }
 
 
 /* =====================================================
-   OPEN EDIT MODAL
+   EDIT EQUIPMENT
 ===================================================== */
 
-function editEquipment(id) {
-
-    if (!canManageEquipment()) {
-
-        showToast(
-            "You do not have permission to edit equipment.",
-            "warning"
-        );
-
-        return;
-
-    }
-
+function openEditModal(
+    id
+){
 
     const item =
         equipmentList.find(
             equipment =>
-                String(equipment.id) ===
-                String(id)
+                String(
+                    equipment.id
+                ) === String(id)
         );
 
 
-    if (!item) {
+    if(!item){
 
         showToast(
-            "Equipment item could not be found.",
+            "Equipment record could not be found.",
             "error"
         );
 
@@ -3896,86 +4061,270 @@ function editEquipment(id) {
         item.id;
 
 
-    document.getElementById(
-        "equipmentNumber"
-    ).value =
-        item.equipment_number || "";
+    document
+        .getElementById(
+            "equipmentModalTitle"
+        )
+        .textContent =
+            "Edit Equipment";
 
 
-    document.getElementById(
-        "equipmentName"
-    ).value =
-        item.equipment_name || "";
+    document
+        .getElementById(
+            "equipmentName"
+        )
+        .value =
+            item.name || "";
 
 
-    document.getElementById(
-        "equipmentType"
-    ).value =
-        item.equipment_type || "";
+    document
+        .getElementById(
+            "equipmentCode"
+        )
+        .value =
+            item.equipment_code || "";
 
 
-    document.getElementById(
-        "equipmentArea"
-    ).value =
-        item.area || "";
+    document
+        .getElementById(
+            "equipmentType"
+        )
+        .value =
+            equipmentTypes.includes(
+                item.equipment_type
+            )
+                ? item.equipment_type
+                : "";
 
 
-    document.getElementById(
-        "equipmentLocation"
-    ).value =
-        item.location || "";
+    document
+        .getElementById(
+            "equipmentStatus"
+        )
+        .value =
+            STATUS_OPTIONS.includes(
+                item.status
+            )
+                ? item.status
+                : "Active";
 
 
-    document.getElementById(
-        "equipmentStatus"
-    ).value =
-        item.status || "Active";
+    document
+        .getElementById(
+            "manufactureDate"
+        )
+        .value =
+            toDateInputValue(
+                item.manufacture_date
+            );
 
 
-    document.getElementById(
-        "lastInspection"
-    ).value =
-        toInputDate(
-            item.last_inspection
-        );
+    document
+        .getElementById(
+            "installationDate"
+        )
+        .value =
+            toDateInputValue(
+                item.installation_date
+            );
 
 
-    document.getElementById(
-        "nextInspectionDue"
-    ).value =
-        toInputDate(
-            item.next_inspection_due
-        );
+    document
+        .getElementById(
+            "equipmentArea"
+        )
+        .value =
+            item.area || "";
 
 
-    document.getElementById(
-        "equipmentModalTitle"
-    ).textContent =
-        "Edit Equipment";
+    document
+        .getElementById(
+            "equipmentLocation"
+        )
+        .value =
+            item.location || "";
+
+
+    document
+        .getElementById(
+            "manufacturer"
+        )
+        .value =
+            item.manufacturer || "";
+
+
+    document
+        .getElementById(
+            "equipmentModel"
+        )
+        .value =
+            item.model || "";
+
+
+    document
+        .getElementById(
+            "serialNumber"
+        )
+        .value =
+            item.serial_number || "";
+
+
+    document
+        .getElementById(
+            "lastInspectionDate"
+        )
+        .value =
+            toDateInputValue(
+                item.last_inspection_date
+            );
+
+
+    document
+        .getElementById(
+            "nextInspectionDate"
+        )
+        .value =
+            toDateInputValue(
+                item.next_inspection_date
+            );
+
+
+    document
+        .getElementById(
+            "equipmentDescription"
+        )
+        .value =
+            item.description || "";
+
+
+    document
+        .getElementById(
+            "equipmentNotes"
+        )
+        .value =
+            item.notes || "";
 
 
     document
         .getElementById(
             "equipmentModal"
         )
-        .classList.add("show");
+        .classList.add(
+            "show"
+        );
+
+}
 
 
-    document.body.style.overflow = "hidden";
+/* =====================================================
+   CLEAR FORM
+===================================================== */
+
+function clearEquipmentForm(){
+
+    document
+        .getElementById(
+            "equipmentName"
+        )
+        .value = "";
 
 
-    setTimeout(
-        () => {
+    document
+        .getElementById(
+            "equipmentCode"
+        )
+        .value = "";
 
-            document
-                .getElementById(
-                    "equipmentNumber"
-                )
-                ?.focus();
 
-        },
-        80
-    );
+    document
+        .getElementById(
+            "equipmentType"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "equipmentStatus"
+        )
+        .value = "Active";
+
+
+    document
+        .getElementById(
+            "manufactureDate"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "installationDate"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "equipmentArea"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "equipmentLocation"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "manufacturer"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "equipmentModel"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "serialNumber"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "lastInspectionDate"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "nextInspectionDate"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "equipmentDescription"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "equipmentNotes"
+        )
+        .value = "";
 
 }
 
@@ -3984,95 +4333,46 @@ function editEquipment(id) {
    SAVE EQUIPMENT
 ===================================================== */
 
-async function saveEquipment() {
+async function saveEquipment(){
 
-    if (!canManageEquipment()) {
-
-        showToast(
-            "Only administrators and supervisors can save equipment.",
-            "warning"
-        );
-
-        return;
-
-    }
-
-
-    const saveButton =
-        document.getElementById(
-            "saveEquipmentBtn"
-        );
-
-
-    const equipmentNumber =
+    const name =
         document
-            .getElementById("equipmentNumber")
+            .getElementById(
+                "equipmentName"
+            )
             .value
             .trim();
 
 
-    const equipmentName =
+    const equipmentCode =
         document
-            .getElementById("equipmentName")
+            .getElementById(
+                "equipmentCode"
+            )
             .value
             .trim();
 
 
     const equipmentType =
         document
-            .getElementById("equipmentType")
-            .value
-            .trim();
-
-
-    const area =
-        document
-            .getElementById("equipmentArea")
-            .value
-            .trim();
-
-
-    const location =
-        document
-            .getElementById("equipmentLocation")
-            .value
-            .trim();
+            .getElementById(
+                "equipmentType"
+            )
+            .value;
 
 
     const status =
         document
-            .getElementById("equipmentStatus")
+            .getElementById(
+                "equipmentStatus"
+            )
             .value;
 
 
-    const lastInspection =
-        document
-            .getElementById("lastInspection")
-            .value ||
-        null;
-
-
-    const nextInspectionDue =
-        document
-            .getElementById("nextInspectionDue")
-            .value ||
-        null;
-
-
-    /*
-     * Validation
-     */
-
-    if (
-        !equipmentNumber ||
-        !equipmentName ||
-        !equipmentType ||
-        !area ||
-        !location
-    ) {
+    if(!name){
 
         showToast(
-            "Please complete all required fields.",
+            "Equipment name is required.",
             "warning"
         );
 
@@ -4081,128 +4381,175 @@ async function saveEquipment() {
     }
 
 
-    /*
-     * Prevent duplicate equipment numbers in the UI.
-     *
-     * The database should still have a UNIQUE constraint if
-     * equipment numbers must be unique.
-     */
-
-    const duplicate =
-        equipmentList.find(item => {
-
-            const sameNumber =
-                String(
-                    item?.equipment_number || ""
-                )
-                    .trim()
-                    .toLowerCase() ===
-                equipmentNumber
-                    .trim()
-                    .toLowerCase();
-
-
-            const sameRecord =
-                editingEquipmentId &&
-                String(item?.id) ===
-                String(editingEquipmentId);
-
-
-            return sameNumber && !sameRecord;
-
-        });
-
-
-    if (duplicate) {
+    if(!equipmentCode){
 
         showToast(
-            `Equipment number "${equipmentNumber}" already exists.`,
+            "Equipment code is required.",
             "warning"
         );
 
         return;
 
     }
+
+
+    if(
+        !equipmentType
+    ){
+
+        showToast(
+            "Please select an equipment type.",
+            "warning"
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !STATUS_OPTIONS.includes(
+            status
+        )
+    ){
+
+        showToast(
+            "Please select a valid status.",
+            "warning"
+        );
+
+        return;
+
+    }
+
+
+    const nextInspection =
+        document
+            .getElementById(
+                "nextInspectionDate"
+            )
+            .value || null;
 
 
     const record = {
 
-        equipment_number:
-            equipmentNumber,
+        name:name,
 
-        equipment_name:
-            equipmentName,
+        equipment_code:
+            equipmentCode,
 
         equipment_type:
             equipmentType,
 
+        manufacture_date:
+            document
+                .getElementById(
+                    "manufactureDate"
+                )
+                .value || null,
+
         area:
-            area,
+            document
+                .getElementById(
+                    "equipmentArea"
+                )
+                .value
+                .trim() || null,
 
         location:
-            location,
+            document
+                .getElementById(
+                    "equipmentLocation"
+                )
+                .value
+                .trim() || null,
 
-        status:
-            status,
+        manufacturer:
+            document
+                .getElementById(
+                    "manufacturer"
+                )
+                .value
+                .trim() || null,
 
-        last_inspection:
-            lastInspection,
+        model:
+            document
+                .getElementById(
+                    "equipmentModel"
+                )
+                .value
+                .trim() || null,
 
-        next_inspection_due:
-            nextInspectionDue
+        serial_number:
+            document
+                .getElementById(
+                    "serialNumber"
+                )
+                .value
+                .trim() || null,
+
+        installation_date:
+            document
+                .getElementById(
+                    "installationDate"
+                )
+                .value || null,
+
+        last_inspection_date:
+            document
+                .getElementById(
+                    "lastInspectionDate"
+                )
+                .value || null,
+
+        next_inspection_date:
+            nextInspection,
+
+        status:status,
+
+        description:
+            document
+                .getElementById(
+                    "equipmentDescription"
+                )
+                .value
+                .trim() || null,
+
+        notes:
+            document
+                .getElementById(
+                    "equipmentNotes"
+                )
+                .value
+                .trim() || null,
+
+        updated_at:
+            new Date().toISOString()
 
     };
 
 
-    try {
+    try{
 
-        const client =
-            getSupabaseClient();
-
-
-        if (saveButton) {
-
-            saveButton.disabled = true;
-
-            saveButton.textContent =
-                editingEquipmentId
-                    ? "Updating..."
-                    : "Saving...";
-
-        }
-
-
-        /*
-         * UPDATE
-         */
-
-        if (editingEquipmentId) {
+        if(editingEquipmentId){
 
             const {
-                data,
                 error
-            } = await client
-                .from("equipment")
-                .update(record)
-                .eq(
-                    "id",
-                    editingEquipmentId
-                )
-                .select("*")
-                .single();
+            } =
+                await supabaseClient
+                    .from("equipment")
+                    .update(record)
+                    .eq(
+                        "id",
+                        editingEquipmentId
+                    );
 
 
-            if (error) {
+            if(error){
 
                 throw error;
 
             }
-
-
-            console.log(
-                "Equipment updated:",
-                data
-            );
 
 
             showToast(
@@ -4210,36 +4557,23 @@ async function saveEquipment() {
                 "success"
             );
 
-        }
-
-
-        /*
-         * INSERT
-         */
-
-        else {
+        }else{
 
             const {
-                data,
                 error
-            } = await client
-                .from("equipment")
-                .insert(record)
-                .select("*")
-                .single();
+            } =
+                await supabaseClient
+                    .from("equipment")
+                    .insert([
+                        record
+                    ]);
 
 
-            if (error) {
+            if(error){
 
                 throw error;
 
             }
-
-
-            console.log(
-                "Equipment inserted:",
-                data
-            );
 
 
             showToast(
@@ -4252,93 +4586,36 @@ async function saveEquipment() {
 
         closeEquipmentModal();
 
-
         await loadEquipment();
 
-
-    } catch (error) {
+    }catch(error){
 
         console.error(
-            "Equipment save error:",
+            "Save equipment error:",
             error
         );
 
 
-        let message =
-            error?.message ||
-            "Unable to save equipment.";
+        if(
+            error &&
+            error.code === "23505"
+        ){
 
+            showToast(
+                "That equipment code already exists.",
+                "error"
+            );
 
-        /*
-         * Give a clearer message for common Supabase errors.
-         */
+        }else{
 
-        if (
-            error?.code === "23505"
-        ) {
-
-            message =
-                "This equipment number already exists.";
-
-        }
-
-
-        if (
-            error?.code === "42501"
-        ) {
-
-            message =
-                "Database permission denied. The equipment INSERT/UPDATE policy in Supabase needs to allow this authenticated role.";
-
-        }
-
-
-        showToast(
-            message,
-            "error"
-        );
-
-    } finally {
-
-        if (saveButton) {
-
-            saveButton.disabled = false;
-
-            saveButton.textContent =
-                editingEquipmentId
-                    ? "Update Equipment"
-                    : "Save Equipment";
+            showToast(
+                "Unable to save equipment. Check database permissions.",
+                "error"
+            );
 
         }
 
     }
-
-}
-
-
-/* =====================================================
-   CLOSE EQUIPMENT MODAL
-===================================================== */
-
-function closeEquipmentModal() {
-
-    const modal =
-        document.getElementById(
-            "equipmentModal"
-        );
-
-
-    if (modal) {
-
-        modal.classList.remove("show");
-
-    }
-
-
-    editingEquipmentId = null;
-
-
-    document.body.style.overflow = "";
 
 }
 
@@ -4347,34 +4624,20 @@ function closeEquipmentModal() {
    DELETE EQUIPMENT
 ===================================================== */
 
-async function deleteEquipment(id) {
-
-    if (!canManageEquipment()) {
-
-        showToast(
-            "You do not have permission to delete equipment.",
-            "warning"
-        );
-
-        return;
-
-    }
-
+async function deleteEquipment(
+    id
+){
 
     const item =
         equipmentList.find(
             equipment =>
-                String(equipment.id) ===
-                String(id)
+                String(
+                    equipment.id
+                ) === String(id)
         );
 
 
-    if (!item) {
-
-        showToast(
-            "Equipment item could not be found.",
-            "error"
-        );
+    if(!item){
 
         return;
 
@@ -4383,37 +4646,41 @@ async function deleteEquipment(id) {
 
     const confirmed =
         window.confirm(
-            `Delete equipment "${item.equipment_number || item.equipment_name}"?\n\nThis action cannot be undone.`
+            `Delete "${item.name || "this equipment"}"?\n\nThis action cannot be undone.`
         );
 
 
-    if (!confirmed) {
+    if(!confirmed){
+
         return;
+
     }
 
 
-    try {
-
-        const client =
-            getSupabaseClient();
-
+    try{
 
         const {
             error
-        } = await client
-            .from("equipment")
-            .delete()
-            .eq(
-                "id",
-                id
-            );
+        } =
+            await supabaseClient
+                .from("equipment")
+                .delete()
+                .eq(
+                    "id",
+                    id
+                );
 
 
-        if (error) {
+        if(error){
 
             throw error;
 
         }
+
+
+        selectedEquipmentIds.delete(
+            id
+        );
 
 
         showToast(
@@ -4424,18 +4691,16 @@ async function deleteEquipment(id) {
 
         await loadEquipment();
 
-
-    } catch (error) {
+    }catch(error){
 
         console.error(
-            "Equipment delete error:",
+            "Delete equipment error:",
             error
         );
 
 
         showToast(
-            error?.message ||
-            "Unable to delete equipment.",
+            "Unable to delete equipment. Check database permissions.",
             "error"
         );
 
@@ -4445,23 +4710,26 @@ async function deleteEquipment(id) {
 
 
 /* =====================================================
-   VIEW EQUIPMENT
+   PROFILE
 ===================================================== */
 
-function viewEquipment(id) {
+async function openProfileModal(
+    id
+){
 
     const item =
         equipmentList.find(
             equipment =>
-                String(equipment.id) ===
-                String(id)
+                String(
+                    equipment.id
+                ) === String(id)
         );
 
 
-    if (!item) {
+    if(!item){
 
         showToast(
-            "Equipment item could not be found.",
+            "Equipment record could not be found.",
             "error"
         );
 
@@ -4470,366 +4738,539 @@ function viewEquipment(id) {
     }
 
 
-    currentViewEquipmentId =
-        item.id;
+    selectedEquipment =
+        item;
 
 
-    const details =
-        document.getElementById(
-            "equipmentDetails"
+    renderProfileDetails(
+        item
+    );
+
+
+    document
+        .getElementById(
+            "profileModal"
+        )
+        .classList.add(
+            "show"
         );
 
 
-    if (!details) {
-        return;
-    }
+    loadInspectionHistory(
+        item.id
+    );
 
 
-    details.innerHTML = `
+    loadDeviationHistory(
+        item.id
+    );
 
-        <div class="detail-item">
-
-            <div class="detail-label">
-                Equipment Number
-            </div>
-
-            <div class="detail-value">
-                ${escapeHtml(
-                    item.equipment_number || "—"
-                )}
-            </div>
-
-        </div>
+}
 
 
-        <div class="detail-item">
+/* =====================================================
+   PROFILE DETAILS
+===================================================== */
 
-            <div class="detail-label">
-                Equipment Name
-            </div>
+function renderProfileDetails(
+    item
+){
 
-            <div class="detail-value">
-                ${escapeHtml(
-                    item.equipment_name || "—"
-                )}
-            </div>
-
-        </div>
-
-
-        <div class="detail-item">
-
-            <div class="detail-label">
-                Equipment Type
-            </div>
-
-            <div class="detail-value">
-                ${escapeHtml(
-                    item.equipment_type || "—"
-                )}
-            </div>
-
-        </div>
+    const state =
+        getInspectionState(
+            item
+        );
 
 
-        <div class="detail-item">
+    const details = [
 
-            <div class="detail-label">
-                Area
-            </div>
+        [
+            "Equipment Name",
+            item.name
+        ],
 
-            <div class="detail-value">
-                ${escapeHtml(
-                    item.area || "—"
-                )}
-            </div>
+        [
+            "Equipment Code",
+            item.equipment_code
+        ],
 
-        </div>
+        [
+            "Equipment Type",
+            item.equipment_type
+        ],
+
+        [
+            "Status",
+            getDisplayStatus(
+                item
+            )
+        ],
+
+        [
+            "Manufacture Date",
+            formatDate(
+                item.manufacture_date
+            )
+        ],
+
+        [
+            "Area",
+            item.area
+        ],
+
+        [
+            "Location",
+            item.location
+        ],
+
+        [
+            "Manufacturer",
+            item.manufacturer
+        ],
+
+        [
+            "Model",
+            item.model
+        ],
+
+        [
+            "Serial Number",
+            item.serial_number
+        ],
+
+        [
+            "Installation Date",
+            formatDate(
+                item.installation_date
+            )
+        ],
+
+        [
+            "Last Inspection",
+            formatDate(
+                item.last_inspection_date
+            )
+        ],
+
+        [
+            "Next Inspection",
+            formatDate(
+                item.next_inspection_date
+            )
+        ],
+
+        [
+            "Inspection State",
+            state
+        ],
+
+        [
+            "Record Created",
+            formatDateTime(
+                item.created_at
+            )
+        ],
+
+        [
+            "Last Updated",
+            formatDateTime(
+                item.updated_at
+            )
+        ],
+
+        [
+            "Description",
+            item.description
+        ],
+
+        [
+            "Notes",
+            item.notes
+        ]
+
+    ];
 
 
-        <div class="detail-item">
-
-            <div class="detail-label">
-                Location
-            </div>
-
-            <div class="detail-value">
-                ${escapeHtml(
-                    item.location || "—"
-                )}
-            </div>
-
-        </div>
+    container =
+        document.getElementById(
+            "profileDetails"
+        );
 
 
-        <div class="detail-item">
+    container.innerHTML =
+        details
+            .map(
+                detail => `
 
-            <div class="detail-label">
-                Status
-            </div>
+                    <div class="detail-box">
 
-            <div class="detail-value">
-                ${escapeHtml(
-                    item.status || "—"
-                )}
-            </div>
+                        <div class="detail-label">
+                            ${escapeHtml(
+                                detail[0]
+                            )}
+                        </div>
 
-        </div>
+                        <div class="detail-value">
+                            ${escapeHtml(
+                                detail[1] ||
+                                "—"
+                            )}
+                        </div>
 
+                    </div>
 
-        <div class="detail-item">
+                `
+            )
+            .join("");
 
-            <div class="detail-label">
-                Last Inspection
-            </div>
-
-            <div class="detail-value">
-                ${formatDate(
-                    item.last_inspection
-                )}
-            </div>
-
-        </div>
+}
 
 
-        <div class="detail-item">
+/* =====================================================
+   INSPECTION HISTORY
+===================================================== */
 
-            <div class="detail-label">
-                Next Inspection Due
-            </div>
+async function loadInspectionHistory(
+    equipmentId
+){
 
-            <div class="detail-value">
-                ${formatDate(
-                    item.next_inspection_due
-                )}
-            </div>
+    const container =
+        document.getElementById(
+            "inspectionHistory"
+        );
 
+
+    container.innerHTML = `
+
+        <div class="history-empty">
+            Loading inspection history...
         </div>
 
     `;
 
 
-    document
-        .getElementById(
-            "viewEquipmentModal"
-        )
-        .classList.add("show");
+    try{
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("inspections")
+                .select("*")
+                .eq(
+                    "equipment_id",
+                    equipmentId
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending:false
+                    }
+                );
 
 
-    document.body.style.overflow = "hidden";
+        if(error){
 
-}
-
-
-/* =====================================================
-   CLOSE VIEW MODAL
-===================================================== */
-
-function closeViewModal() {
-
-    const modal =
-        document.getElementById(
-            "viewEquipmentModal"
-        );
-
-
-    if (modal) {
-
-        modal.classList.remove("show");
-
-    }
-
-
-    currentViewEquipmentId = null;
-
-
-    document.body.style.overflow = "";
-
-}
-
-
-/* =====================================================
-   START INSPECTION
-===================================================== */
-
-function startInspection() {
-
-    if (!currentViewEquipmentId) {
-
-        showToast(
-            "No equipment selected.",
-            "warning"
-        );
-
-        return;
-
-    }
-
-
-    /*
-     * Pass the equipment ID to inspections.html.
-     *
-     * inspections.html can read:
-     * new URLSearchParams(location.search).get("equipment")
-     */
-
-    window.location.href =
-        `inspections.html?equipment=${encodeURIComponent(
-            currentViewEquipmentId
-        )}`;
-
-}
-
-
-/* =====================================================
-   SELECT ALL
-===================================================== */
-
-function toggleSelectAll(event) {
-
-    const checked =
-        event.target.checked;
-
-
-    document
-        .querySelectorAll(
-            ".equipment-checkbox"
-        )
-        .forEach(checkbox => {
-
-            checkbox.checked =
-                checked;
-
-        });
-
-}
-
-
-/* =====================================================
-   UPDATE SELECT ALL
-===================================================== */
-
-function updateSelectAllState() {
-
-    const master =
-        document.getElementById(
-            "selectAll"
-        );
-
-
-    const checkboxes =
-        [
-            ...document.querySelectorAll(
-                ".equipment-checkbox"
-            )
-        ];
-
-
-    if (!master) {
-        return;
-    }
-
-
-    if (!checkboxes.length) {
-
-        master.checked = false;
-        master.indeterminate = false;
-
-        return;
-
-    }
-
-
-    const checked =
-        checkboxes.filter(
-            checkbox =>
-                checkbox.checked
-        ).length;
-
-
-    master.checked =
-        checked === checkboxes.length;
-
-
-    master.indeterminate =
-        checked > 0 &&
-        checked < checkboxes.length;
-
-}
-
-
-/* =====================================================
-   GENERATE REPORT
-===================================================== */
-
-function generateReport() {
-
-    const selected =
-        [
-            ...document.querySelectorAll(
-                ".equipment-checkbox:checked"
-            )
-        ]
-            .map(
-                checkbox =>
-                    checkbox.value
+            console.warn(
+                "Inspection history error:",
+                error
             );
 
 
-    if (!selected.length) {
+            container.innerHTML = `
 
-        showToast(
-            "Select at least one equipment item to generate a report.",
-            "warning"
+                <div class="history-empty">
+                    Inspection history is not available yet.
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        if(
+            !data ||
+            data.length === 0
+        ){
+
+            container.innerHTML = `
+
+                <div class="history-empty">
+                    No inspection history recorded.
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        container.innerHTML = `
+
+            <div class="history-list">
+
+                ${data.map(
+                    inspection => `
+
+                        <div class="history-item">
+
+                            <div class="history-item-title">
+                                ${escapeHtml(
+                                    inspection.status ||
+                                    inspection.result ||
+                                    inspection.inspection_type ||
+                                    "Inspection"
+                                )}
+                            </div>
+
+                            <div class="history-item-meta">
+
+                                ${
+                                    formatDateTime(
+                                        inspection.created_at
+                                    )
+                                }
+
+                            </div>
+
+                        </div>
+
+                    `
+                ).join("")}
+
+            </div>
+
+        `;
+
+    }catch(error){
+
+        console.error(
+            error
         );
 
-        return;
+
+        container.innerHTML = `
+
+            <div class="history-empty">
+                Inspection history is not available.
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+/* =====================================================
+   DEVIATION HISTORY
+===================================================== */
+
+async function loadDeviationHistory(
+    equipmentId
+){
+
+    const container =
+        document.getElementById(
+            "deviationHistory"
+        );
+
+
+    container.innerHTML = `
+
+        <div class="history-empty">
+            Loading deviation history...
+        </div>
+
+    `;
+
+
+    try{
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("deviations")
+                .select("*")
+                .eq(
+                    "equipment_id",
+                    equipmentId
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending:false
+                    }
+                );
+
+
+        if(error){
+
+            console.warn(
+                "Deviation history error:",
+                error
+            );
+
+
+            container.innerHTML = `
+
+                <div class="history-empty">
+                    Deviation history is not available yet.
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        if(
+            !data ||
+            data.length === 0
+        ){
+
+            container.innerHTML = `
+
+                <div class="history-empty">
+                    No deviations recorded.
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        container.innerHTML = `
+
+            <div class="history-list">
+
+                ${data.map(
+                    deviation => `
+
+                        <div class="history-item">
+
+                            <div class="history-item-title">
+
+                                ${escapeHtml(
+                                    deviation.title ||
+                                    deviation.description ||
+                                    deviation.status ||
+                                    "Deviation"
+                                )}
+
+                            </div>
+
+                            <div class="history-item-meta">
+
+                                ${formatDateTime(
+                                    deviation.created_at
+                                )}
+
+                            </div>
+
+                        </div>
+
+                    `
+                ).join("")}
+
+            </div>
+
+        `;
+
+    }catch(error){
+
+        console.error(
+            error
+        );
+
+
+        container.innerHTML = `
+
+            <div class="history-empty">
+                Deviation history is not available.
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+/* =====================================================
+   CLOSE MODALS
+===================================================== */
+
+function closeEquipmentModal(){
+
+    document
+        .getElementById(
+            "equipmentModal"
+        )
+        .classList.remove(
+            "show"
+        );
+
+
+    editingEquipmentId =
+        null;
+
+}
+
+
+function closeProfileModal(){
+
+    document
+        .getElementById(
+            "profileModal"
+        )
+        .classList.remove(
+            "show"
+        );
+
+
+    selectedEquipment =
+        null;
+
+}
+
+
+/* =====================================================
+   DATE HELPERS
+===================================================== */
+
+function toDateInputValue(
+    value
+){
+
+    if(!value){
+
+        return "";
 
     }
 
 
-    /*
-     * Pass selected equipment IDs to reports page.
-     */
-
-    const params =
-        new URLSearchParams();
+    const text =
+        String(value);
 
 
-    params.set(
-        "equipment",
-        selected.join(",")
-    );
+    if(
+        /^\d{4}-\d{2}-\d{2}$/.test(
+            text
+        )
+    ){
 
+        return text;
 
-    window.location.href =
-        `reports.html?${params.toString()}`;
-
-}
-
-
-/* =====================================================
-   FIND LATEST INSPECTION
-===================================================== */
-
-function findLatestInspection(item) {
-
-    return (
-        item?.last_inspection ||
-        null
-    );
-
-}
-
-
-/* =====================================================
-   DATE FORMAT
-===================================================== */
-
-function formatDate(value) {
-
-    if (!value) {
-        return "—";
     }
 
 
@@ -4837,90 +5278,215 @@ function formatDate(value) {
         new Date(value);
 
 
-    if (Number.isNaN(date.getTime())) {
-        return "—";
+    if(
+        Number.isNaN(
+            date.getTime()
+        )
+    ){
+
+        return "";
+
     }
 
 
-    return date.toLocaleDateString(
-        "en-GB",
-        {
-            day: "2-digit",
-            month: "short",
-            year: "numeric"
-        }
+    return (
+        date.getFullYear() +
+        "-" +
+        String(
+            date.getMonth() + 1
+        ).padStart(2,"0") +
+        "-" +
+        String(
+            date.getDate()
+        ).padStart(2,"0")
     );
 
 }
 
 
-/* =====================================================
-   DATE INPUT FORMAT
-===================================================== */
+function formatDate(
+    value
+){
 
-function toInputDate(value) {
+    if(!value){
 
-    if (!value) {
-        return "";
+        return "—";
+
     }
 
 
-    /*
-     * If already YYYY-MM-DD
-     */
+    const text =
+        String(value);
 
-    if (
+
+    if(
         /^\d{4}-\d{2}-\d{2}$/.test(
-            String(value)
+            text
         )
-    ) {
+    ){
+
+        const parts =
+            text.split("-");
+
+
+        return (
+            parts[2] +
+            "-" +
+            monthName(parts[1]) +
+            "-" +
+            parts[0]
+        );
+
+    }
+
+
+    const date =
+        new Date(value);
+
+
+    if(
+        Number.isNaN(
+            date.getTime()
+        )
+    ){
+
+        return text;
+
+    }
+
+
+    return (
+        String(
+            date.getDate()
+        ).padStart(2,"0") +
+        "-" +
+        monthName(
+            String(
+                date.getMonth() + 1
+            ).padStart(2,"0")
+        ) +
+        "-" +
+        date.getFullYear()
+    );
+
+}
+
+
+function formatDateTime(
+    value
+){
+
+    if(!value){
+
+        return "—";
+
+    }
+
+
+    const date =
+        new Date(value);
+
+
+    if(
+        Number.isNaN(
+            date.getTime()
+        )
+    ){
 
         return String(value);
 
     }
 
 
-    const date =
-        new Date(value);
-
-
-    if (Number.isNaN(date.getTime())) {
-        return "";
-    }
-
-
-    const year =
-        date.getFullYear();
-
-
-    const month =
+    return (
+        formatDate(value) +
+        " " +
         String(
-            date.getMonth() + 1
-        )
-            .padStart(2, "0");
-
-
-    const day =
+            date.getHours()
+        ).padStart(2,"0") +
+        ":" +
         String(
-            date.getDate()
-        )
-            .padStart(2, "0");
+            date.getMinutes()
+        ).padStart(2,"0")
+    );
+
+}
 
 
-    return `${year}-${month}-${day}`;
+function formatExcelDate(
+    value
+){
+
+    return formatDate(
+        value
+    ) === "—"
+        ? ""
+        : formatDate(value);
+
+}
+
+
+function formatExcelDateTime(
+    value
+){
+
+    return formatDateTime(
+        value
+    ) === "—"
+        ? ""
+        : formatDateTime(value);
+
+}
+
+
+function monthName(
+    month
+){
+
+    const months = [
+
+        "JAN",
+        "FEB",
+        "MAR",
+        "APR",
+        "MAY",
+        "JUN",
+        "JUL",
+        "AUG",
+        "SEP",
+        "OCT",
+        "NOV",
+        "DEC"
+
+    ];
+
+
+    return months[
+        Number(month) - 1
+    ] || "";
 
 }
 
 
 /* =====================================================
-   HTML ESCAPE
+   HTML ESCAPING
 ===================================================== */
 
-function escapeHtml(value) {
+function escapeHtml(
+    value
+){
 
-    return String(
-        value ?? ""
-    )
+    if(
+        value === null ||
+        value === undefined
+    ){
+
+        return "";
+
+    }
+
+
+    return String(value)
         .replace(
             /&/g,
             "&amp;"
@@ -4945,50 +5511,134 @@ function escapeHtml(value) {
 }
 
 
-/* =====================================================
-   JAVASCRIPT STRING ESCAPE
-===================================================== */
+function escapeAttribute(
+    value
+){
 
-function escapeJs(value) {
-
-    return String(
-        value ?? ""
-    )
-        .replace(
-            /\\/g,
-            "\\\\"
-        )
-        .replace(
-            /'/g,
-            "\\'"
-        )
-        .replace(
-            /"/g,
-            '\\"'
-        )
-        .replace(
-            /\n/g,
-            "\\n"
-        )
-        .replace(
-            /\r/g,
-            "\\r"
-        );
+    return escapeHtml(
+        value
+    );
 
 }
 
 
 /* =====================================================
-   INITIALISE
+   TOAST
+===================================================== */
+
+function showToast(
+    message,
+    type = "success"
+){
+
+    const container =
+        document.getElementById(
+            "toastContainer"
+        );
+
+
+    const toast =
+        document.createElement(
+            "div"
+        );
+
+
+    toast.className =
+        `toast ${type}`;
+
+
+    toast.textContent =
+        message;
+
+
+    container.appendChild(
+        toast
+    );
+
+
+    setTimeout(
+        () => {
+
+            toast.remove();
+
+        },
+        4000
+    );
+
+}
+
+
+/* =====================================================
+   MODAL OUTSIDE CLICK
+===================================================== */
+
+document
+    .getElementById(
+        "equipmentModal"
+    )
+    .addEventListener(
+        "click",
+        event => {
+
+            if(
+                event.target ===
+                event.currentTarget
+            ){
+
+                closeEquipmentModal();
+
+            }
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "profileModal"
+    )
+    .addEventListener(
+        "click",
+        event => {
+
+            if(
+                event.target ===
+                event.currentTarget
+            ){
+
+                closeProfileModal();
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   KEYBOARD
 ===================================================== */
 
 document.addEventListener(
-    "DOMContentLoaded",
-    initializePage
+    "keydown",
+    event => {
+
+        if(
+            event.key === "Escape"
+        ){
+
+            closeEquipmentModal();
+
+            closeProfileModal();
+
+            closeSidebar();
+
+        }
+
+    }
 );
 
 </script>
 
-<script src="./firesafe-control-bar.js" defer></script>
 </body>
+
 </html>
