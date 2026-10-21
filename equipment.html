@@ -1021,13 +1021,15 @@ input[type="checkbox"]{
 
         </div>
 
-        <button
-            class="primary-button"
-            type="button"
-            onclick="openAddModal()"
-        >
-            + Add Equipment
-        </button>
+        
+<button
+    id="addEquipmentButton"
+    class="primary-button"
+    type="button"
+    onclick="openAddModal()"
+>
+    + Add Equipment
+</button>
 
     </div>
 
@@ -1881,6 +1883,123 @@ let locationNames = [];
 
 
 /* =====================================================
+   SIGNED-IN USER AND ROLE
+===================================================== */
+
+let currentUser = null;
+let currentUserProfile = null;
+
+async function loadCurrentUserProfile() {
+    try {
+        const {
+            data: { user },
+            error: authError
+        } = await supabaseClient.auth.getUser();
+
+        if (authError) throw authError;
+
+        if (!user) {
+            currentUser = null;
+            currentUserProfile = null;
+
+            window.location.href = "index.html";
+            return false;
+        }
+
+        currentUser = user;
+
+        const {
+            data: profile,
+            error: profileError
+        } = await supabaseClient
+            .from("profiles")
+            .select("id, full_name, role, department_id, active")
+            .eq("id", user.id)
+            .maybeSingle();
+
+        if (profileError) throw profileError;
+
+        if (!profile || !profile.active) {
+            currentUserProfile = null;
+
+            showToast(
+                "Your account is inactive or has no authorised profile.",
+                "error"
+            );
+
+            return false;
+        }
+
+        currentUserProfile = profile;
+
+        const userLabel =
+            document.querySelector(".topbar .user-name");
+
+        if (userLabel) {
+            userLabel.textContent =
+                profile.full_name || "Signed-in user";
+        }
+
+        return true;
+
+    } catch (error) {
+        console.error(
+            "Unable to load signed-in user profile:",
+            error
+        );
+
+        showToast(
+            "Unable to verify your account. Please sign in again.",
+            "error"
+        );
+
+        return false;
+    }
+}
+
+
+/* =====================================================
+   ROLE PERMISSION HELPERS
+===================================================== */
+
+function isAdministrator() {
+    return currentUserProfile?.role === "administrator";
+}
+
+function isSupervisor() {
+    return currentUserProfile?.role === "supervisor";
+}
+
+function isInspector() {
+    return currentUserProfile?.role === "inspector";
+}
+
+function canAddEquipment() {
+    return isAdministrator() || isSupervisor();
+}
+
+function canEditEquipment() {
+    return isAdministrator();
+}
+
+function canDeleteEquipment() {
+    return isAdministrator();
+}
+
+
+
+function applyEquipmentPermissions() {
+
+    const addButton =
+        document.getElementById("addEquipmentButton");
+
+    if (addButton) {
+        addButton.hidden = !canAddEquipment();
+    }
+
+}
+
+/* =====================================================
    DOM READY
 ===================================================== */
 
@@ -1896,13 +2015,21 @@ document.addEventListener(
 
         populateEquipmentTypeControls();
 
+        const authorised =
+            await loadCurrentUserProfile();
+
+        if (!authorised) {
+            return;
+        }
+
+        applyEquipmentPermissions();
+
         await loadReferenceData();
 
         await loadEquipment();
 
     }
 );
-
 
 /* =====================================================
    SIDEBAR
@@ -3299,64 +3426,43 @@ function renderEquipment(){
    CREATE TABLE ROW
 ===================================================== */
 
-function createEquipmentRow(
-    item
-){
+
+function createEquipmentRow(item) {
 
     const selected =
-        selectedEquipmentIds.has(
-            item.id
-        );
-
+        selectedEquipmentIds.has(item.id);
 
     const state =
-        getInspectionState(
-            item
-        );
-
+        getInspectionState(item);
 
     const statusClass =
-        getStatusClass(
-            item
-        );
-
+        getStatusClass(item);
 
     const canInspect =
         state === "Due Today" ||
         state === "Overdue" ||
         item.status === "Inspection Due";
 
+    const canEdit =
+        canEditEquipment();
+
+    const canDelete =
+        canDeleteEquipment();
 
     let inspectionText = "";
 
-    if(state === "Overdue"){
-
+    if (state === "Overdue") {
+        inspectionText = "Inspection overdue";
+    } else if (state === "Due Today") {
+        inspectionText = "Inspection due today";
+    } else if (item.next_inspection_date) {
         inspectionText =
-            "Inspection overdue";
-
-    }else if(state === "Due Today"){
-
-        inspectionText =
-            "Inspection due today";
-
-    }else if(
-        item.next_inspection_date
-    ){
-
-        inspectionText =
-            `Next: ${formatDate(
-                item.next_inspection_date
-            )}`;
-
+            `Next: ${formatDate(item.next_inspection_date)}`;
     }
 
-
     return `
-
         <tr>
-
             <td class="checkbox-cell">
-
                 <input
                     type="checkbox"
                     ${selected ? "checked" : ""}
@@ -3366,101 +3472,56 @@ function createEquipmentRow(
                     )"
                     aria-label="Select equipment"
                 >
-
             </td>
 
-
             <td>
-
                 <div class="equipment-name">
-                    ${escapeHtml(
-                        item.name ||
-                        "Unnamed Equipment"
-                    )}
+                    ${escapeHtml(item.name || "Unnamed Equipment")}
                 </div>
 
                 <span class="equipment-code">
-                    ${escapeHtml(
-                        item.equipment_code ||
-                        "No code"
-                    )}
+                    ${escapeHtml(item.equipment_code || "No code")}
                 </span>
-
             </td>
 
+            <td>${escapeHtml(item.equipment_type || "—")}</td>
+            <td>${escapeHtml(item.area || "—")}</td>
+            <td>${escapeHtml(item.location || "—")}</td>
 
             <td>
-                ${escapeHtml(
-                    item.equipment_type ||
-                    "—"
-                )}
-            </td>
-
-
-            <td>
-                ${escapeHtml(
-                    item.area ||
-                    "—"
-                )}
-            </td>
-
-
-            <td>
-                ${escapeHtml(
-                    item.location ||
-                    "—"
-                )}
-            </td>
-
-
-            <td>
-
-                <span
-                    class="status-badge ${statusClass}"
-                >
-                    ${escapeHtml(
-                        getDisplayStatus(
-                            item
-                        )
-                    )}
+                <span class="status-badge ${statusClass}">
+                    ${escapeHtml(getDisplayStatus(item))}
                 </span>
 
                 ${
                     inspectionText
                         ? `
-                            <span
-                                class="inspection-indicator ${
-                                    state === "Overdue"
-                                        ? "overdue"
-                                        : state === "Due Today"
-                                            ? "due"
-                                            : ""
-                                }"
-                            >
-                                ${escapeHtml(
-                                    inspectionText
-                                )}
+                            <span class="inspection-indicator ${
+                                state === "Overdue"
+                                    ? "overdue"
+                                    : state === "Due Today"
+                                        ? "due"
+                                        : ""
+                            }">
+                                ${escapeHtml(inspectionText)}
                             </span>
                         `
                         : ""
                 }
-
             </td>
 
-
             <td>
-
                 <div class="action-buttons">
 
                     <button
                         class="icon-button"
                         type="button"
                         title="View profile"
+                        aria-label="View equipment profile"
                         onclick="openProfileModal('${escapeAttribute(item.id)}')"
                     >
                         👁
                     </button>
-
 
                     ${
                         canInspect
@@ -3469,6 +3530,7 @@ function createEquipmentRow(
                                     class="icon-button inspect"
                                     type="button"
                                     title="Inspect equipment"
+                                    aria-label="Inspect equipment"
                                     onclick="inspectEquipment('${escapeAttribute(item.id)}')"
                                 >
                                     ✓
@@ -3477,34 +3539,42 @@ function createEquipmentRow(
                             : ""
                     }
 
+                    ${
+                        canEdit
+                            ? `
+                                <button
+                                    class="icon-button"
+                                    type="button"
+                                    title="Edit equipment"
+                                    aria-label="Edit equipment"
+                                    onclick="openEditModal('${escapeAttribute(item.id)}')"
+                                >
+                                    ✎
+                                </button>
+                            `
+                            : ""
+                    }
 
-                    <button
-                        class="icon-button"
-                        type="button"
-                        title="Edit equipment"
-                        onclick="openEditModal('${escapeAttribute(item.id)}')"
-                    >
-                        ✎
-                    </button>
-
-
-                    <button
-                        class="icon-button delete"
-                        type="button"
-                        title="Delete equipment"
-                        onclick="deleteEquipment('${escapeAttribute(item.id)}')"
-                    >
-                        🗑
-                    </button>
+                    ${
+                        canDelete
+                            ? `
+                                <button
+                                    class="icon-button delete"
+                                    type="button"
+                                    title="Delete equipment"
+                                    aria-label="Delete equipment"
+                                    onclick="deleteEquipment('${escapeAttribute(item.id)}')"
+                                >
+                                    🗑
+                                </button>
+                            `
+                            : ""
+                    }
 
                 </div>
-
             </td>
-
         </tr>
-
     `;
-
 }
 
 
