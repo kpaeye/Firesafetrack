@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1f3a">
+<title>Login | FireSafe Track</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box}
+body{
+    margin:0;min-height:100vh;display:flex;align-items:center;
+    justify-content:center;padding:20px;
+    font-family:Arial,sans-serif;color:#fff;
+    background:linear-gradient(135deg,#0b1f3a,#142d4c)
+}
+.login-card{
+    width:100%;max-width:420px;padding:32px;
+    background:#ffffff0d;border:1px solid #ffffff20;
+    border-radius:14px;box-shadow:0 15px 40px #0003
+}
+.logo{text-align:center;font-size:23px;font-weight:bold;margin-bottom:8px}
+.logo span{color:#ff3b30}
+.subtitle{text-align:center;color:#cfd8dc;margin:0 0 28px}
+label{display:block;margin:16px 0 7px;font-size:14px}
+input{
+    width:100%;padding:13px;border:1px solid #ffffff35;
+    border-radius:6px;background:#07172a;color:white;font-size:16px
+}
+input:focus{outline:2px solid #ff3b30;outline-offset:1px}
+button{
+    width:100%;margin-top:22px;padding:14px;border:0;border-radius:6px;
+    background:#ff3b30;color:white;font-weight:bold;font-size:16px;
+    cursor:pointer
+}
+button:disabled{opacity:.65;cursor:wait}
+#message{margin-top:16px;font-size:14px;line-height:1.5}
+.error{color:#ffaaa5}
+.success{color:#b8f5cb}
+.back{text-align:center;margin-top:22px;font-size:14px}
+a{color:#ffcc00}
+</style>
+</head>
+
+<body>
+<main class="login-card">
+    <div class="logo">A-eye <span>Group</span></div>
+    <h1 style="text-align:center;font-size:24px">FireSafe Track</h1>
+    <p class="subtitle">Sign in to your safety management system</p>
+
+    <form id="loginForm">
+        <label for="email">Email address</label>
+        <input id="email" type="email" autocomplete="username"
+               required placeholder="Enter your registered email">
+
+        <label for="password">Password</label>
+        <input id="password" type="password"
+               autocomplete="current-password" required
+               placeholder="Enter your password">
+
+        <button id="loginButton" type="submit">Sign In</button>
+        <div id="message" role="status" aria-live="polite"></div>
+    </form>
+
+    <div class="back">
+        <a href="index.html">Back to home</a>
+    </div>
+</main>
+
+<script>
+(() => {
+    const SUPABASE_URL =
+        "https://syiemjazbawflavxibzv.supabase.co";
+
+    const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
+
+    // Replace the placeholder key above with your existing
+    // SUPABASE_ANON_KEY value from dashboard.html.
+    const client = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+    const form = document.getElementById("loginForm");
+    const button = document.getElementById("loginButton");
+    const message = document.getElementById("message");
+
+    function showMessage(text, type) {
+        message.textContent = text;
+        message.className = type || "";
+    }
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        button.disabled = true;
+        button.textContent = "Signing in...";
+        showMessage("", "");
+
+        try {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            const { data, error } = await client.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) throw error;
+
+            const { data: profile, error: profileError } = await client
+                .from("profiles")
+                .select("id, full_name, role, department_id, active")
+                .eq("id", data.user.id)
+                .maybeSingle();
+
+            if (profileError) {
+                await client.auth.signOut();
+                throw new Error(
+                    "Your profile could not be verified. Please contact your administrator."
+                );
+            }
+
+            if (!profile || !profile.active) {
+                await client.auth.signOut();
+                throw new Error(
+                    "Your account has no active FireSafe Track profile. Contact your administrator."
+                );
+            }
+
+            showMessage("Login successful. Opening FireSafe Track...", "success");
+
+            // Save profile for page display only.
+            // Database permissions must still enforce security.
+            sessionStorage.setItem(
+                "firesafe_profile",
+                JSON.stringify(profile)
+            );
+
+            window.location.replace("dashboard.html");
+
+        } catch (error) {
+            showMessage(
+                error.message || "Sign-in failed. Check your details and try again.",
+                "error"
+            );
+        } finally {
+            button.disabled = false;
+            button.textContent = "Sign In";
+        }
+    });
+})();
+</script>
+</body>
+</html>
