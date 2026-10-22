@@ -4414,957 +4414,126 @@ function clearEquipmentForm(){
    SAVE EQUIPMENT
 ===================================================== */
 
-async function saveEquipment(){
 
-    const name =
-        document
-            .getElementById(
-                "equipmentName"
-            )
-            .value
-            .trim();
-
-
-    const equipmentCode =
-        document
-            .getElementById(
-                "equipmentCode"
-            )
-            .value
-            .trim();
-
-
-    const equipmentType =
-        document
-            .getElementById(
-                "equipmentType"
-            )
-            .value;
-
-
-    const status =
-        document
-            .getElementById(
-                "equipmentStatus"
-            )
-            .value;
-
-
-    if(!name){
-
-        showToast(
-            "Equipment name is required.",
-            "warning"
-        );
-
+async function saveEquipment() {
+    // Check permissions before attempting a database write.
+    if (editingEquipmentId && !canEditEquipment()) {
+        showToast("Only administrators can edit equipment.", "error");
         return;
-
     }
 
-
-    if(!equipmentCode){
-
-        showToast(
-            "Equipment code is required.",
-            "warning"
-        );
-
+    if (!editingEquipmentId && !canAddEquipment()) {
+        showToast("You are not authorised to add equipment.", "error");
         return;
-
     }
 
-
-    if(
-        !equipmentType
-    ){
-
-        showToast(
-            "Please select an equipment type.",
-            "warning"
-        );
-
+    if (!currentUser || !currentUserProfile) {
+        showToast("Your signed-in profile could not be verified.", "error");
         return;
-
     }
 
+    const name = document.getElementById("equipmentName").value.trim();
+    const equipmentCode = document.getElementById("equipmentCode").value.trim();
+    const equipmentType = document.getElementById("equipmentType").value;
+    const status = document.getElementById("equipmentStatus").value;
 
-    if(
-        !STATUS_OPTIONS.includes(
-            status
-        )
-    ){
-
-        showToast(
-            "Please select a valid status.",
-            "warning"
-        );
-
+    if (!name || !equipmentCode || !equipmentType) {
+        showToast("Enter the equipment name, code and type.", "warning");
         return;
-
     }
 
-
-    const nextInspection =
-        document
-            .getElementById(
-                "nextInspectionDate"
-            )
-            .value || null;
-
+    if (!STATUS_OPTIONS.includes(status)) {
+        showToast("Please select a valid equipment status.", "warning");
+        return;
+    }
 
     const record = {
-
-        name:name,
-
-        equipment_code:
-            equipmentCode,
-
-        equipment_type:
-            equipmentType,
-
-        manufacture_date:
-            document
-                .getElementById(
-                    "manufactureDate"
-                )
-                .value || null,
-
-        area:
-            document
-                .getElementById(
-                    "equipmentArea"
-                )
-                .value
-                .trim() || null,
-
-        location:
-            document
-                .getElementById(
-                    "equipmentLocation"
-                )
-                .value
-                .trim() || null,
-
-        manufacturer:
-            document
-                .getElementById(
-                    "manufacturer"
-                )
-                .value
-                .trim() || null,
-
-        model:
-            document
-                .getElementById(
-                    "equipmentModel"
-                )
-                .value
-                .trim() || null,
-
-        serial_number:
-            document
-                .getElementById(
-                    "serialNumber"
-                )
-                .value
-                .trim() || null,
-
-        installation_date:
-            document
-                .getElementById(
-                    "installationDate"
-                )
-                .value || null,
-
-        last_inspection_date:
-            document
-                .getElementById(
-                    "lastInspectionDate"
-                )
-                .value || null,
-
-        next_inspection_date:
-            nextInspection,
-
-        status:status,
-
-        description:
-            document
-                .getElementById(
-                    "equipmentDescription"
-                )
-                .value
-                .trim() || null,
-
-        notes:
-            document
-                .getElementById(
-                    "equipmentNotes"
-                )
-                .value
-                .trim() || null,
-
-        updated_at:
-            new Date().toISOString()
-
+        name,
+        equipment_code: equipmentCode,
+        equipment_type: equipmentType,
+        manufacture_date: document.getElementById("manufactureDate").value || null,
+        area: document.getElementById("equipmentArea").value.trim() || null,
+        location: document.getElementById("equipmentLocation").value.trim() || null,
+        manufacturer: document.getElementById("manufacturer").value.trim() || null,
+        model: document.getElementById("equipmentModel").value.trim() || null,
+        serial_number: document.getElementById("serialNumber").value.trim() || null,
+        installation_date: document.getElementById("installationDate").value || null,
+        last_inspection_date: document.getElementById("lastInspectionDate").value || null,
+        next_inspection_date: document.getElementById("nextInspectionDate").value || null,
+        status,
+        description: document.getElementById("equipmentDescription").value.trim() || null,
+        notes: document.getElementById("equipmentNotes").value.trim() || null,
+        updated_at: new Date().toISOString()
     };
 
+    try {
+        let result;
 
-if (!editingEquipmentId) {
-
-    if (!currentUserProfile?.department_id) {
-
-        showToast(
-            "Your account has no assigned department.",
-            "error"
-        );
-
-        return;
-    }
-
-    record.department_id =
-        currentUserProfile.department_id;
-}
-
-    try{
-
-        if(editingEquipmentId){
-
-            const {
-                error
-            } =
-                await supabaseClient
-                    .from("equipment")
-                    .update(record)
-                    .eq(
-                        "id",
-                        editingEquipmentId
-                    );
-
-
-            if(error){
-
-                throw error;
-
-            }
-
-
-            showToast(
-                "Equipment updated successfully.",
-                "success"
-            );
-
-        }else{
-
-console.log(
-    "INSERT department_id:",
-    record.department_id
-);
-
-console.log(
-    "Profile department_id:",
-    currentUserProfile?.department_id
-);
-
-console.log(
-    "Signed-in user ID:",
-    currentUser?.id
-);
-
-console.log(
-    "Full insert record:",
-    JSON.stringify(record, null, 2)
-);
-            const {
-                error
-            } =
-                await supabaseClient
-                    .from("equipment")
-                    .insert([
-                        record
-                    ]);
-
-
-            if(error){
-
-                throw error;
-
-            }
-
-
-            showToast(
-                "Equipment added successfully.",
-                "success"
-            );
-
-        }
-
-
-        closeEquipmentModal();
-
-        await loadEquipment();
-
-    }catch(error){
-
-       console.error(
-    "Save equipment error:",
-    JSON.stringify(error, null, 2)
-);
-
-showToast(
-    error?.message ||
-    error?.details ||
-    "Unknown database error. Open the browser console.",
-    "error"
-);
-
-
-        if(
-            error &&
-            error.code === "23505"
-        ){
-
-            showToast(
-                "That equipment code already exists.",
-                "error"
-            );
-
-        }else{
-
-            showToast(
-                "Unable to save equipment. Check database permissions.",
-                "error"
-            );
-
-        }
-
-    }
-
-}
-
-
-/* =====================================================
-   DELETE EQUIPMENT
-===================================================== */
-
-async function deleteEquipment(
-    id
-){
-
-    const item =
-        equipmentList.find(
-            equipment =>
-                String(
-                    equipment.id
-                ) === String(id)
-        );
-
-
-    if(!item){
-
-        return;
-
-    }
-
-
-    const confirmed =
-        window.confirm(
-            `Delete "${item.name || "this equipment"}"?\n\nThis action cannot be undone.`
-        );
-
-
-    if(!confirmed){
-
-        return;
-
-    }
-
-
-    try{
-
-        const {
-            error
-        } =
-            await supabaseClient
+        if (editingEquipmentId) {
+            result = await supabaseClient
                 .from("equipment")
-                .delete()
-                .eq(
-                    "id",
-                    id
+                .update(record)
+                .eq("id", editingEquipmentId);
+        } else {
+            const departmentId = currentUserProfile.department_id;
+
+            if (!departmentId) {
+                showToast(
+                    "Your profile has no assigned department. Ask an administrator to correct it.",
+                    "error"
                 );
+                return;
+            }
 
+            // Explicitly include the department on every new record.
+            const insertRecord = {
+                ...record,
+                department_id: departmentId
+            };
 
-        if(error){
-
-            throw error;
-
+            result = await supabaseClient
+                .from("equipment")
+                .insert(insertRecord);
         }
 
-
-        selectedEquipmentIds.delete(
-            id
-        );
-
+        if (result.error) {
+            throw result.error;
+        }
 
         showToast(
-            "Equipment deleted successfully.",
+            editingEquipmentId
+                ? "Equipment updated successfully."
+                : "Equipment added successfully.",
             "success"
         );
 
-
+        closeEquipmentModal();
         await loadEquipment();
 
-    }catch(error){
-
-        console.error(
-            "Delete equipment error:",
-            error
-        );
-
-
-        showToast(
-            "Unable to delete equipment. Check database permissions.",
-            "error"
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   PROFILE
-===================================================== */
-
-async function openProfileModal(
-    id
-){
-
-    const item =
-        equipmentList.find(
-            equipment =>
-                String(
-                    equipment.id
-                ) === String(id)
-        );
-
-
-    if(!item){
-
-        showToast(
-            "Equipment record could not be found.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    selectedEquipment =
-        item;
-
-
-    renderProfileDetails(
-        item
-    );
-
-
-    document
-        .getElementById(
-            "profileModal"
-        )
-        .classList.add(
-            "show"
-        );
-
-
-    loadInspectionHistory(
-        item.id
-    );
-
-
-    loadDeviationHistory(
-        item.id
-    );
-
-}
-
-
-/* =====================================================
-   PROFILE DETAILS
-===================================================== */
-
-function renderProfileDetails(
-    item
-){
-
-    const state =
-        getInspectionState(
-            item
-        );
-
-
-    const details = [
-
-        [
-            "Equipment Name",
-            item.name
-        ],
-
-        [
-            "Equipment Code",
-            item.equipment_code
-        ],
-
-        [
-            "Equipment Type",
-            item.equipment_type
-        ],
-
-        [
-            "Status",
-            getDisplayStatus(
-                item
-            )
-        ],
-
-        [
-            "Manufacture Date",
-            formatDate(
-                item.manufacture_date
-            )
-        ],
-
-        [
-            "Area",
-            item.area
-        ],
-
-        [
-            "Location",
-            item.location
-        ],
-
-        [
-            "Manufacturer",
-            item.manufacturer
-        ],
-
-        [
-            "Model",
-            item.model
-        ],
-
-        [
-            "Serial Number",
-            item.serial_number
-        ],
-
-        [
-            "Installation Date",
-            formatDate(
-                item.installation_date
-            )
-        ],
-
-        [
-            "Last Inspection",
-            formatDate(
-                item.last_inspection_date
-            )
-        ],
-
-        [
-            "Next Inspection",
-            formatDate(
-                item.next_inspection_date
-            )
-        ],
-
-        [
-            "Inspection State",
-            state
-        ],
-
-        [
-            "Record Created",
-            formatDateTime(
-                item.created_at
-            )
-        ],
-
-        [
-            "Last Updated",
-            formatDateTime(
-                item.updated_at
-            )
-        ],
-
-        [
-            "Description",
-            item.description
-        ],
-
-        [
-            "Notes",
-            item.notes
-        ]
-
-    ];
-
-
-    container =
-        document.getElementById(
-            "profileDetails"
-        );
-
-
-    container.innerHTML =
-        details
-            .map(
-                detail => `
-
-                    <div class="detail-box">
-
-                        <div class="detail-label">
-                            ${escapeHtml(
-                                detail[0]
-                            )}
-                        </div>
-
-                        <div class="detail-value">
-                            ${escapeHtml(
-                                detail[1] ||
-                                "—"
-                            )}
-                        </div>
-
-                    </div>
-
-                `
-            )
-            .join("");
-
-}
-
-
-/* =====================================================
-   INSPECTION HISTORY
-===================================================== */
-
-async function loadInspectionHistory(
-    equipmentId
-){
-
-    const container =
-        document.getElementById(
-            "inspectionHistory"
-        );
-
-
-    container.innerHTML = `
-
-        <div class="history-empty">
-            Loading inspection history...
-        </div>
-
-    `;
-
-
-    try{
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .from("inspections")
-                .select("*")
-                .eq(
-                    "equipment_id",
-                    equipmentId
-                )
-                .order(
-                    "created_at",
-                    {
-                        ascending:false
-                    }
-                );
-
-
-        if(error){
-
-            console.warn(
-                "Inspection history error:",
-                error
+    } catch (error) {
+        console.error("Equipment save failed:", {
+            code: error?.code,
+            message: error?.message,
+            details: error?.details,
+            hint: error?.hint
+        });
+
+        if (error?.code === "23505") {
+            showToast("That equipment code already exists.", "error");
+        } else if (error?.code === "42501") {
+            showToast(
+                "Supabase rejected this save under its security policy. The insert must include your authorised department.",
+                "error"
             );
-
-
-            container.innerHTML = `
-
-                <div class="history-empty">
-                    Inspection history is not available yet.
-                </div>
-
-            `;
-
-            return;
-
-        }
-
-
-        if(
-            !data ||
-            data.length === 0
-        ){
-
-            container.innerHTML = `
-
-                <div class="history-empty">
-                    No inspection history recorded.
-                </div>
-
-            `;
-
-            return;
-
-        }
-
-
-        container.innerHTML = `
-
-            <div class="history-list">
-
-                ${data.map(
-                    inspection => `
-
-                        <div class="history-item">
-
-                            <div class="history-item-title">
-                                ${escapeHtml(
-                                    inspection.status ||
-                                    inspection.result ||
-                                    inspection.inspection_type ||
-                                    "Inspection"
-                                )}
-                            </div>
-
-                            <div class="history-item-meta">
-
-                                ${
-                                    formatDateTime(
-                                        inspection.created_at
-                                    )
-                                }
-
-                            </div>
-
-                        </div>
-
-                    `
-                ).join("")}
-
-            </div>
-
-        `;
-
-    }catch(error){
-
-        console.error(
-            error
-        );
-
-
-        container.innerHTML = `
-
-            <div class="history-empty">
-                Inspection history is not available.
-            </div>
-
-        `;
-
-    }
-
-}
-
-
-/* =====================================================
-   DEVIATION HISTORY
-===================================================== */
-
-async function loadDeviationHistory(
-    equipmentId
-){
-
-    const container =
-        document.getElementById(
-            "deviationHistory"
-        );
-
-
-    container.innerHTML = `
-
-        <div class="history-empty">
-            Loading deviation history...
-        </div>
-
-    `;
-
-
-    try{
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .from("deviations")
-                .select("*")
-                .eq(
-                    "equipment_id",
-                    equipmentId
-                )
-                .order(
-                    "created_at",
-                    {
-                        ascending:false
-                    }
-                );
-
-
-        if(error){
-
-            console.warn(
-                "Deviation history error:",
-                error
+        } else {
+            showToast(
+                error?.message || "Unable to save equipment.",
+                "error"
             );
-
-
-            container.innerHTML = `
-
-                <div class="history-empty">
-                    Deviation history is not available yet.
-                </div>
-
-            `;
-
-            return;
-
         }
-
-
-        if(
-            !data ||
-            data.length === 0
-        ){
-
-            container.innerHTML = `
-
-                <div class="history-empty">
-                    No deviations recorded.
-                </div>
-
-            `;
-
-            return;
-
-        }
-
-
-        container.innerHTML = `
-
-            <div class="history-list">
-
-                ${data.map(
-                    deviation => `
-
-                        <div class="history-item">
-
-                            <div class="history-item-title">
-
-                                ${escapeHtml(
-                                    deviation.title ||
-                                    deviation.description ||
-                                    deviation.status ||
-                                    "Deviation"
-                                )}
-
-                            </div>
-
-                            <div class="history-item-meta">
-
-                                ${formatDateTime(
-                                    deviation.created_at
-                                )}
-
-                            </div>
-
-                        </div>
-
-                    `
-                ).join("")}
-
-            </div>
-
-        `;
-
-    }catch(error){
-
-        console.error(
-            error
-        );
-
-
-        container.innerHTML = `
-
-            <div class="history-empty">
-                Deviation history is not available.
-            </div>
-
-        `;
-
     }
-
 }
 
-
-/* =====================================================
-   CLOSE MODALS
-===================================================== */
-
-function closeEquipmentModal(){
-
-    document
-        .getElementById(
-            "equipmentModal"
-        )
-        .classList.remove(
-            "show"
-        );
-
-
-    editingEquipmentId =
-        null;
-
-}
-
-
-function closeProfileModal(){
-
-    document
-        .getElementById(
-            "profileModal"
-        )
-        .classList.remove(
-            "show"
-        );
-
-
-    selectedEquipment =
-        null;
-
-}
 
 
 /* =====================================================
