@@ -4610,6 +4610,22 @@ async function saveEquipment(){
     };
 
 
+if (!editingEquipmentId) {
+
+    if (!currentUserProfile?.department_id) {
+
+        showToast(
+            "Your account has no assigned department.",
+            "error"
+        );
+
+        return;
+    }
+
+    record.department_id =
+        currentUserProfile.department_id;
+}
+
     try{
 
         if(editingEquipmentId){
