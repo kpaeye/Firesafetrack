@@ -1932,14 +1932,14 @@ async function loadCurrentUserProfile() {
 
         currentUserProfile = profile;
 
-        const userLabel =
-            document.querySelector(".topbar .user-name");
+        const userLabel = document.querySelector(".topbar-user");
 
-        if (userLabel) {
-            userLabel.textContent =
-                profile.full_name || "Signed-in user";
-        }
-
+if (userLabel) {
+    userLabel.textContent =
+        profile.full_name?.trim() ||
+        user.email ||
+        "Signed-in user";
+}
         return true;
 
     } catch (error) {
@@ -4534,6 +4534,207 @@ async function saveEquipment() {
     }
 }
 
+ 
+function closeEquipmentModal() {
+    const modal = document.getElementById("equipmentModal");
+
+    if (modal) {
+        modal.classList.remove("show");
+    }
+}
+
+/* =====================================================
+   EQUIPMENT PROFILE
+===================================================== */
+
+function closeProfileModal() {
+    const modal = document.getElementById("profileModal");
+    if (modal) modal.classList.remove("show");
+}
+
+async function openProfileModal(id) {
+    const item = equipmentList.find(
+        equipment => String(equipment.id) === String(id)
+    );
+
+    if (!item) {
+        showToast("Equipment record could not be found.", "error");
+        return;
+    }
+
+    const details = document.getElementById("profileDetails");
+    const inspectionHistory = document.getElementById("inspectionHistory");
+    const deviationHistory = document.getElementById("deviationHistory");
+
+    const fields = [
+        ["Equipment Name", item.name],
+        ["Equipment Code", item.equipment_code],
+        ["Equipment Type", item.equipment_type],
+        ["Status", getDisplayStatus(item)],
+        ["Area", item.area],
+        ["Location", item.location],
+        ["Manufacturer", item.manufacturer],
+        ["Model", item.model],
+        ["Serial Number", item.serial_number],
+        ["Manufacture Date", formatDate(item.manufacture_date)],
+        ["Installation Date", formatDate(item.installation_date)],
+        ["Last Inspection", formatDate(item.last_inspection_date)],
+        ["Next Inspection", formatDate(item.next_inspection_date)],
+        ["Description", item.description],
+        ["Notes", item.notes]
+    ];
+
+    details.innerHTML = fields.map(([label, value]) => `
+        <div class="detail-box">
+            <div class="detail-label">${escapeHtml(label)}</div>
+            <div class="detail-value">${escapeHtml(value || "—")}</div>
+        </div>
+    `).join("");
+
+    inspectionHistory.innerHTML =
+        '<div class="history-empty">Loading inspection history...</div>';
+
+    deviationHistory.innerHTML =
+        '<div class="history-empty">Loading deviation history...</div>';
+
+    document.getElementById("profileModal").classList.add("show");
+
+    await loadEquipmentHistory(
+        "inspections",
+        id,
+        inspectionHistory,
+        "Inspection"
+    );
+
+    await loadEquipmentHistory(
+        "deviations",
+        id,
+        deviationHistory,
+        "Deviation"
+    );
+}
+
+async function loadEquipmentHistory(tableName, equipmentId, container, label) {
+    try {
+        const { data, error } = await supabaseClient
+            .from(tableName)
+            .select("*")
+            .eq("equipment_id", equipmentId)
+            .order("created_at", { ascending: false })
+            .limit(10);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            container.innerHTML = `
+                <div class="history-empty">
+                    No ${label.toLowerCase()} history found for this equipment.
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="history-list">
+                ${data.map(record => {
+                    const date =
+                        record.created_at ||
+                        record.inspection_date ||
+                        record.deviation_date ||
+                        record.date;
+
+                    const status =
+                        record.status ||
+                        record.result ||
+                        record.finding ||
+                        record.title ||
+                        `${label} record`;
+
+                    const reference =
+                        record.reference ||
+                        record.deviation_number ||
+                        record.inspection_number ||
+                        "";
+
+                    return `
+                        <div class="history-item">
+                            <div class="history-item-title">
+                                ${escapeHtml(status)}
+                            </div>
+                            <div class="history-item-meta">
+                                ${escapeHtml(date ? formatDateTime(date) : "Date unavailable")}
+                                ${reference ? " • " + escapeHtml(reference) : ""}
+                            </div>
+                        </div>
+                    `;
+                }).join("")}
+            </div>
+        `;
+    } catch (error) {
+        console.error(`${label} history loading failed:`, error);
+
+        container.innerHTML = `
+            <div class="history-empty">
+                Unable to load ${label.toLowerCase()} history.
+                Check the table's equipment relationship and permissions.
+            </div>
+        `;
+    }
+}
+
+
+/* =====================================================
+   DELETE EQUIPMENT
+===================================================== */
+
+async function deleteEquipment(id) {
+    if (!isAdministrator()) {
+        showToast(
+            "Only administrators can delete equipment.",
+            "error"
+        );
+        return;
+    }
+
+    const item = equipmentList.find(
+        equipment => String(equipment.id) === String(id)
+    );
+
+    if (!item) {
+        showToast("Equipment record could not be found.", "error");
+        return;
+    }
+
+    const confirmed = window.confirm(
+        `Delete "${item.name || item.equipment_code}"?\n\n` +
+        "This action may affect records linked to this equipment."
+    );
+
+    if (!confirmed) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from("equipment")
+            .delete()
+            .eq("id", id);
+
+        if (error) throw error;
+
+        selectedEquipmentIds.delete(id);
+
+        showToast("Equipment deleted successfully.", "success");
+
+        await loadEquipment();
+    } catch (error) {
+        console.error("Equipment deletion failed:", error);
+
+        showToast(
+            error?.message ||
+            "Unable to delete equipment. Check permissions and linked records.",
+            "error"
+        );
+    }
+}
 
 
 /* =====================================================

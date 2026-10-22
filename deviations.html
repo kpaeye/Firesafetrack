@@ -65,6 +65,13 @@ body{
     cursor:pointer;
 }
 
+.current-user-name {
+    color: #d9e2ec;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
 .menu-btn:hover{
     background:rgba(255,255,255,0.15);
 }
@@ -986,7 +993,12 @@ tbody tr:hover{
         </span>
 
     </div>
-
+<div
+    id="currentUserName"
+    class="current-user-name"
+>
+    Loading user...
+</div>
 </header>
 
 
@@ -1762,6 +1774,54 @@ document.addEventListener(
     }
 );
 
+/*====================================================
+SIGNED IN USERNAME
+=====================================================*/
+displaySignedInUserName();
+async function displaySignedInUserName() {
+    const label =
+        document.getElementById("currentUserName") ||
+        document.getElementById("userDisplay") ||
+        document.querySelector(
+            ".topbar-user, .user-display, .user-name"
+        );
+
+    if (!label) return;
+
+    try {
+        const {
+            data: { user },
+            error: userError
+        } = await supabaseClient.auth.getUser();
+
+        if (userError || !user) {
+            label.textContent = "Signed-in user";
+            return;
+        }
+
+        const {
+            data: profile,
+            error: profileError
+        } = await supabaseClient
+            .from("profiles")
+            .select("full_name")
+            .eq("id", user.id)
+            .maybeSingle();
+
+        if (profileError) {
+            console.error("Profile name loading error:", profileError);
+        }
+
+        label.textContent =
+            profile?.full_name?.trim() ||
+            user.email ||
+            "Signed-in user";
+
+    } catch (error) {
+        console.error("Could not display user name:", error);
+        label.textContent = "Signed-in user";
+    }
+}
 
 /* =====================================================
    SIDEBAR

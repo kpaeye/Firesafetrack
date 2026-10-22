@@ -2292,15 +2292,28 @@ const dashboardStats = {
             }
 
 
-            userDisplay.textContent =
-                user.email ||
-                "User";
-
-
             const {
-                data: profile,
-                error: profileError
-            } =
+    data: profile,
+    error: profileError
+} = await supabaseClient
+    .from("profiles")
+    .select("full_name, role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+if (profileError) {
+    console.error("Could not load user profile:", profileError);
+}
+
+userDisplay.textContent =
+    profile?.full_name?.trim() ||
+    user.email ||
+    "Signed-in user";
+
+roleBadge.textContent =
+    String(profile?.role || "USER").toUpperCase();
+
+    
                 await supabaseClient
                     .from("profiles")
                     .select("role")

@@ -1,0 +1,1207 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>FireSafe Track | Equipment Types</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --red: #e32636;
+    --red-dark: #bd1727;
+    --navy: #101827;
+    --navy-light: #192438;
+    --page: #f3f5f8;
+    --white: #ffffff;
+    --text: #202938;
+    --muted: #778195;
+    --border: #e2e7ee;
+    --green: #168653;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: var(--page);
+    color: var(--text);
+    font-size: 14px;
+}
+
+button, input, textarea {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 240px;
+    background: var(--navy);
+    color: white;
+    padding: 22px 15px;
+    z-index: 100;
+    overflow-y: auto;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 3px 10px 25px;
+    border-bottom: 1px solid #293347;
+    margin-bottom: 22px;
+}
+
+.brand-mark {
+    color: var(--red);
+    font-size: 25px;
+    font-weight: 700;
+    letter-spacing: -2px;
+}
+
+.brand-name {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .4px;
+}
+
+.brand-name span {
+    color: var(--red);
+}
+
+.nav-heading {
+    color: #8995a9;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    padding: 0 12px;
+    margin: 22px 0 9px;
+}
+
+.sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    margin: 4px 0;
+    color: #c7cfdb;
+    text-decoration: none;
+    border-radius: 7px;
+    font-size: 12px;
+    transition: background .2s;
+}
+
+.sidebar-nav a:hover {
+    background: var(--navy-light);
+    color: white;
+}
+
+.sidebar-nav a.active {
+    background: var(--red);
+    color: white;
+}
+
+.nav-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 16px;
+}
+
+.sidebar-close {
+    display: none;
+}
+
+.sidebar-overlay {
+    display: none;
+}
+
+.main {
+    margin-left: 240px;
+    min-height: 100vh;
+}
+
+.topbar {
+    height: 70px;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 0 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.topbar h1 {
+    font-size: 17px;
+    margin: 0;
+    font-weight: 600;
+}
+
+.topbar-user {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.menu-button {
+    display: none;
+    border: 0;
+    background: transparent;
+    font-size: 24px;
+}
+
+.content {
+    max-width: 1250px;
+    padding: 28px 30px 45px;
+    margin: auto;
+}
+
+.page-intro {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.page-intro h2 {
+    margin: 0 0 7px;
+    font-size: 23px;
+}
+
+.page-intro p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 22px;
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.card-header h3 {
+    font-size: 14px;
+    margin: 0 0 5px;
+}
+
+.card-header p {
+    color: var(--muted);
+    font-size: 11px;
+    margin: 0;
+}
+
+.card-body {
+    padding: 22px;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.search {
+    width: 100%;
+    max-width: 340px;
+    padding: 11px 13px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    outline: none;
+    background: white;
+}
+
+.search:focus, input:focus, textarea:focus {
+    border-color: var(--red);
+}
+
+.btn {
+    border: 0;
+    border-radius: 7px;
+    padding: 11px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+}
+
+.btn-primary {
+    background: var(--red);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--red-dark);
+}
+
+.btn-secondary {
+    background: #edf0f5;
+    color: #344054;
+}
+
+.btn-danger {
+    background: #fff0f1;
+    color: #c51f30;
+}
+
+.btn-small {
+    padding: 7px 10px;
+    font-size: 11px;
+}
+
+.table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 580px;
+}
+
+th {
+    background: #f8f9fb;
+    color: #778195;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    text-align: left;
+    padding: 14px 20px;
+    white-space: nowrap;
+}
+
+td {
+    padding: 16px 20px;
+    border-top: 1px solid #edf0f4;
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+tbody tr:hover {
+    background: #fafbfd;
+}
+
+.type-name {
+    font-weight: 600;
+    color: #202938;
+}
+
+.description {
+    color: var(--muted);
+    max-width: 420px;
+    line-height: 1.6;
+}
+
+.actions {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.count-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 14px;
+}
+
+.empty-state {
+    padding: 38px 20px;
+    text-align: center;
+    color: var(--muted);
+    line-height: 1.8;
+}
+
+.empty-state strong {
+    display: block;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 17px;
+}
+
+.field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.field input, .field textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    outline: none;
+    background: white;
+    font-size: 12px;
+}
+
+.field textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.field small {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    margin-top: 6px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.notice {
+    display: none;
+    padding: 12px 14px;
+    border-radius: 7px;
+    margin-bottom: 17px;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.notice.error {
+    display: block;
+    background: #fff0f1;
+    color: #b42332;
+}
+
+.notice.success {
+    display: block;
+    background: #eaf8f0;
+    color: #167348;
+}
+
+.toast {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    max-width: min(400px, calc(100vw - 40px));
+    padding: 14px 18px;
+    background: #172033;
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px #0002;
+    z-index: 300;
+    display: none;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.toast.show {
+    display: block;
+}
+
+.toast.error {
+    background: #b42332;
+}
+
+.permission-note {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-top: 10px;
+}
+
+.loading {
+    color: var(--muted);
+    text-align: center;
+    padding: 28px;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 800px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .sidebar-close {
+        display: block;
+        position: absolute;
+        right: 15px;
+        top: 18px;
+        border: 0;
+        color: white;
+        background: transparent;
+        font-size: 24px;
+    }
+
+    .sidebar-overlay.show {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: #0008;
+        z-index: 90;
+    }
+
+    .main {
+        margin-left: 0;
+    }
+
+    .topbar {
+        height: 62px;
+        padding: 0 16px;
+    }
+
+    .menu-button {
+        display: block;
+    }
+
+    .topbar h1 {
+        font-size: 15px;
+    }
+
+    .topbar-user {
+        font-size: 10px;
+        max-width: 125px;
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .content {
+        padding: 22px 15px 35px;
+    }
+
+    .page-intro {
+        flex-direction: column;
+    }
+
+    .page-intro h2 {
+        font-size: 20px;
+    }
+
+    .card-header, .card-body {
+        padding: 17px;
+    }
+
+    .toolbar, .search {
+        width: 100%;
+        max-width: none;
+    }
+
+    .toolbar .btn {
+        flex: 1;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<aside class="sidebar" id="sidebar">
+    <button class="sidebar-close" id="sidebarClose" aria-label="Close menu">&times;</button>
+
+    <div class="brand">
+        <div class="brand-mark">FS</div>
+        <div class="brand-name">FIRE<span>SAFE</span> TRACK</div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-heading">Main menu</div>
+        <a href="dashboard.html"><span class="nav-icon">▦</span>Dashboard</a>
+        <a href="inspections.html"><span class="nav-icon">✓</span>Inspections</a>
+        <a href="equipment.html"><span class="nav-icon">▣</span>Equipment Register</a>
+        <a href="deviations.html"><span class="nav-icon">⚠</span>Deviations</a>
+        <a href="corrective-actions.html"><span class="nav-icon">↗</span>Corrective Actions</a>
+        <a href="reports.html"><span class="nav-icon">▤</span>Reports</a>
+
+        <div class="nav-heading">Reference data</div>
+        <a href="equipment-types.html" class="active"><span class="nav-icon">▦</span>Equipment Types</a>
+        <a href="locations.html"><span class="nav-icon">⌖</span>Locations</a>
+    </nav>
+</aside>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<main class="main">
+    <header class="topbar">
+        <div class="topbar-left">
+            <button class="menu-button" id="menuButton" aria-label="Open menu">☰</button>
+            <h1>Equipment Types</h1>
+        </div>
+        <div class="topbar-user">Verifying account...</div>
+    </header>
+
+    <div class="content">
+        <section class="page-intro">
+            <div>
+                <h2>Equipment Types</h2>
+                <p>Manage the categories used to classify fire safety equipment in FireSafe Track.</p>
+            </div>
+
+            <button class="btn btn-primary" id="addTypeButton" hidden>
+                <span>+</span> Add Equipment Type
+            </button>
+        </section>
+
+        <section class="card" id="formCard" hidden>
+            <div class="card-header">
+                <div>
+                    <h3 id="formTitle">Add Equipment Type</h3>
+                    <p>Enter the equipment type name and an optional description.</p>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div id="formNotice" class="notice" role="alert"></div>
+
+                <form id="typeForm">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="typeName">Equipment Type Name *</label>
+                            <input id="typeName" name="name" type="text"
+                                   maxlength="100" required
+                                   placeholder="e.g. Fire extinguisher">
+                        </div>
+
+                        <div class="field">
+                            <label for="typeDescription">Description</label>
+                            <textarea id="typeDescription" name="description"
+                                      maxlength="1000"
+                                      placeholder="Optional details about this equipment type"></textarea>
+                            <small>Maximum 1,000 characters.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelButton">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="saveButton">
+                            Save Equipment Type
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h3>Equipment Type Register</h3>
+                    <p>View and manage the equipment categories available in the system.</p>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="toolbar">
+                    <input class="search" id="searchInput" type="search"
+                           placeholder="Search equipment types...">
+                    <button class="btn btn-secondary" id="refreshButton">
+                        ↻ Refresh
+                    </button>
+                </div>
+
+                <div class="table-wrap" style="margin-top:20px">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Equipment Type</th>
+                                <th>Description</th>
+                                <th id="actionsHeading" hidden>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="typesTableBody">
+                            <tr><td colspan="3" class="loading">Loading equipment types...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="count-label" id="countLabel">Loading records...</div>
+                <p class="permission-note" id="permissionNote"></p>
+            </div>
+        </section>
+    </div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================
+   SUPABASE
+===================================================== */
+
+const SUPABASE_URL =
+    "https://syiemjazbawflavxibzv.supabase.co";
+
+const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5aWVtamF6YmF3ZmxhdnhpYnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Njg5MzEsImV4cCI6MjEwNDU0NDkzMX0.RJ6siFDLg3LAsP2ZPDgdFVGAFasg05hK4GikdIO68PM";
+    
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let currentUser = null;
+let currentUserProfile = null;
+let equipmentTypes = [];
+let editingTypeId = null;
+let toastTimeout = null;
+
+/* =====================================================
+   NOTIFICATIONS
+===================================================== */
+
+function showToast(message, type = "success") {
+    const toast = document.getElementById("toast");
+
+    toast.textContent = message;
+    toast.className = "toast show" +
+        (type === "error" ? " error" : "");
+
+    clearTimeout(toastTimeout);
+
+    toastTimeout = setTimeout(() => {
+        toast.className = "toast";
+    }, 4500);
+}
+
+function showFormNotice(message, type = "error") {
+    const notice = document.getElementById("formNotice");
+
+    notice.textContent = message;
+    notice.className = "notice " + type;
+}
+
+function clearFormNotice() {
+    const notice = document.getElementById("formNotice");
+    notice.textContent = "";
+    notice.className = "notice";
+}
+
+/* =====================================================
+   SIGNED-IN USER AND ROLE
+===================================================== */
+
+async function loadCurrentUserProfile() {
+    try {
+        const {
+            data: { user },
+            error: authError
+        } = await supabaseClient.auth.getUser();
+
+        if (authError) throw authError;
+
+        if (!user) {
+            currentUser = null;
+            currentUserProfile = null;
+            window.location.href = "index.html";
+            return false;
+        }
+
+        currentUser = user;
+
+        const {
+            data: profile,
+            error: profileError
+        } = await supabaseClient
+            .from("profiles")
+            .select("id, full_name, role, department_id, active")
+            .eq("id", user.id)
+            .maybeSingle();
+
+        if (profileError) throw profileError;
+
+        if (!profile || !profile.active) {
+            currentUserProfile = null;
+
+            showToast(
+                "Your account is inactive or has no authorised profile.",
+                "error"
+            );
+
+            document.querySelector(".topbar-user").textContent =
+                "Unauthorised account";
+
+            return false;
+        }
+
+        currentUserProfile = profile;
+
+        const userLabel = document.querySelector(".topbar-user");
+
+        if (userLabel) {
+            userLabel.textContent =
+                profile.full_name?.trim() ||
+                user.email ||
+                "Signed-in user";
+        }
+
+        return true;
+
+    } catch (error) {
+        console.error("Unable to load signed-in user profile:", error);
+
+        showToast(
+            "Unable to verify your account. Please sign in again.",
+            "error"
+        );
+
+        return false;
+    }
+}
+
+/* =====================================================
+   ROLE PERMISSIONS
+===================================================== */
+
+function isAdministrator() {
+    return currentUserProfile?.role === "administrator";
+}
+
+function isSupervisor() {
+    return currentUserProfile?.role === "supervisor";
+}
+
+function canManageEquipmentTypes() {
+    return isAdministrator() || isSupervisor();
+}
+
+function applyPermissions() {
+    const canManage = canManageEquipmentTypes();
+
+    document.getElementById("addTypeButton").hidden = !canManage;
+    document.getElementById("actionsHeading").hidden = !canManage;
+
+    document.getElementById("permissionNote").textContent = canManage
+        ? "Your role allows you to add, edit and delete equipment types."
+        : "View-only access: your account cannot add, edit or delete equipment types.";
+}
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+function setupSidebar() {
+    const menuButton = document.getElementById("menuButton");
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    const closeButton = document.getElementById("sidebarClose");
+
+    menuButton.addEventListener("click", () => {
+        sidebar.classList.toggle("open");
+        overlay.classList.toggle("show", sidebar.classList.contains("open"));
+    });
+
+    closeButton.addEventListener("click", closeSidebar);
+    overlay.addEventListener("click", closeSidebar);
+
+    document.querySelectorAll(".sidebar-nav a").forEach(link => {
+        link.addEventListener("click", closeSidebar);
+    });
+}
+
+function closeSidebar() {
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebarOverlay").classList.remove("show");
+}
+
+/* =====================================================
+   FORM
+===================================================== */
+
+function openAddForm() {
+    if (!canManageEquipmentTypes()) {
+        showToast("You do not have permission to manage equipment types.", "error");
+        return;
+    }
+
+    editingTypeId = null;
+
+    document.getElementById("typeForm").reset();
+    document.getElementById("formTitle").textContent = "Add Equipment Type";
+    document.getElementById("saveButton").textContent = "Save Equipment Type";
+    document.getElementById("formCard").hidden = false;
+
+    clearFormNotice();
+
+    document.getElementById("typeName").focus();
+    document.getElementById("formCard").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+function openEditForm(type) {
+    if (!canManageEquipmentTypes()) {
+        showToast("You do not have permission to edit equipment types.", "error");
+        return;
+    }
+
+    editingTypeId = type.id;
+
+    document.getElementById("typeName").value = type.name || "";
+    document.getElementById("typeDescription").value = type.description || "";
+    document.getElementById("formTitle").textContent = "Edit Equipment Type";
+    document.getElementById("saveButton").textContent = "Save Changes";
+    document.getElementById("formCard").hidden = false;
+
+    clearFormNotice();
+
+    document.getElementById("formCard").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+function closeForm() {
+    document.getElementById("formCard").hidden = true;
+    document.getElementById("typeForm").reset();
+    clearFormNotice();
+    editingTypeId = null;
+}
+
+/* =====================================================
+   LOAD EQUIPMENT TYPES
+===================================================== */
+
+async function loadEquipmentTypes() {
+    const tbody = document.getElementById("typesTableBody");
+
+    tbody.innerHTML =
+        '<tr><td colspan="3" class="loading">Loading equipment types...</td></tr>';
+
+    document.getElementById("countLabel").textContent = "Loading records...";
+
+    const { data, error } = await supabaseClient
+        .from("equipment_types")
+        .select("id, name, description, created_at")
+        .order("name", { ascending: true });
+
+    if (error) {
+        console.error("Unable to load equipment types:", error);
+
+        tbody.innerHTML =
+            '<tr><td colspan="3" class="empty-state">Unable to load equipment types. Check your connection and Supabase permissions, then refresh.</td></tr>';
+
+        document.getElementById("countLabel").textContent =
+            "Equipment types could not be loaded.";
+
+        showToast("Unable to load equipment types.", "error");
+        return;
+    }
+
+    equipmentTypes = data || [];
+    renderEquipmentTypes();
+}
+
+/* =====================================================
+   DISPLAY EQUIPMENT TYPES
+===================================================== */
+
+function renderEquipmentTypes() {
+    const tbody = document.getElementById("typesTableBody");
+    const search = document.getElementById("searchInput").value
+        .trim()
+        .toLowerCase();
+
+    const canManage = canManageEquipmentTypes();
+
+    const filtered = equipmentTypes.filter(type => {
+        const name = (type.name || "").toLowerCase();
+        const description = (type.description || "").toLowerCase();
+
+        return name.includes(search) || description.includes(search);
+    });
+
+    if (!filtered.length) {
+        const message = equipmentTypes.length
+            ? "No equipment types match your search."
+            : "No equipment types have been created yet.";
+
+        tbody.innerHTML = "";
+
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = canManage ? 3 : 2;
+        cell.className = "empty-state";
+
+        const strong = document.createElement("strong");
+        strong.textContent = "No records found";
+
+        cell.appendChild(strong);
+        cell.appendChild(document.createTextNode(message));
+        row.appendChild(cell);
+        tbody.appendChild(row);
+
+    } else {
+        tbody.innerHTML = "";
+
+        filtered.forEach(type => {
+            const row = document.createElement("tr");
+
+            const nameCell = document.createElement("td");
+            nameCell.className = "type-name";
+            nameCell.textContent = type.name || "Unnamed type";
+            row.appendChild(nameCell);
+
+            const descriptionCell = document.createElement("td");
+            descriptionCell.className = "description";
+            descriptionCell.textContent = type.description || "—";
+            row.appendChild(descriptionCell);
+
+            if (canManage) {
+                const actionsCell = document.createElement("td");
+                const actions = document.createElement("div");
+                actions.className = "actions";
+
+                const editButton = document.createElement("button");
+                editButton.type = "button";
+                editButton.className = "btn btn-secondary btn-small";
+                editButton.textContent = "Edit";
+                editButton.addEventListener("click", () => openEditForm(type));
+
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.className = "btn btn-danger btn-small";
+                deleteButton.textContent = "Delete";
+                deleteButton.addEventListener("click", () => deleteEquipmentType(type));
+
+                actions.appendChild(editButton);
+                actions.appendChild(deleteButton);
+                actionsCell.appendChild(actions);
+                row.appendChild(actionsCell);
+            }
+
+            tbody.appendChild(row);
+        });
+    }
+
+    document.getElementById("countLabel").textContent =
+        "Showing " + filtered.length + " of " + equipmentTypes.length +
+        " equipment type" + (equipmentTypes.length === 1 ? "" : "s") + ".";
+}
+
+/* =====================================================
+   SAVE EQUIPMENT TYPE
+===================================================== */
+
+async function saveEquipmentType(event) {
+    event.preventDefault();
+
+    if (!canManageEquipmentTypes()) {
+        showFormNotice("Your role does not permit changes to equipment types.");
+        return;
+    }
+
+    const name = document.getElementById("typeName").value.trim();
+    const description = document.getElementById("typeDescription").value.trim();
+
+    if (!name) {
+        showFormNotice("Enter an equipment type name.");
+        document.getElementById("typeName").focus();
+        return;
+    }
+
+    const saveButton = document.getElementById("saveButton");
+    saveButton.disabled = true;
+    saveButton.textContent = "Saving...";
+
+    try {
+        // Prevent accidental duplicate names, ignoring letter case.
+        const duplicate = equipmentTypes.some(type =>
+            type.name.toLowerCase() === name.toLowerCase() &&
+            type.id !== editingTypeId
+        );
+
+        if (duplicate) {
+            showFormNotice("An equipment type with this name already exists.");
+            return;
+        }
+
+        let result;
+
+        if (editingTypeId) {
+            result = await supabaseClient
+                .from("equipment_types")
+                .update({
+                    name,
+                    description: description || null
+                })
+                .eq("id", editingTypeId)
+                .select("id")
+                .maybeSingle();
+        } else {
+            result = await supabaseClient
+                .from("equipment_types")
+                .insert({
+                    name,
+                    description: description || null
+                })
+                .select("id")
+                .single();
+        }
+
+        if (result.error) throw result.error;
+
+        if (!result.data) {
+            throw new Error(
+                "No record was returned. Check your Supabase permissions and try again."
+            );
+        }
+
+        closeForm();
+
+        showToast(
+            editingTypeId
+                ? "Equipment type updated successfully."
+                : "Equipment type added successfully."
+        );
+
+        await loadEquipmentTypes();
+
+    } catch (error) {
+        console.error("Unable to save equipment type:", error);
+
+        showFormNotice(
+            error.message ||
+            "Unable to save this equipment type. Check your Supabase permissions."
+        );
+    } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = editingTypeId
+            ? "Save Changes"
+            : "Save Equipment Type";
+    }
+}
+
+/* =====================================================
+   DELETE EQUIPMENT TYPE
+===================================================== */
+
+async function deleteEquipmentType(type) {
+    if (!canManageEquipmentTypes()) {
+        showToast("You do not have permission to delete equipment types.", "error");
+        return;
+    }
+
+    const confirmed = window.confirm(
+        'Delete the equipment type "' + type.name + '"?\n\n' +
+        "This cannot be undone. If equipment records use this type, the deletion may not be appropriate."
+    );
+
+    if (!confirmed) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from("equipment_types")
+            .delete()
+            .eq("id", type.id);
+
+        if (error) throw error;
+
+        showToast("Equipment type deleted successfully.");
+        await loadEquipmentTypes();
+
+    } catch (error) {
+        console.error("Unable to delete equipment type:", error);
+
+        showToast(
+            "Unable to delete this type. It may be restricted by database permissions.",
+            "error"
+        );
+    }
+}
+
+/* =====================================================
+   INITIALISE PAGE
+===================================================== */
+
+document.addEventListener("DOMContentLoaded", async () => {
+    setupSidebar();
+
+    document.getElementById("addTypeButton")
+        .addEventListener("click", openAddForm);
+
+    document.getElementById("cancelButton")
+        .addEventListener("click", closeForm);
+
+    document.getElementById("typeForm")
+        .addEventListener("submit", saveEquipmentType);
+
+    document.getElementById("searchInput")
+        .addEventListener("input", renderEquipmentTypes);
+
+    document.getElementById("refreshButton")
+        .addEventListener("click", loadEquipmentTypes);
+
+    const authorised = await loadCurrentUserProfile();
+
+    if (!authorised) return;
+
+    applyPermissions();
+    await loadEquipmentTypes();
+});
+</script>
+
+</body>
+</html>
