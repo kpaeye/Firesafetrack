@@ -4656,8 +4656,25 @@ if (!editingEquipmentId) {
 
         }else{
 
-console.log("Equipment record being inserted:", record);
-console.log("Current user profile:", currentUserProfile);
+console.log(
+    "INSERT department_id:",
+    record.department_id
+);
+
+console.log(
+    "Profile department_id:",
+    currentUserProfile?.department_id
+);
+
+console.log(
+    "Signed-in user ID:",
+    currentUser?.id
+);
+
+console.log(
+    "Full insert record:",
+    JSON.stringify(record, null, 2)
+);
             const {
                 error
             } =
