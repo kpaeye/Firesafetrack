@@ -4689,7 +4689,7 @@ if (!editingEquipmentId) {
 
        console.error(
     "Save equipment error:",
-    error
+    JSON.stringify(error, null, 2)
 );
 
 showToast(
