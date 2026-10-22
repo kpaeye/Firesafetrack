@@ -4687,10 +4687,17 @@ if (!editingEquipmentId) {
 
     }catch(error){
 
-        console.error(
-            "Save equipment error:",
-            error
-        );
+       console.error(
+    "Save equipment error:",
+    error
+);
+
+showToast(
+    error?.message ||
+    error?.details ||
+    "Unknown database error. Open the browser console.",
+    "error"
+);
 
 
         if(
