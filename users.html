@@ -1,0 +1,911 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101827">
+<meta name="description" content="FireSafe Track user management.">
+<title>FireSafe Track | Users</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --red:#e32636;
+    --red-dark:#bd1727;
+    --navy:#101827;
+    --navy-light:#192438;
+    --page:#f3f5f8;
+    --text:#202938;
+    --muted:#778195;
+    --border:#e2e7ee;
+    --green:#168653;
+}
+* { box-sizing:border-box; }
+body {
+    margin:0;
+    font-family:'Poppins',sans-serif;
+    background:var(--page);
+    color:var(--text);
+    font-size:13px;
+}
+button,input,select { font:inherit; }
+button { cursor:pointer; }
+button:disabled { opacity:.6; cursor:not-allowed; }
+[hidden] { display:none!important; }
+
+.sidebar {
+    position:fixed; inset:0 auto 0 0; width:240px;
+    padding:22px 15px; background:var(--navy); color:white;
+    z-index:100; overflow-y:auto;
+}
+.brand {
+    display:flex; align-items:center; gap:10px;
+    padding:3px 10px 25px; margin-bottom:22px;
+    border-bottom:1px solid #293347;
+}
+.brand-mark { color:var(--red); font-size:25px; font-weight:700; }
+.brand-name { font-size:14px; font-weight:700; }
+.brand-name span { color:var(--red); }
+.nav-heading {
+    color:#8995a9; font-size:10px; text-transform:uppercase;
+    letter-spacing:1.4px; padding:0 12px; margin:22px 0 9px;
+}
+.sidebar-nav a {
+    display:flex; gap:12px; align-items:center;
+    padding:11px 12px; margin:4px 0; border-radius:7px;
+    color:#c7cfdb; text-decoration:none; font-size:12px;
+}
+.sidebar-nav a:hover { background:var(--navy-light); color:white; }
+.sidebar-nav a.active { background:var(--red); color:white; }
+.nav-icon { width:20px; text-align:center; font-size:16px; }
+
+.sidebar-close { display:none; }
+.sidebar-overlay { display:none; }
+.main { margin-left:240px; min-height:100vh; }
+.topbar {
+    height:70px; background:white; border-bottom:1px solid var(--border);
+    padding:0 30px; display:flex; align-items:center;
+    justify-content:space-between; gap:15px;
+    position:sticky; top:0; z-index:50;
+}
+.topbar-left { display:flex; align-items:center; gap:12px; }
+.topbar h1 { font-size:17px; margin:0; font-weight:600; }
+.topbar-user { color:var(--muted); font-size:12px; }
+.menu-button { display:none; border:0; background:transparent; font-size:24px; }
+
+.content { max-width:1300px; padding:28px 30px 45px; margin:auto; }
+.page-intro {
+    display:flex; align-items:flex-start; justify-content:space-between;
+    gap:15px; margin-bottom:24px;
+}
+.page-intro h2 { font-size:23px; margin:0 0 7px; }
+.page-intro p { color:var(--muted); font-size:12px; margin:0; line-height:1.7; }
+
+.stats {
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:16px; margin-bottom:22px;
+}
+.stat-card {
+    background:white; border:1px solid var(--border);
+    border-radius:11px; padding:19px;
+}
+.stat-label { color:var(--muted); font-size:11px; }
+.stat-value { font-size:26px; font-weight:700; margin-top:8px; }
+.stat-value.red { color:var(--red); }
+.stat-value.green { color:var(--green); }
+
+.card {
+    background:white; border:1px solid var(--border);
+    border-radius:12px; margin-bottom:22px; overflow:hidden;
+}
+.card-header {
+    padding:20px 22px; border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center; gap:15px;
+}
+.card-header h3 { font-size:14px; margin:0 0 5px; }
+.card-header p { color:var(--muted); font-size:11px; margin:0; }
+.card-body { padding:22px; }
+
+.toolbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.search {
+    width:100%; max-width:360px; padding:11px 13px;
+    border:1px solid var(--border); border-radius:7px; outline:none;
+}
+.search:focus,input:focus,select:focus { border-color:var(--red); }
+.btn {
+    border:0; border-radius:7px; padding:10px 15px;
+    font-size:12px; font-weight:600; display:inline-flex;
+    justify-content:center; align-items:center; gap:7px;
+}
+.btn-primary { background:var(--red); color:white; }
+.btn-primary:hover { background:var(--red-dark); }
+.btn-secondary { background:#edf0f5; color:#344054; }
+.btn-danger { background:#fff0f1; color:#c51f30; }
+.btn-small { padding:7px 10px; font-size:11px; }
+
+.table-wrap { width:100%; overflow-x:auto; margin-top:20px; }
+table { width:100%; border-collapse:collapse; min-width:780px; }
+th {
+    background:#f8f9fb; color:#778195; font-size:10px;
+    text-transform:uppercase; letter-spacing:.6px;
+    text-align:left; padding:14px 16px; white-space:nowrap;
+}
+td {
+    padding:15px 16px; border-top:1px solid #edf0f4;
+    font-size:12px; vertical-align:middle;
+}
+tbody tr:hover { background:#fafbfd; }
+.user-name { font-weight:600; }
+.user-id { color:var(--muted); font-size:10px; margin-top:4px; }
+.role-pill,.status-pill {
+    display:inline-block; padding:5px 9px; border-radius:20px;
+    font-size:10px; font-weight:600; white-space:nowrap;
+}
+.role-administrator { background:#fff0f1; color:#bd1727; }
+.role-supervisor { background:#fff5df; color:#8a5b00; }
+.role-inspector { background:#eaf2ff; color:#2756a4; }
+.status-active { background:#eaf8f0; color:#167348; }
+.status-inactive { background:#fff0f1; color:#bd1727; }
+.actions { display:flex; flex-wrap:wrap; gap:7px; }
+
+.empty-state,.loading {
+    text-align:center; padding:30px 18px; color:var(--muted); line-height:1.8;
+}
+.count-label { font-size:11px; color:var(--muted); margin-top:14px; }
+.notice {
+    display:none; padding:12px 14px; border-radius:7px;
+    margin-bottom:16px; font-size:12px; line-height:1.7;
+}
+.notice.error { display:block; background:#fff0f1; color:#b42332; }
+.notice.success { display:block; background:#eaf8f0; color:#167348; }
+.permission-note { color:var(--muted); font-size:11px; line-height:1.7; margin-top:14px; }
+
+.modal-backdrop {
+    position:fixed; inset:0; background:#10182799;
+    z-index:200; display:flex; align-items:center; justify-content:center;
+    padding:18px; overflow-y:auto;
+}
+.modal {
+    width:100%; max-width:510px; background:white; border-radius:12px;
+    padding:24px; box-shadow:0 20px 60px #0003;
+}
+.modal h3 { margin:0 0 7px; font-size:17px; }
+.modal-intro { color:var(--muted); font-size:12px; margin:0 0 22px; line-height:1.7; }
+.field { margin-bottom:17px; }
+.field label { display:block; font-size:12px; font-weight:600; margin-bottom:8px; }
+.field input,.field select {
+    width:100%; padding:11px 12px; border:1px solid var(--border);
+    border-radius:7px; outline:none; background:white; font-size:12px;
+}
+.form-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:22px; }
+.toast {
+    position:fixed; right:22px; bottom:22px; max-width:min(400px,calc(100vw - 40px));
+    padding:14px 18px; background:#172033; color:white; border-radius:8px;
+    box-shadow:0 8px 30px #0002; z-index:300; display:none;
+    font-size:12px; line-height:1.6;
+}
+.toast.show { display:block; }
+.toast.error { background:#b42332; }
+
+@media(max-width:900px) {
+    .sidebar { transform:translateX(-100%); transition:transform .25s ease; }
+    .sidebar.open { transform:translateX(0); }
+    .sidebar-close {
+        display:block; position:absolute; right:15px; top:18px;
+        border:0; color:white; background:transparent; font-size:24px;
+    }
+    .sidebar-overlay.show { display:block; position:fixed; inset:0; background:#0008; z-index:90; }
+    .main { margin-left:0; }
+    .topbar { height:62px; padding:0 16px; }
+    .menu-button { display:block; }
+    .topbar h1 { font-size:15px; }
+    .topbar-user { font-size:10px; max-width:145px; text-align:right; overflow-wrap:anywhere; }
+    .content { padding:22px 15px 35px; }
+    .page-intro h2 { font-size:20px; }
+    .stats { gap:10px; }
+    .stat-card { padding:14px; }
+    .stat-value { font-size:22px; }
+}
+@media(max-width:520px) {
+    .stats { grid-template-columns:1fr; }
+    .page-intro { flex-direction:column; }
+    .card-header,.card-body { padding:16px; }
+    .toolbar,.search { width:100%; max-width:none; }
+    .toolbar .btn { flex:1; }
+}
+</style>
+</head>
+
+<body>
+
+<aside class="sidebar" id="sidebar">
+    <button class="sidebar-close" id="sidebarClose" aria-label="Close menu">&times;</button>
+    <div class="brand">
+        <div class="brand-mark">FS</div>
+        <div class="brand-name">FIRE<span>SAFE</span> TRACK</div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-heading">Main menu</div>
+        <a href="dashboard.html"><span class="nav-icon">▦</span>Dashboard</a>
+        <a href="inspections.html"><span class="nav-icon">✓</span>Inspections</a>
+        <a href="equipment.html"><span class="nav-icon">▣</span>Equipment Register</a>
+        <a href="deviations.html"><span class="nav-icon">⚠</span>Deviations</a>
+        <a href="corrective-actions.html"><span class="nav-icon">↗</span>Corrective Actions</a>
+        <a href="reports.html"><span class="nav-icon">▤</span>Reports</a>
+
+        <div class="nav-heading">Reference data</div>
+        <a href="equipment-types.html"><span class="nav-icon">▦</span>Equipment Types</a>
+        <a href="locations.html"><span class="nav-icon">⌖</span>Locations</a>
+
+        <div class="nav-heading">Administration</div>
+        <a href="users.html" class="active"><span class="nav-icon">♙</span>Users</a>
+    </nav>
+</aside>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<main class="main">
+    <header class="topbar">
+        <div class="topbar-left">
+            <button class="menu-button" id="menuButton" aria-label="Open menu">☰</button>
+            <h1>User Management</h1>
+        </div>
+        <div class="topbar-user">Verifying account...</div>
+    </header>
+
+    <div class="content">
+        <section class="page-intro">
+            <div>
+                <h2>Users</h2>
+                <p>View FireSafe Track user profiles and manage authorised roles and account status.</p>
+            </div>
+        </section>
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total users visible to you</div>
+                <div class="stat-value" id="totalUsers">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active users</div>
+                <div class="stat-value green" id="activeUsers">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Inactive users</div>
+                <div class="stat-value red" id="inactiveUsers">—</div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h3>User Register</h3>
+                    <p>User profile information stored in the profiles table.</p>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div id="pageNotice" class="notice" role="alert"></div>
+
+                <div class="toolbar">
+                    <input class="search" id="searchInput" type="search"
+                           placeholder="Search by name, role or department...">
+                    <button class="btn btn-secondary" id="refreshButton">↻ Refresh</button>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Department</th>
+                                <th>Account Status</th>
+                                <th id="actionsHeading" hidden>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr><td colspan="5" class="loading">Verifying account...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="count-label" id="countLabel"></div>
+                <p class="permission-note" id="permissionNote"></p>
+            </div>
+        </section>
+    </div>
+</main>
+
+<div class="modal-backdrop" id="editModal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+        <h3 id="editTitle">Edit User</h3>
+        <p class="modal-intro" id="editIntro">Update the user's profile details.</p>
+
+        <div id="editNotice" class="notice" role="alert"></div>
+
+        <form id="editForm">
+            <div class="field">
+                <label for="editFullName">Full Name *</label>
+                <input id="editFullName" type="text" maxlength="150" required>
+            </div>
+
+            <div class="field">
+                <label for="editRole">Role *</label>
+                <select id="editRole" required>
+                    <option value="administrator">Administrator</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="inspector">Inspector</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="editDepartment">Department</label>
+                <select id="editDepartment">
+                    <option value="">No department assigned</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="editActive">Account Status *</label>
+                <select id="editActive" required>
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="cancelEdit">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveEdit">Save Changes</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================
+   SUPABASE — MATCHES equipment.html
+===================================================== */
+
+const SUPABASE_URL =
+    "https://syiemjazbawflavxibzv.supabase.co";
+
+const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5aWVtamF6YmF3ZmxhdnhpYnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Njg5MzEsImV4cCI6MjEwNDU0NDkzMX0.RJ6siFDLg3LAsP2ZPDgdFVGAFasg05hK4GikdIO68PM";
+   
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let currentUser = null;
+let currentUserProfile = null;
+let userProfiles = [];
+let departments = [];
+let editingProfileId = null;
+let toastTimeout = null;
+
+/* =====================================================
+   NOTIFICATIONS
+===================================================== */
+
+function showToast(message, type = "success") {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.className = "toast show" + (type === "error" ? " error" : "");
+
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        toast.className = "toast";
+    }, 4500);
+}
+
+function showNotice(message, type = "error") {
+    const notice = document.getElementById("pageNotice");
+    notice.textContent = message;
+    notice.className = "notice " + type;
+}
+
+function clearNotice() {
+    const notice = document.getElementById("pageNotice");
+    notice.textContent = "";
+    notice.className = "notice";
+}
+
+function showEditNotice(message, type = "error") {
+    const notice = document.getElementById("editNotice");
+    notice.textContent = message;
+    notice.className = "notice " + type;
+}
+
+/* =====================================================
+   SIGNED-IN USER AND ROLE
+===================================================== */
+
+async function loadCurrentUserProfile() {
+    try {
+        const {
+            data: { user },
+            error: authError
+        } = await supabaseClient.auth.getUser();
+
+        if (authError) throw authError;
+
+        if (!user) {
+            currentUser = null;
+            currentUserProfile = null;
+            window.location.href = "index.html";
+            return false;
+        }
+
+        currentUser = user;
+
+        const {
+            data: profile,
+            error: profileError
+        } = await supabaseClient
+            .from("profiles")
+            .select("id, full_name, role, department_id, active")
+            .eq("id", user.id)
+            .maybeSingle();
+
+        if (profileError) throw profileError;
+
+        if (!profile || !profile.active) {
+            currentUserProfile = null;
+
+            document.querySelector(".topbar-user").textContent =
+                "Unauthorised account";
+
+            showNotice(
+                "Your account is inactive or has no authorised profile."
+            );
+
+            return false;
+        }
+
+        currentUserProfile = profile;
+
+        document.querySelector(".topbar-user").textContent =
+            profile.full_name?.trim() || user.email || "Signed-in user";
+
+        return true;
+
+    } catch (error) {
+        console.error("Unable to load signed-in user profile:", error);
+
+        showNotice(
+            "Unable to verify your account. Please check your connection and Supabase API key."
+        );
+
+        return false;
+    }
+}
+
+/* =====================================================
+   ROLE PERMISSIONS
+===================================================== */
+
+function isAdministrator() {
+    return currentUserProfile?.role === "administrator";
+}
+
+function isSupervisor() {
+    return currentUserProfile?.role === "supervisor";
+}
+
+function canManageUsers() {
+    return isAdministrator() || isSupervisor();
+}
+
+function canManageTarget(profile) {
+    if (!profile || profile.id === currentUser?.id) {
+        return false;
+    }
+
+    if (isAdministrator()) {
+        return true;
+    }
+
+    if (isSupervisor()) {
+        return profile.role === "inspector" &&
+            profile.department_id === currentUserProfile.department_id;
+    }
+
+    return false;
+}
+
+function applyPermissions() {
+    const allowed = canManageUsers();
+
+    document.getElementById("actionsHeading").hidden = !allowed;
+
+    document.getElementById("permissionNote").textContent =
+        isAdministrator()
+            ? "Administrator access: you can manage other user profiles. Changes are still subject to Supabase database policies."
+            : isSupervisor()
+                ? "Supervisor access: you may manage inspectors in your own department, subject to Supabase database policies."
+                : "View-only access: your role cannot manage other user profiles.";
+}
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+function setupSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+
+    document.getElementById("menuButton").addEventListener("click", () => {
+        sidebar.classList.toggle("open");
+        overlay.classList.toggle("show", sidebar.classList.contains("open"));
+    });
+
+    document.getElementById("sidebarClose").addEventListener("click", closeSidebar);
+    overlay.addEventListener("click", closeSidebar);
+
+    document.querySelectorAll(".sidebar-nav a").forEach(link => {
+        link.addEventListener("click", closeSidebar);
+    });
+}
+
+function closeSidebar() {
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebarOverlay").classList.remove("show");
+}
+
+/* =====================================================
+   DEPARTMENTS
+===================================================== */
+
+async function loadDepartments() {
+    const { data, error } = await supabaseClient
+        .from("departments")
+        .select("id, name")
+        .order("name", { ascending: true });
+
+    if (error) {
+        console.warn("Departments could not be loaded:", error);
+        departments = [];
+        return;
+    }
+
+    departments = data || [];
+}
+
+/* =====================================================
+   LOAD USER PROFILES
+===================================================== */
+
+async function loadUsers() {
+    const tbody = document.getElementById("usersTableBody");
+
+    tbody.innerHTML =
+        '<tr><td colspan="5" class="loading">Loading user profiles...</td></tr>';
+
+    clearNotice();
+
+    const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("id, full_name, role, department_id, active")
+        .order("full_name", { ascending: true });
+
+    if (error) {
+        console.error("Unable to load user profiles:", error);
+
+        tbody.innerHTML =
+            '<tr><td colspan="5" class="empty-state">User profiles could not be loaded.</td></tr>';
+
+        showNotice(
+            "Supabase denied access to the user register or the request failed. The profiles table currently has a policy that allows users to read their own profile only. An administrator/supervisor read policy must be configured before this register can show other users."
+        );
+
+        document.getElementById("countLabel").textContent = "";
+        document.getElementById("totalUsers").textContent = "—";
+        document.getElementById("activeUsers").textContent = "—";
+        document.getElementById("inactiveUsers").textContent = "—";
+        return;
+    }
+
+    userProfiles = data || [];
+
+    updateStats();
+    renderUsers();
+}
+
+/* =====================================================
+   DISPLAY USERS
+===================================================== */
+
+function getDepartmentName(departmentId) {
+    if (!departmentId) return "Not assigned";
+
+    const department = departments.find(item => item.id === departmentId);
+    return department?.name || "Department unavailable";
+}
+
+function formatRole(role) {
+    if (!role) return "Unassigned";
+    return role.charAt(0).toUpperCase() + role.slice(1);
+}
+
+function updateStats() {
+    document.getElementById("totalUsers").textContent = userProfiles.length;
+    document.getElementById("activeUsers").textContent =
+        userProfiles.filter(profile => profile.active === true).length;
+    document.getElementById("inactiveUsers").textContent =
+        userProfiles.filter(profile => profile.active !== true).length;
+}
+
+function renderUsers() {
+    const tbody = document.getElementById("usersTableBody");
+    const search = document.getElementById("searchInput").value.trim().toLowerCase();
+    const allowed = canManageUsers();
+
+    const filtered = userProfiles.filter(profile => {
+        const text = [
+            profile.full_name,
+            profile.role,
+            getDepartmentName(profile.department_id),
+            profile.active ? "active" : "inactive"
+        ].join(" ").toLowerCase();
+
+        return text.includes(search);
+    });
+
+    tbody.innerHTML = "";
+
+    if (!filtered.length) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = allowed ? 5 : 4;
+        cell.className = "empty-state";
+        cell.textContent = "No user profiles match your search.";
+        row.appendChild(cell);
+        tbody.appendChild(row);
+    } else {
+        filtered.forEach(profile => {
+            const row = document.createElement("tr");
+
+            const userCell = document.createElement("td");
+            const name = document.createElement("div");
+            name.className = "user-name";
+            name.textContent = profile.full_name || "Name not provided";
+
+            const id = document.createElement("div");
+            id.className = "user-id";
+            id.textContent = "ID: " + profile.id;
+
+            userCell.appendChild(name);
+            userCell.appendChild(id);
+            row.appendChild(userCell);
+
+            const roleCell = document.createElement("td");
+            const role = document.createElement("span");
+            role.className = "role-pill role-" +
+                (["administrator", "supervisor", "inspector"].includes(profile.role)
+                    ? profile.role : "inspector");
+            role.textContent = formatRole(profile.role);
+            roleCell.appendChild(role);
+            row.appendChild(roleCell);
+
+            const departmentCell = document.createElement("td");
+            departmentCell.textContent = getDepartmentName(profile.department_id);
+            row.appendChild(departmentCell);
+
+            const statusCell = document.createElement("td");
+            const status = document.createElement("span");
+            status.className = "status-pill " +
+                (profile.active ? "status-active" : "status-inactive");
+            status.textContent = profile.active ? "Active" : "Inactive";
+            statusCell.appendChild(status);
+            row.appendChild(statusCell);
+
+            if (allowed) {
+                const actionsCell = document.createElement("td");
+
+                if (canManageTarget(profile)) {
+                    const editButton = document.createElement("button");
+                    editButton.type = "button";
+                    editButton.className = "btn btn-secondary btn-small";
+                    editButton.textContent = "Edit";
+                    editButton.addEventListener("click", () => openEdit(profile));
+                    actionsCell.appendChild(editButton);
+                } else {
+                    actionsCell.textContent =
+                        profile.id === currentUser?.id
+                            ? "Your account"
+                            : "Restricted";
+                }
+
+                row.appendChild(actionsCell);
+            }
+
+            tbody.appendChild(row);
+        });
+    }
+
+    document.getElementById("countLabel").textContent =
+        "Showing " + filtered.length + " of " + userProfiles.length + " user profile(s).";
+}
+
+/* =====================================================
+   EDIT USER
+===================================================== */
+
+function populateDepartmentOptions(selectedId) {
+    const select = document.getElementById("editDepartment");
+    select.innerHTML = "";
+
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = "No department assigned";
+    select.appendChild(blank);
+
+    departments.forEach(department => {
+        const option = document.createElement("option");
+        option.value = department.id;
+        option.textContent = department.name;
+        select.appendChild(option);
+    });
+
+    select.value = selectedId || "";
+}
+
+function openEdit(profile) {
+    if (!canManageTarget(profile)) {
+        showToast("You do not have permission to manage this user.", "error");
+        return;
+    }
+
+    editingProfileId = profile.id;
+
+    document.getElementById("editFullName").value = profile.full_name || "";
+    document.getElementById("editRole").value = profile.role || "inspector";
+    document.getElementById("editActive").value = String(profile.active === true);
+
+    populateDepartmentOptions(profile.department_id);
+
+    const supervisor = isSupervisor();
+
+    document.getElementById("editRole").disabled = supervisor;
+    document.getElementById("editDepartment").disabled = supervisor;
+    document.getElementById("editActive").disabled = supervisor;
+
+    document.getElementById("editIntro").textContent = supervisor
+        ? "You can update this inspector's name. Role, department and account status changes are restricted."
+        : "Update the user's profile information. This does not create or delete their Supabase login account.";
+
+    document.getElementById("editNotice").className = "notice";
+    document.getElementById("editNotice").textContent = "";
+    document.getElementById("editModal").hidden = false;
+    document.getElementById("editFullName").focus();
+}
+
+function closeEdit() {
+    document.getElementById("editModal").hidden = true;
+    document.getElementById("editForm").reset();
+    editingProfileId = null;
+}
+
+async function saveUser(event) {
+    event.preventDefault();
+
+    const profile = userProfiles.find(item => item.id === editingProfileId);
+
+    if (!profile || !canManageTarget(profile)) {
+        showEditNotice("You do not have permission to change this profile.");
+        return;
+    }
+
+    const fullName = document.getElementById("editFullName").value.trim();
+
+    if (!fullName) {
+        showEditNotice("Enter the user's full name.");
+        return;
+    }
+
+    const changes = { full_name: fullName };
+
+    if (isAdministrator()) {
+        changes.role = document.getElementById("editRole").value;
+        changes.active = document.getElementById("editActive").value === "true";
+
+        const departmentId = document.getElementById("editDepartment").value;
+        changes.department_id = departmentId || null;
+    }
+
+    const saveButton = document.getElementById("saveEdit");
+    saveButton.disabled = true;
+    saveButton.textContent = "Saving...";
+
+    try {
+        const { data, error } = await supabaseClient
+            .from("profiles")
+            .update(changes)
+            .eq("id", editingProfileId)
+            .select("id")
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+            throw new Error(
+                "No profile was updated. Check the profiles table's UPDATE RLS policies."
+            );
+        }
+
+        closeEdit();
+        showToast("User profile updated successfully.");
+
+        await loadUsers();
+
+    } catch (error) {
+        console.error("Unable to update user profile:", error);
+
+        showEditNotice(
+            error.message ||
+            "Unable to update the profile. Check your database permissions."
+        );
+    } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = "Save Changes";
+    }
+}
+
+/* =====================================================
+   PAGE INITIALISATION
+===================================================== */
+
+document.addEventListener("DOMContentLoaded", async () => {
+    setupSidebar();
+
+    document.getElementById("searchInput")
+        .addEventListener("input", renderUsers);
+
+    document.getElementById("refreshButton")
+        .addEventListener("click", async () => {
+            await loadDepartments();
+            await loadUsers();
+        });
+
+    document.getElementById("cancelEdit")
+        .addEventListener("click", closeEdit);
+
+    document.getElementById("editForm")
+        .addEventListener("submit", saveUser);
+
+    document.getElementById("editModal")
+        .addEventListener("click", event => {
+            if (event.target.id === "editModal") closeEdit();
+        });
+
+    const authorised = await loadCurrentUserProfile();
+
+    if (!authorised) {
+        document.getElementById("usersTableBody").innerHTML =
+            '<tr><td colspan="5" class="empty-state">Your account could not be authorised.</td></tr>';
+        return;
+    }
+
+    applyPermissions();
+    await loadDepartments();
+    await loadUsers();
+});
+</script>
+
+</body>
+</html>

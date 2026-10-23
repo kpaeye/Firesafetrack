@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,37 +6,224 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0b1f3a">
 <meta name="description" content="FireSafe Track fire safety equipment inspection and management platform.">
+
 <title>A-eye Group | FireSafe Track</title>
+
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icons/firesafe-icon.svg" type="image/svg+xml">
+
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#0b1f3a,#142d4c);color:#fff;padding-bottom:82px}
-.header{padding:18px clamp(18px,4vw,40px);display:flex;justify-content:space-between;align-items:center;gap:14px;background:rgba(0,0,0,.3);border-bottom:1px solid #ffffff18}.logo{font-size:20px;font-weight:bold;letter-spacing:1px}.logo span{color:#ff3b30}.nav button{background:transparent;border:1px solid white;color:white;padding:8px 16px;border-radius:4px;cursor:pointer}.nav button:hover{background:white;color:#0b1f3a}
-.hero{text-align:center;padding:clamp(55px,10vw,100px) 20px 55px}.hero h1{font-size:clamp(34px,5vw,48px);margin:0 0 16px}.hero p{font-size:18px;color:#cfd8dc;line-height:1.65;max-width:650px;margin:0 auto 30px}.cta{display:inline-block;background:#ff3b30;color:white;padding:13px 25px;border-radius:5px;text-decoration:none;font-weight:bold}.cta:hover{background:#cc2f26}
-.features{display:flex;justify-content:center;gap:20px;padding:25px 22px 45px;flex-wrap:wrap}.card{background:#ffffff0d;border:1px solid #ffffff16;padding:22px;width:min(280px,100%);border-radius:10px;text-align:center}.card h2{color:#ffcc00;font-size:18px}.card p{color:#cfd8dc;line-height:1.55;font-size:14px}.footer{text-align:center;padding:20px;font-size:12px;color:#aaa}@media(max-width:600px){.header{padding:14px}.logo{font-size:16px}.hero p{font-size:16px}.features{padding-top:10px}}
-
-/* Show bottom control bar on mobile only */
-.control-bar {
-    display: none;
+* {
+    box-sizing: border-box;
 }
 
-@media screen and (max-width: 768px) {
-    .control-bar {
-        display: grid;
-    }
-
-    body {
-        padding-bottom: 82px;
-    }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0b1f3a, #142d4c);
+    color: #fff;
 }
 
+/* HEADER */
+.header {
+    padding: 18px clamp(18px, 4vw, 40px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    background: rgba(0, 0, 0, .3);
+    border-bottom: 1px solid #ffffff18;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.logo span {
+    color: #ff3b30;
+}
+
+.nav button {
+    background: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.nav button:hover {
+    background: white;
+    color: #0b1f3a;
+}
+
+/* HERO */
+.hero {
+    text-align: center;
+    padding: clamp(55px, 10vw, 100px) 20px 55px;
+}
+
+.hero h1 {
+    font-size: clamp(34px, 5vw, 48px);
+    margin: 0 0 16px;
+}
+
+.hero p {
+    font-size: 18px;
+    color: #cfd8dc;
+    line-height: 1.65;
+    max-width: 650px;
+    margin: 0 auto 30px;
+}
+
+/* GET STARTED BUTTON */
+.cta {
+    display: inline-block;
+    background: #ff3b30;
+    color: white;
+    padding: 13px 25px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.cta:hover {
+    background: #cc2f26;
+}
+
+/* FEATURE CARDS */
+.features {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 25px 22px 45px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background: #ffffff0d;
+    border: 1px solid #ffffff16;
+    padding: 22px;
+    width: min(280px, 100%);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.card h2 {
+    color: #ffcc00;
+    font-size: 18px;
+}
+
+.card p {
+    color: #cfd8dc;
+    line-height: 1.55;
+    font-size: 14px;
+}
+
+/* FOOTER */
+.footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: #aaa;
+}
+
+/* MOBILE LAYOUT */
+@media (max-width: 600px) {
+    .header {
+        padding: 14px;
+    }
+
+    .logo {
+        font-size: 16px;
+    }
+
+    .hero p {
+        font-size: 16px;
+    }
+
+    .features {
+        padding-top: 10px;
+    }
+}
 </style>
 </head>
+
 <body>
-<header class="header"><div class="logo">A-eye<span> Group</span> | FireSafe Track</div><div class="nav"><button type="button" onclick="location.href='login.html'">Login</button></div></header>
-<main><section class="hero"><h1>Fire Safety Intelligence System</h1><p>A digital platform developed by A-eye Group for managing, tracking, and inspecting fire safety equipment across industrial and mining environments.</p><a class="cta" href="login.html">Get Started</a></section>
-<section class="features"><article class="card"><h2>Inspections</h2><p>Track fire equipment inspections and record findings.</p></article><article class="card"><h2>Compliance</h2><p>Support consistent fire safety and site compliance processes.</p></article><article class="card"><h2>Reporting</h2><p>Generate structured inspection and safety reports.</p></article></section></main>
-<footer class="footer">© 2026 A-eye Group | FireSafe Track System</footer>
-<script src="./firesafe-control-bar.js" defer></script>
-<script>if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')) addEventListener('load',()=>navigator.serviceWorker.register('./firesafe-sw.js').catch(e=>console.warn('PWA service worker registration failed:',e)));</script>
-</body></html>
+
+<header class="header">
+    <div class="logo">
+        A-eye<span> Group</span> | FireSafe Track
+    </div>
+
+    <div class="nav">
+        <button type="button" onclick="location.href='login.html'">
+            Login
+        </button>
+    </div>
+</header>
+
+<main>
+    <section class="hero">
+        <h1>Fire Safety Intelligence System</h1>
+
+        <p>
+            A digital platform developed by A-eye Group for managing,
+            tracking, and inspecting fire safety equipment across
+            industrial and mining environments.
+        </p>
+
+        <a class="cta" href="login.html">Get Started</a>
+    </section>
+
+    <section class="features">
+        <article class="card">
+            <h2>Inspections</h2>
+            <p>
+                Track fire equipment inspections and record findings.
+            </p>
+        </article>
+
+        <article class="card">
+            <h2>Compliance</h2>
+            <p>
+                Support consistent fire safety and site compliance processes.
+            </p>
+        </article>
+
+        <article class="card">
+            <h2>Reporting</h2>
+            <p>
+                Generate structured inspection and safety reports.
+            </p>
+        </article>
+    </section>
+</main>
+
+<footer class="footer">
+    © 2026 A-eye Group | FireSafe Track System
+</footer>
+
+<script>
+/* Keep PWA installation and offline caching support. */
+if (
+    'serviceWorker' in navigator &&
+    (location.protocol === 'https:' || location.hostname === 'localhost')
+) {
+    addEventListener('load', () => {
+        navigator.serviceWorker
+            .register('./firesafe-sw.js')
+            .catch(error => {
+                console.warn(
+                    'PWA service worker registration failed:',
+                    error
+                );
+            });
+    });
+}
+</script>
+
+</body>
+</html>

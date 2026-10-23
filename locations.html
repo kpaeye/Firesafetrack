@@ -1,203 +1,1121 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Locations | FireSafe Track</title>
-<meta name="description" content="FireSafe Track Locations Management - Areas, locations and equipment distribution.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b1f3a">
+<meta name="description" content="FireSafe Track location register">
+<title>FireSafe Track | Locations</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="auth.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-:root{--black:#0B0D0F;--black-2:#111417;--black-3:#181C20;--panel:#20252A;--panel-light:#272D33;--red:#E53935;--red-light:#FF5A56;--white:#fff;--text:#E8EAED;--text-soft:#C5CBD1;--muted:#9AA1A8;--muted-2:#6F777F;--line:rgba(255,255,255,.08);--line-light:rgba(255,255,255,.12);--green:#43A047;--amber:#FFB300;--danger:#EF5350;--sidebar-width:240px}
-*{box-sizing:border-box;margin:0;padding:0}html,body{min-height:100%}body{font-family:Poppins,sans-serif;background:var(--black);color:var(--text);font-size:13px}button,input,select{font-family:inherit}button{cursor:pointer}a{text-decoration:none;color:inherit}
-.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-width);background:var(--black-2);border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:1000}.brand{height:78px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--line)}.brand-mark{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:var(--red);color:#fff;border-radius:8px;font-size:14px;font-weight:700;margin-right:11px}.brand-name{color:#fff;font-size:15px;font-weight:700}.brand-by{color:var(--muted);font-size:9px;margin-top:4px}.sidebar-nav{flex:1;padding:18px 12px;overflow-y:auto}.nav-section{margin-bottom:23px}.nav-section-title{padding:0 10px;margin-bottom:8px;color:var(--muted-2);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.9px}.nav-item{display:flex;align-items:center;min-height:42px;padding:0 11px;margin-bottom:4px;border-radius:6px;color:var(--muted);font-size:11px;transition:.15s}.nav-item:hover{background:var(--black-3);color:var(--text)}.nav-item.active{background:rgba(229,57,53,.12);color:#fff;border-left:2px solid var(--red)}.nav-icon{width:25px;color:inherit;font-size:13px}.sidebar-footer{padding:14px 20px;border-top:1px solid var(--line);color:var(--muted-2);font-size:9px}
-.main{margin-left:var(--sidebar-width);min-height:100vh}.topbar{height:70px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px;background:rgba(11,13,15,.96);position:sticky;top:0;z-index:900}.page-title{font-size:15px;font-weight:600;color:#fff}.page-subtitle{font-size:9px;color:var(--muted);margin-top:3px}.topbar-actions{display:flex;align-items:center;gap:8px}.role-badge{display:inline-flex;align-items:center;min-height:25px;padding:0 9px;border:1px solid var(--line-light);border-radius:20px;color:var(--muted);font-size:9px}
-.content{padding:26px 30px 40px}.intro{margin-bottom:20px}.intro h1{font-size:22px;color:#fff;font-weight:600}.intro p{font-size:11px;color:var(--muted);margin-top:5px;max-width:800px}
-.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}.stat-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:17px 18px;min-height:92px;position:relative;overflow:hidden}.stat-card:before{content:"";position:absolute;top:0;left:0;width:3px;height:100%;background:var(--red);opacity:.75}.stat-card.green:before{background:var(--green)}.stat-card.amber:before{background:var(--amber)}.stat-card.danger:before{background:var(--danger)}.stat-label{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px}.stat-value{margin-top:8px;color:#fff;font-size:25px;font-weight:600;line-height:1}
-.toolbar{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:13px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px}.toolbar-left,.toolbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.search{height:36px;width:260px;padding:0 12px;background:var(--black-3);border:1px solid var(--line-light);border-radius:6px;color:var(--text);outline:none;font-size:10px}.search:focus,.filter:focus{border-color:rgba(229,57,53,.6)}.filter{height:36px;min-width:150px;padding:0 10px;background:var(--black-3);border:1px solid var(--line-light);border-radius:6px;color:var(--text-soft);outline:none;font-size:10px}.btn{min-height:36px;padding:0 13px;border:1px solid transparent;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:10px;font-weight:600}.btn-primary{background:var(--red);color:#fff;border-color:var(--red)}.btn-primary:hover{background:var(--red-light)}.btn-secondary{background:var(--panel);color:var(--text-soft);border-color:var(--line-light)}.btn-secondary:hover{background:var(--panel-light);color:#fff}.btn-sm{min-height:29px;padding:0 9px;font-size:9px}
-.grid{display:grid;grid-template-columns:1fr 1.35fr;gap:14px;margin-bottom:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}.card-header{padding:14px 17px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}.card-title{font-size:12px;font-weight:600;color:#fff}.card-subtitle{font-size:9px;color:var(--muted);margin-top:3px}.card-body{padding:14px 17px}
-.area-list{display:flex;flex-direction:column;gap:7px;max-height:420px;overflow:auto}.area-row{display:grid;grid-template-columns:1fr auto;align-items:center;padding:11px 12px;background:var(--black-3);border:1px solid var(--line);border-radius:6px;cursor:pointer}.area-row:hover{border-color:var(--line-light);background:var(--panel-light)}.area-name{font-size:10px;color:#fff;font-weight:500}.area-meta{font-size:8px;color:var(--muted);margin-top:3px}.count-badge{min-width:30px;height:25px;padding:0 7px;display:flex;align-items:center;justify-content:center;border-radius:15px;background:rgba(229,57,53,.12);color:var(--red-light);font-size:9px;font-weight:600}
-.table-wrap{overflow:auto}.data-table{width:100%;border-collapse:collapse;min-width:720px}.data-table th{padding:10px 12px;text-align:left;color:var(--muted-2);font-size:9px;text-transform:uppercase;letter-spacing:.35px;border-bottom:1px solid var(--line)}.data-table td{padding:11px 12px;border-bottom:1px solid var(--line);font-size:10px;color:var(--text-soft)}.data-table tr:hover td{background:rgba(255,255,255,.018)}.primary-text{color:#fff;font-weight:500}.muted{color:var(--muted)}.pill{display:inline-flex;align-items:center;padding:4px 7px;border-radius:12px;font-size:8px;border:1px solid var(--line-light)}.pill.green{color:#81c784;background:rgba(67,160,71,.1)}.pill.amber{color:#ffd166;background:rgba(255,179,0,.1)}.pill.red{color:#ff7b78;background:rgba(239,83,80,.1)}.empty{padding:35px 15px;text-align:center;color:var(--muted);font-size:10px}.loading{padding:35px;text-align:center;color:var(--muted);font-size:10px}.error-box{display:none;margin-bottom:14px;padding:12px 14px;background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.2);border-radius:7px;color:#ff8a87;font-size:10px}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.68);display:none;align-items:center;justify-content:center;padding:20px;z-index:3000}.modal.show{display:flex}.modal-box{width:min(900px,100%);max-height:90vh;overflow:hidden;background:var(--panel);border:1px solid var(--line-light);border-radius:9px;box-shadow:0 25px 70px rgba(0,0,0,.5)}.modal-header{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.modal-title{font-size:13px;color:#fff;font-weight:600}.modal-close{border:0;background:transparent;color:var(--muted);font-size:20px}.modal-body{padding:16px 18px;overflow:auto;max-height:calc(90vh - 65px)}.detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:15px}.detail{background:var(--black-3);border:1px solid var(--line);border-radius:6px;padding:11px}.detail-label{font-size:8px;color:var(--muted);text-transform:uppercase}.detail-value{font-size:15px;color:#fff;font-weight:600;margin-top:4px}.mini-title{font-size:10px;color:#fff;font-weight:600;margin:13px 0 8px}.type-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.type-row{display:flex;justify-content:space-between;padding:8px 10px;background:var(--black-3);border-radius:5px;border:1px solid var(--line);font-size:9px}.toast-container{position:fixed;right:20px;top:20px;z-index:5000;display:flex;flex-direction:column;gap:8px}.toast{min-width:280px;max-width:400px;padding:12px 14px;background:var(--panel);border:1px solid var(--line-light);border-left:3px solid var(--red);border-radius:6px;box-shadow:0 15px 35px rgba(0,0,0,.35);font-size:10px}.toast.success{border-left-color:var(--green)}.toast.error{border-left-color:var(--danger)}
-@media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.detail-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:800px){:root{--sidebar-width:0px}.sidebar{display:none}.main{margin-left:0}.topbar{padding:0 18px}.content{padding:20px 16px 30px}.toolbar{align-items:stretch;flex-direction:column}.search{width:100%}.toolbar-left,.toolbar-right{width:100%}}
-@media(max-width:520px){.stats-grid{grid-template-columns:1fr}.topbar-actions{display:none}.detail-grid,.type-list{grid-template-columns:1fr}}
+:root {
+    --navy: #0b1f3a;
+    --navy-light: #142d4c;
+    --red: #ff3b30;
+    --background: #f3f5f9;
+    --white: #ffffff;
+    --text: #182438;
+    --muted: #738096;
+    --border: #e3e8f0;
+    --green: #16865b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Poppins, Arial, sans-serif;
+    background: var(--background);
+    color: var(--text);
+}
+
+button, input, select, textarea {
+    font: inherit;
+}
+
+button { cursor: pointer; }
+
+.sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 240px;
+    padding: 25px 16px;
+    color: white;
+    background: linear-gradient(180deg, var(--navy), var(--navy-light));
+    overflow-y: auto;
+    z-index: 20;
+}
+
+.brand {
+    padding: 5px 12px 25px;
+    border-bottom: 1px solid #ffffff20;
+    margin-bottom: 20px;
+}
+
+.brand-name {
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: .3px;
+}
+
+.brand-name span { color: var(--red); }
+
+.brand small {
+    display: block;
+    color: #aebbd0;
+    margin-top: 6px;
+    font-size: 11px;
+}
+
+.nav-label {
+    color: #91a1ba;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    margin: 22px 12px 10px;
+    text-transform: uppercase;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #d4ddec;
+    text-decoration: none;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 4px 0;
+    font-size: 13px;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    background: #ffffff15;
+    color: white;
+}
+
+.nav-link.active {
+    border-left: 3px solid var(--red);
+}
+
+.main {
+    margin-left: 240px;
+    min-height: 100vh;
+}
+
+.topbar {
+    min-height: 76px;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 16px 30px;
+}
+
+.topbar h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.topbar-user {
+    color: var(--muted);
+    font-size: 12px;
+    text-align: right;
+}
+
+.content {
+    padding: 30px;
+    max-width: 1500px;
+    margin: auto;
+}
+
+.page-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.page-heading h1 {
+    margin: 0 0 8px;
+    font-size: 25px;
+}
+
+.page-heading p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.button {
+    border: 0;
+    border-radius: 7px;
+    padding: 11px 16px;
+    font-weight: 600;
+    font-size: 12px;
+    transition: .15s;
+}
+
+.button-primary {
+    background: var(--red);
+    color: white;
+}
+
+.button-primary:hover { background: #df2b23; }
+
+.button-secondary {
+    background: #e9edf4;
+    color: var(--navy);
+}
+
+.button-danger {
+    background: #fff0ef;
+    color: #c52a23;
+}
+
+.button:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: white;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.stat-card .label {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.stat-card .number {
+    font-size: 27px;
+    font-weight: 750;
+    margin-top: 10px;
+}
+
+.panel {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.panel-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 15px;
+}
+
+.search {
+    width: min(100%, 300px);
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    outline: none;
+    font-size: 12px;
+}
+
+.search:focus,
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+    border-color: #7187a8;
+    outline: 2px solid #7187a820;
+}
+
+.table-wrap { overflow-x: auto; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 680px;
+}
+
+th, td {
+    text-align: left;
+    padding: 15px 18px;
+    border-bottom: 1px solid #edf0f5;
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+th {
+    background: #f8f9fc;
+    color: #718096;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+}
+
+tbody tr:hover { background: #fafbfe; }
+
+.location-name {
+    font-weight: 700;
+    color: var(--navy);
+}
+
+.description {
+    color: var(--muted);
+    max-width: 270px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.area-tag {
+    display: inline-block;
+    background: #edf2fa;
+    color: #344e72;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+}
+
+.actions {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.actions .button {
+    padding: 7px 10px;
+    font-size: 11px;
+}
+
+.empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.notice {
+    margin-bottom: 20px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.notice-info {
+    color: #34506f;
+    background: #eaf2fc;
+    border: 1px solid #d8e6f7;
+}
+
+.notice-warning {
+    color: #815c13;
+    background: #fff7df;
+    border: 1px solid #f1e1aa;
+}
+
+.notice[hidden] { display: none; }
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: #071426a8;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    z-index: 100;
+    overflow-y: auto;
+}
+
+.modal-backdrop.open { display: flex; }
+
+.modal {
+    width: 100%;
+    max-width: 540px;
+    background: white;
+    border-radius: 13px;
+    overflow: hidden;
+    box-shadow: 0 20px 70px #0003;
+    max-height: calc(100dvh - 36px);
+    overflow-y: auto;
+}
+
+.modal-header {
+    padding: 20px 23px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 17px;
+}
+
+.close-button {
+    border: 0;
+    background: transparent;
+    font-size: 24px;
+    color: var(--muted);
+}
+
+.modal-body { padding: 23px; }
+
+.field { margin-bottom: 18px; }
+
+.field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 650;
+    margin-bottom: 8px;
+}
+
+.field input,
+.field textarea,
+.field select {
+    width: 100%;
+    border: 1px solid #dce2ec;
+    border-radius: 7px;
+    padding: 11px 12px;
+    font-size: 13px;
+    background: white;
+}
+
+.field textarea {
+    min-height: 95px;
+    resize: vertical;
+}
+
+.required { color: var(--red); }
+
+.help-text {
+    display: block;
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--muted);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 8px;
+}
+
+.toast {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    max-width: min(420px, calc(100vw - 32px));
+    padding: 14px 18px;
+    background: #15253c;
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px #0002;
+    z-index: 200;
+    font-size: 12px;
+    line-height: 1.5;
+    display: none;
+}
+
+.toast.show { display: block; }
+.toast.error { background: #b42318; }
+.toast.success { background: #13734e; }
+
+.loading { opacity: .65; pointer-events: none; }
+
+@media (max-width: 900px) {
+    .sidebar { width: 205px; }
+    .main { margin-left: 205px; }
+    .content { padding: 22px 18px; }
+    .topbar { padding: 15px 20px; }
+}
+
+@media (max-width: 600px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .topbar { min-height: 64px; padding: 14px 16px; }
+    .content { padding: 20px 13px 90px; }
+    .page-heading { flex-direction: column; }
+    .page-heading h1 { font-size: 22px; }
+    .page-heading .button { width: 100%; }
+    .stats { gap: 9px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .stat-card { padding: 14px; }
+    .stat-card .number { font-size: 23px; }
+    .stat-card:last-child { grid-column: 1 / -1; }
+    .panel-header { padding: 15px; }
+    .search { width: 100%; }
+    .toast { bottom: 80px; right: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; transition: none !important; }
+}
 </style>
 </head>
+
 <body>
+
 <aside class="sidebar">
-  <div class="brand"><div class="brand-mark">FS</div><div><div class="brand-name">FireSafe Track</div><div class="brand-by">by A-eye Group</div></div></div>
-  <nav class="sidebar-nav">
-    <div class="nav-section">
-      <div class="nav-section-title">Safety Management</div>
-      <a href="dashboard.html" class="nav-item"><span class="nav-icon">⌂</span><span>Dashboard</span></a>
-      <a href="equipment.html" class="nav-item"><span class="nav-icon">▣</span><span>Equipment</span></a>
-      <a href="locations.html" class="nav-item active"><span class="nav-icon">⌖</span><span>Locations</span></a>
-      <a href="inspections.html" class="nav-item"><span class="nav-icon">✓</span><span>Inspections</span></a>
-      <a href="deviations.html" class="nav-item"><span class="nav-icon">!</span><span>Deviations</span></a>
-      <a href="reports.html" class="nav-item"><span class="nav-icon">▤</span><span>Reports</span></a>
+    <div class="brand">
+        <div class="brand-name"><span>FIRE</span>SAFE TRACK</div>
+        <small>Fire Safety Management</small>
     </div>
-    <div class="nav-section"><div class="nav-section-title">Account</div><a href="#" class="nav-item" id="logoutLink"><span class="nav-icon">↪</span><span>Logout</span></a></div>
-  </nav>
-  <div class="sidebar-footer">FireSafe Track System</div>
+
+    <div class="nav-label">Main Menu</div>
+    <a class="nav-link" href="dashboard.html">▦ Dashboard</a>
+    <a class="nav-link" href="equipment.html">▤ Equipment Register</a>
+    <a class="nav-link" href="inspections.html">✓ Inspections</a>
+    <a class="nav-link" href="deviations.html">⚑ Deviations</a>
+    <a class="nav-link" href="corrective-actions.html">↗ Corrective Actions</a>
+    <a class="nav-link" href="reports.html">▥ Reports</a>
+
+    <div class="nav-label">Administration</div>
+    <a class="nav-link" href="equipment-types.html">◈ Equipment Types</a>
+    <a class="nav-link active" href="locations.html">⌖ Locations</a>
+    <a class="nav-link" href="users.html">♙ User Register</a>
 </aside>
 
 <main class="main">
-<header class="topbar"><div><div class="page-title">Locations Management</div><div class="page-subtitle">Areas, locations and equipment distribution</div></div><div class="topbar-actions"><span class="role-badge" id="roleBadge">Loading role...</span></div></header>
-<section class="content">
-  <div class="intro"><h1>Locations</h1><p>This module reads the existing Equipment Register and automatically groups equipment by Area and Location. No new database tables are required.</p></div>
-  <div class="error-box" id="errorBox"></div>
-  <div class="stats-grid">
-    <div class="stat-card"><div class="stat-label">Total Areas</div><div class="stat-value" id="totalAreas">0</div></div>
-    <div class="stat-card green"><div class="stat-label">Total Locations</div><div class="stat-value" id="totalLocations">0</div></div>
-    <div class="stat-card amber"><div class="stat-label">Locations With Equipment</div><div class="stat-value" id="locationsWithEquipment">0</div></div>
-    <div class="stat-card danger"><div class="stat-label">Equipment Records</div><div class="stat-value" id="totalEquipment">0</div></div>
-  </div>
+    <header class="topbar">
+        <h2>Location Register</h2>
+        <div class="topbar-user">Checking account...</div>
+    </header>
 
-  <div class="toolbar">
-    <div class="toolbar-left">
-      <input id="searchInput" class="search" type="search" placeholder="Search area or location...">
-      <select id="areaFilter" class="filter"><option value="">All Areas</option></select>
-      <select id="equipmentFilter" class="filter"><option value="">All Equipment</option><option value="with">With Equipment</option><option value="empty">No Equipment</option></select>
-    </div>
-    <div class="toolbar-right"><button class="btn btn-secondary" id="refreshBtn">↻ Refresh</button><button class="btn btn-secondary" id="exportBtn">⇩ Export CSV</button><a class="btn btn-primary" href="equipment.html">▣ Equipment Register</a></div>
-  </div>
+    <section class="content">
+        <div class="page-heading">
+            <div>
+                <h1>Locations</h1>
+                <p>Manage the locations where fire safety equipment is installed and inspected.</p>
+            </div>
+            <button class="button button-primary" id="addLocationBtn" type="button">
+                + Add Location
+            </button>
+        </div>
 
-  <div class="grid">
-    <div class="card"><div class="card-header"><div><div class="card-title">Areas</div><div class="card-subtitle">Click an area to filter locations</div></div></div><div class="card-body"><div id="areaList" class="area-list"><div class="loading">Loading areas...</div></div></div></div>
-    <div class="card"><div class="card-header"><div><div class="card-title">Location Register</div><div class="card-subtitle" id="locationCountText">Loading...</div></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Area</th><th>Location</th><th>Equipment</th><th>Types</th><th>Active</th><th>Due / Overdue</th><th>Action</th></tr></thead><tbody id="locationTableBody"><tr><td colspan="7" class="loading">Loading locations...</td></tr></tbody></table></div></div>
-  </div>
+        <div id="pageNotice" class="notice notice-info" hidden></div>
 
-  <div class="card"><div class="card-header"><div><div class="card-title">Equipment Distribution by Type</div><div class="card-subtitle">Overall equipment count by equipment type</div></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Equipment Type</th><th>Total</th><th>Active</th><th>Inactive</th><th>Areas</th><th>Locations</th></tr></thead><tbody id="typeTableBody"><tr><td colspan="6" class="loading">Loading...</td></tr></tbody></table></div></div>
-</section>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="label">Total Locations</div>
+                <div class="number" id="totalLocations">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Areas Represented</div>
+                <div class="number" id="totalAreas">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Locations With Descriptions</div>
+                <div class="number" id="describedLocations">—</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Saved Locations</h3>
+                <input
+                    id="searchInput"
+                    class="search"
+                    type="search"
+                    placeholder="Search locations or areas..."
+                    aria-label="Search locations"
+                >
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Location Name</th>
+                            <th>Area</th>
+                            <th>Description</th>
+                            <th>Date Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="locationsTable">
+                        <tr>
+                            <td colspan="5" class="empty-state">Loading locations...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </main>
 
-<div class="modal" id="locationModal"><div class="modal-box"><div class="modal-header"><div class="modal-title" id="modalTitle">Location Details</div><button class="modal-close" id="modalClose">×</button></div><div class="modal-body" id="modalBody"></div></div></div>
-<div class="toast-container" id="toastContainer"></div>
+<div class="modal-backdrop" id="locationModal" role="dialog"
+     aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modalTitle">Add Location</h3>
+            <button type="button" class="close-button" id="closeModalBtn"
+                    aria-label="Close form">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <form id="locationForm">
+                <div class="field">
+                    <label for="locationName">
+                        Location Name <span class="required">*</span>
+                    </label>
+                    <input id="locationName" name="name" type="text"
+                           maxlength="120" required
+                           placeholder="e.g. Main Workshop">
+                </div>
+
+                <div class="field">
+                    <label for="locationArea">Area</label>
+                    <input id="locationArea" name="area" type="text"
+                           maxlength="120"
+                           placeholder="e.g. Plant Area A">
+                    <span class="help-text">
+                        The larger operational area, department, or section this location belongs to.
+                    </span>
+                </div>
+
+                <div class="field">
+                    <label for="locationDescription">Description</label>
+                    <textarea id="locationDescription" name="description"
+                              maxlength="1000"
+                              placeholder="Optional details to help identify this location"></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="button button-secondary"
+                            id="cancelBtn">Cancel</button>
+                    <button type="submit" class="button button-primary"
+                            id="saveBtn">Save Location</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
-let authenticatedUser=null;
-let equipmentList=[];
-let locationRecords=[];
-let areaRecords=[];
+"use strict";
 
-function getSupabaseClient(){
-  if(typeof supabase==='undefined'||!supabase||typeof supabase.from!=='function') throw new Error('Supabase client is not available. Check your existing auth.js / Supabase configuration.');
-  return supabase;
-}
-function role(){return String(authenticatedUser?.profile?.role||authenticatedUser?.role||'').trim().toLowerCase()||'user'}
-function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
-function clean(v){return String(v??'').trim()}
-function key(v){return clean(v).toLowerCase()}
-function formatDate(v){if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}
-function dueStatus(item){const value=item?.next_inspection_due||item?.next_inspection; if(!value)return 'none';const d=new Date(value);if(Number.isNaN(d.getTime()))return 'none';return d.getTime()<=Date.now()?'due':'ok'}
-function showToast(message,type='success'){const el=document.createElement('div');el.className='toast '+type;el.textContent=message;document.getElementById('toastContainer').appendChild(el);setTimeout(()=>el.remove(),3500)}
-function showError(message){const box=document.getElementById('errorBox');box.textContent=message;box.style.display='block'}
-function clearError(){const box=document.getElementById('errorBox');box.style.display='none';box.textContent=''}
+/* =========================================================
+   SUPABASE CONNECTION
+   Uses the same project and public anon key as equipment.html.
+========================================================= */
 
-async function initializePage(){
-  try{
-    if(typeof checkAuth!=='function') throw new Error('checkAuth() was not found. Make sure auth.js is in the same folder.');
-    authenticatedUser=await checkAuth();
-    if(!authenticatedUser)return;
-    window.currentUser=authenticatedUser;
-    document.getElementById('roleBadge').textContent=role();
-    await loadEquipment();
-  }catch(error){console.error(error);showError(error.message||'Unable to load Locations.');showToast(error.message||'Unable to load Locations.','error')}
-}
+const SUPABASE_URL = "https://syiemjazbawflavxibzv.supabase.co";
 
-async function loadEquipment(){
-  clearError();
-  const client=getSupabaseClient();
-  const {data,error}=await client.from('equipment').select('*').order('area',{ascending:true}).order('location',{ascending:true});
-  if(error)throw error;
-  equipmentList=Array.isArray(data)?data:[];
-  buildRecords();
-  populateAreaFilter();
-  renderAll();
+const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5aWVtamF6YmF3ZmxhdnhpYnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Njg5MzEsImV4cCI6MjEwNDU0NDkzMX0.RJ6siFDLg3LAsP2ZPDgdFVGAFasg05hK4GikdIO68PM";
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
+
+let currentUser = null;
+let currentUserProfile = null;
+let locations = [];
+let editingLocationId = null;
+let isSaving = false;
+let toastTimeout = null;
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+    })[char]);
 }
 
-function buildRecords(){
-  const areas=new Map();
-  const locations=new Map();
-  const typeMap=new Map();
-  equipmentList.forEach(item=>{
-    const area=clean(item.area)||'Unassigned Area';
-    const location=clean(item.location)||'Unassigned Location';
-    const areaKey=key(area), locKey=areaKey+'||'+key(location);
-    if(!areas.has(areaKey))areas.set(areaKey,{name:area,equipment:[]});
-    areas.get(areaKey).equipment.push(item);
-    if(!locations.has(locKey))locations.set(locKey,{area,location,equipment:[]});
-    locations.get(locKey).equipment.push(item);
-    const type=clean(item.equipment_type)||'Unspecified';
-    const tKey=key(type);
-    if(!typeMap.has(tKey))typeMap.set(tKey,{name:type,equipment:[]});
-    typeMap.get(tKey).equipment.push(item);
-  });
-  areaRecords=[...areas.values()].sort((a,b)=>a.name.localeCompare(b.name));
-  locationRecords=[...locations.values()].sort((a,b)=>a.area.localeCompare(b.area)||a.location.localeCompare(b.location));
-  window.typeRecords=[...typeMap.values()].sort((a,b)=>b.equipment.length-a.equipment.length||a.name.localeCompare(b.name));
+function showToast(message, type = "success") {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.className = "toast show " + type;
+
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        toast.className = "toast";
+    }, 4500);
 }
 
-function populateAreaFilter(){
-  const select=document.getElementById('areaFilter');
-  const current=select.value;
-  select.innerHTML='<option value="">All Areas</option>'+areaRecords.map(a=>`<option value="${escapeHtml(a.name)}">${escapeHtml(a.name)}</option>`).join('');
-  if([...select.options].some(o=>o.value===current))select.value=current;
-}
-function filteredLocations(){
-  const q=key(document.getElementById('searchInput').value);const area=document.getElementById('areaFilter').value;const eq=document.getElementById('equipmentFilter').value;
-  return locationRecords.filter(r=>{const matchesQ=!q||key(r.area).includes(q)||key(r.location).includes(q);const matchesArea=!area||r.area===area;const has=r.equipment.length>0;const matchesEq=!eq||(eq==='with'&&has)||(eq==='empty'&&!has);return matchesQ&&matchesArea&&matchesEq});
-}
-function renderAll(){
-  document.getElementById('totalAreas').textContent=areaRecords.length;
-  document.getElementById('totalLocations').textContent=locationRecords.length;
-  document.getElementById('locationsWithEquipment').textContent=locationRecords.filter(r=>r.equipment.length>0).length;
-  document.getElementById('totalEquipment').textContent=equipmentList.length;
-  renderAreas();renderLocations();renderTypes();
-}
-function renderAreas(){
-  const box=document.getElementById('areaList');
-  if(!areaRecords.length){box.innerHTML='<div class="empty">No areas found in the Equipment Register.</div>';return}
-  box.innerHTML=areaRecords.map(a=>{const active=a.equipment.filter(x=>key(x.status)==='active').length;return `<div class="area-row" data-area="${escapeHtml(a.name)}"><div><div class="area-name">${escapeHtml(a.name)}</div><div class="area-meta">${a.equipment.length} equipment · ${active} active</div></div><div class="count-badge">${a.equipment.length}</div></div>`}).join('');
-  box.querySelectorAll('.area-row').forEach(row=>row.addEventListener('click',()=>{document.getElementById('areaFilter').value=row.dataset.area;renderLocations()}));
-}
-function renderLocations(){
-  const rows=filteredLocations();document.getElementById('locationCountText').textContent=`${rows.length} location${rows.length===1?'':'s'} shown`;
-  const body=document.getElementById('locationTableBody');
-  if(!rows.length){body.innerHTML='<tr><td colspan="7" class="empty">No locations match the current filters.</td></tr>';return}
-  body.innerHTML=rows.map((r,i)=>{const active=r.equipment.filter(x=>key(x.status)==='active').length;const due=r.equipment.filter(x=>dueStatus(x)==='due').length;const types=new Set(r.equipment.map(x=>clean(x.equipment_type)||'Unspecified')).size;return `<tr><td class="primary-text">${escapeHtml(r.area)}</td><td class="primary-text">${escapeHtml(r.location)}</td><td>${r.equipment.length}</td><td>${types}</td><td><span class="pill green">${active}</span></td><td><span class="pill ${due?'red':'green'}">${due}</span></td><td><button class="btn btn-secondary btn-sm" data-index="${i}">View</button></td></tr>`}).join('');
-  body.querySelectorAll('button').forEach((btn,i)=>btn.addEventListener('click',()=>openLocation(rows[i])));
-}
-function renderTypes(){
-  const body=document.getElementById('typeTableBody');const rows=window.typeRecords||[];
-  if(!rows.length){body.innerHTML='<tr><td colspan="6" class="empty">No equipment records found.</td></tr>';return}
-  body.innerHTML=rows.map(r=>{const active=r.equipment.filter(x=>key(x.status)==='active').length;const inactive=r.equipment.length-active;const areas=new Set(r.equipment.map(x=>clean(x.area)||'Unassigned')).size;const locs=new Set(r.equipment.map(x=>(clean(x.area)||'Unassigned')+'||'+(clean(x.location)||'Unassigned'))).size;return `<tr><td class="primary-text">${escapeHtml(r.name)}</td><td>${r.equipment.length}</td><td><span class="pill green">${active}</span></td><td>${inactive}</td><td>${areas}</td><td>${locs}</td></tr>`}).join('');
-}
-function openLocation(record){
-  const active=record.equipment.filter(x=>key(x.status)==='active').length;const inactive=record.equipment.length-active;const due=record.equipment.filter(x=>dueStatus(x)==='due').length;const types=new Map();
-  record.equipment.forEach(x=>{const t=clean(x.equipment_type)||'Unspecified';types.set(t,(types.get(t)||0)+1)});
-  document.getElementById('modalTitle').textContent=`${record.location} — ${record.area}`;
-  const typeRows=[...types.entries()].sort((a,b)=>b[1]-a[1]).map(([name,count])=>`<div class="type-row"><span>${escapeHtml(name)}</span><strong>${count}</strong></div>`).join('');
-  const equipmentRows=record.equipment.map(x=>`<tr><td class="primary-text">${escapeHtml(x.equipment_number||'—')}</td><td>${escapeHtml(x.equipment_name||'—')}</td><td>${escapeHtml(x.equipment_type||'—')}</td><td>${escapeHtml(x.status||'—')}</td><td>${formatDate(x.next_inspection_due||x.next_inspection)}</td></tr>`).join('');
-  document.getElementById('modalBody').innerHTML=`<div class="detail-grid"><div class="detail"><div class="detail-label">Equipment</div><div class="detail-value">${record.equipment.length}</div></div><div class="detail"><div class="detail-label">Active</div><div class="detail-value">${active}</div></div><div class="detail"><div class="detail-label">Inactive</div><div class="detail-value">${inactive}</div></div><div class="detail"><div class="detail-label">Due / Overdue</div><div class="detail-value">${due}</div></div></div><div class="mini-title">Equipment Types</div><div class="type-list">${typeRows||'<div class="empty">No equipment types.</div>'}</div><div class="mini-title">Equipment at this Location</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Number</th><th>Name</th><th>Type</th><th>Status</th><th>Next Inspection</th></tr></thead><tbody>${equipmentRows||'<tr><td colspan="5" class="empty">No equipment at this location.</td></tr>'}</tbody></table></div>`;
-  document.getElementById('locationModal').classList.add('show');document.body.style.overflow='hidden';
-}
-function closeModal(){document.getElementById('locationModal').classList.remove('show');document.body.style.overflow=''}
-function exportCSV(){
-  const rows=filteredLocations();if(!rows.length){showToast('There are no locations to export.','error');return}
-  const lines=[['Area','Location','Equipment Count','Equipment Types','Active','Inactive','Due/Overdue']];
-  rows.forEach(r=>{const active=r.equipment.filter(x=>key(x.status)==='active').length;const due=r.equipment.filter(x=>dueStatus(x)==='due').length;lines.push([r.area,r.location,r.equipment.length,new Set(r.equipment.map(x=>clean(x.equipment_type)||'Unspecified')).size,active,r.equipment.length-active,due])});
-  const csv=lines.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='firesafe-track-locations.csv';a.click();URL.revokeObjectURL(url);showToast('Locations exported successfully.','success');
+function showNotice(message, type = "info") {
+    const notice = document.getElementById("pageNotice");
+    notice.textContent = message;
+    notice.className = "notice notice-" + type;
+    notice.hidden = false;
 }
 
-document.getElementById('searchInput').addEventListener('input',renderLocations);document.getElementById('areaFilter').addEventListener('change',renderLocations);document.getElementById('equipmentFilter').addEventListener('change',renderLocations);document.getElementById('refreshBtn').addEventListener('click',()=>loadEquipment().then(()=>showToast('Locations refreshed.')).catch(e=>{showError(e.message);showToast(e.message,'error')}));document.getElementById('exportBtn').addEventListener('click',exportCSV);document.getElementById('modalClose').addEventListener('click',closeModal);document.getElementById('locationModal').addEventListener('click',e=>{if(e.target.id==='locationModal')closeModal()});document.getElementById('logoutLink').addEventListener('click',async e=>{e.preventDefault();try{if(typeof logout==='function')await logout();else if(typeof supabase!=='undefined'&&supabase.auth)await supabase.auth.signOut();window.location.href='index.html'}catch(err){showToast(err.message||'Logout failed.','error')}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
-document.addEventListener('DOMContentLoaded',initializePage);
+function hideNotice() {
+    document.getElementById("pageNotice").hidden = true;
+}
+
+function formatDate(value) {
+    if (!value) return "—";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+
+    return date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+    });
+}
+
+function canManageLocations() {
+    const role = String(currentUserProfile?.role || "").toLowerCase();
+    return role === "admin" || role === "administrator" ||
+           role === "supervisor";
+}
+
+/* =========================================================
+   AUTHENTICATION AND PROFILE
+========================================================= */
+
+async function loadCurrentUserProfile() {
+    try {
+        const {
+            data: { user },
+            error: authError
+        } = await supabaseClient.auth.getUser();
+
+        if (authError) throw authError;
+
+        if (!user) {
+            window.location.replace("index.html");
+            return false;
+        }
+
+        currentUser = user;
+
+        const {
+            data: profile,
+            error: profileError
+        } = await supabaseClient
+            .from("profiles")
+            .select("id, full_name, role, department_id, active")
+            .eq("id", user.id)
+            .maybeSingle();
+
+        if (profileError) throw profileError;
+
+        if (!profile || profile.active !== true) {
+            currentUserProfile = null;
+            showNotice(
+                "Your account is inactive or does not have an authorised profile. Contact an administrator.",
+                "warning"
+            );
+
+            document.getElementById("addLocationBtn").disabled = true;
+            document.getElementById("locationsTable").innerHTML =
+                '<tr><td colspan="5" class="empty-state">Access is unavailable for this account.</td></tr>';
+
+            return false;
+        }
+
+        currentUserProfile = profile;
+
+        document.querySelector(".topbar-user").textContent =
+            profile.full_name?.trim() || user.email || "Signed-in user";
+
+        if (!canManageLocations()) {
+            document.getElementById("addLocationBtn").hidden = true;
+            showNotice(
+                "You have read-only access to locations. Administrators and supervisors can manage this register.",
+                "info"
+            );
+        }
+
+        return true;
+
+    } catch (error) {
+        console.error("Profile verification failed:", error);
+
+        showNotice(
+            "We could not verify your account. Please sign in again. If the problem continues, check your profile permissions.",
+            "warning"
+        );
+
+        document.getElementById("locationsTable").innerHTML =
+            '<tr><td colspan="5" class="empty-state">Account verification failed.</td></tr>';
+
+        return false;
+    }
+}
+
+/* =========================================================
+   LOAD LOCATIONS
+========================================================= */
+
+async function loadLocations() {
+    const table = document.getElementById("locationsTable");
+    table.innerHTML =
+        '<tr><td colspan="5" class="empty-state">Loading locations...</td></tr>';
+
+    try {
+        const { data, error } = await supabaseClient
+            .from("locations")
+            .select("id, name, area, description, created_at")
+            .order("name", { ascending: true });
+
+        if (error) throw error;
+
+        locations = data || [];
+        hideNotice();
+        renderLocations();
+
+    } catch (error) {
+        console.error("Unable to load locations:", error);
+
+        locations = [];
+        updateStats();
+
+        table.innerHTML =
+            '<tr><td colspan="5" class="empty-state">Unable to load locations. Check the locations table and its Supabase SELECT policy, then refresh.</td></tr>';
+
+        showNotice(
+            "Locations could not be loaded. Confirm that the locations table contains the expected columns and that your signed-in role has permission to read it.",
+            "warning"
+        );
+    }
+}
+
+/* =========================================================
+   DISPLAY LOCATIONS
+========================================================= */
+
+function updateStats() {
+    document.getElementById("totalLocations").textContent =
+        locations.length;
+
+    const areas = new Set(
+        locations.map(item => String(item.area || "").trim().toLowerCase())
+                 .filter(Boolean)
+    );
+
+    document.getElementById("totalAreas").textContent = areas.size;
+
+    document.getElementById("describedLocations").textContent =
+        locations.filter(item => String(item.description || "").trim()).length;
+}
+
+function renderLocations() {
+    const table = document.getElementById("locationsTable");
+    const query = document.getElementById("searchInput")
+        .value.trim().toLowerCase();
+
+    const filtered = locations.filter(item => [
+        item.name,
+        item.area,
+        item.description
+    ].some(value => String(value || "").toLowerCase().includes(query)));
+
+    updateStats();
+
+    if (!filtered.length) {
+        const message = locations.length
+            ? "No locations match your search."
+            : "No locations have been added yet. Select Add Location to create the first one.";
+
+        table.innerHTML =
+            `<tr><td colspan="5" class="empty-state">${escapeHTML(message)}</td></tr>`;
+        return;
+    }
+
+    table.innerHTML = filtered.map(item => {
+        const actions = canManageLocations()
+            ? `
+                <div class="actions">
+                    <button class="button button-secondary"
+                        type="button" data-action="edit"
+                        data-id="${escapeHTML(item.id)}">Edit</button>
+                    <button class="button button-danger"
+                        type="button" data-action="delete"
+                        data-id="${escapeHTML(item.id)}">Delete</button>
+                </div>`
+            : '<span style="color:#738096">View only</span>';
+
+        return `
+            <tr>
+                <td><div class="location-name">${escapeHTML(item.name)}</div></td>
+                <td>${item.area
+                    ? `<span class="area-tag">${escapeHTML(item.area)}</span>`
+                    : "—"}</td>
+                <td><div class="description">${escapeHTML(item.description || "—")}</div></td>
+                <td>${formatDate(item.created_at)}</td>
+                <td>${actions}</td>
+            </tr>`;
+    }).join("");
+}
+
+/* =========================================================
+   FORM OPEN/CLOSE
+========================================================= */
+
+function openForm(location = null) {
+    if (!canManageLocations()) {
+        showToast("You do not have permission to manage locations.", "error");
+        return;
+    }
+
+    editingLocationId = location?.id || null;
+
+    document.getElementById("modalTitle").textContent =
+        editingLocationId ? "Edit Location" : "Add Location";
+
+    document.getElementById("saveBtn").textContent =
+        editingLocationId ? "Save Changes" : "Save Location";
+
+    document.getElementById("locationName").value =
+        location?.name || "";
+
+    document.getElementById("locationArea").value =
+        location?.area || "";
+
+    document.getElementById("locationDescription").value =
+        location?.description || "";
+
+    document.getElementById("locationModal").classList.add("open");
+
+    setTimeout(() => document.getElementById("locationName").focus(), 50);
+}
+
+function closeForm() {
+    if (isSaving) return;
+
+    document.getElementById("locationModal").classList.remove("open");
+    document.getElementById("locationForm").reset();
+    editingLocationId = null;
+}
+
+/* =========================================================
+   SAVE LOCATION
+========================================================= */
+
+async function saveLocation(event) {
+    event.preventDefault();
+
+    if (isSaving) return;
+
+    if (!canManageLocations()) {
+        showToast("You do not have permission to manage locations.", "error");
+        return;
+    }
+
+    const name = document.getElementById("locationName").value.trim();
+    const area = document.getElementById("locationArea").value.trim();
+    const description =
+        document.getElementById("locationDescription").value.trim();
+
+    if (!name) {
+        showToast("Please enter a location name.", "error");
+        document.getElementById("locationName").focus();
+        return;
+    }
+
+    const wasEditing = Boolean(editingLocationId);
+    const locationId = editingLocationId;
+
+    const payload = {
+        name,
+        area: area || null,
+        description: description || null
+    };
+
+    isSaving = true;
+    document.getElementById("saveBtn").disabled = true;
+    document.getElementById("saveBtn").textContent = "Saving...";
+
+    try {
+        let result;
+
+        if (wasEditing) {
+            result = await supabaseClient
+                .from("locations")
+                .update(payload)
+                .eq("id", locationId)
+                .select("id")
+                .maybeSingle();
+        } else {
+            result = await supabaseClient
+                .from("locations")
+                .insert(payload)
+                .select("id")
+                .single();
+        }
+
+        if (result.error) throw result.error;
+
+        if (!result.data) {
+            throw new Error(
+                "No location was returned. Check your Supabase write policies."
+            );
+        }
+
+        document.getElementById("locationModal").classList.remove("open");
+        document.getElementById("locationForm").reset();
+        editingLocationId = null;
+
+        showToast(
+            wasEditing
+                ? "Location updated successfully."
+                : "Location added successfully.",
+            "success"
+        );
+
+        await loadLocations();
+
+    } catch (error) {
+        console.error("Unable to save location:", error);
+
+        showToast(
+            error.code === "23505"
+                ? "A location with these details may already exist."
+                : "Could not save the location. Check your Supabase INSERT/UPDATE policies and try again.",
+            "error"
+        );
+
+    } finally {
+        isSaving = false;
+        document.getElementById("saveBtn").disabled = false;
+        document.getElementById("saveBtn").textContent =
+            editingLocationId ? "Save Changes" : "Save Location";
+    }
+}
+
+/* =========================================================
+   EDIT / DELETE
+========================================================= */
+
+function findLocation(id) {
+    return locations.find(item => String(item.id) === String(id));
+}
+
+async function deleteLocation(id) {
+    if (!canManageLocations()) {
+        showToast("You do not have permission to delete locations.", "error");
+        return;
+    }
+
+    const location = findLocation(id);
+    if (!location) return;
+
+    const confirmed = window.confirm(
+        `Delete the location "${location.name}"?\n\nOnly proceed if it is no longer needed. Existing equipment records may still contain this location name.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+        const { data, error } = await supabaseClient
+            .from("locations")
+            .delete()
+            .eq("id", id)
+            .select("id");
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            throw new Error(
+                "The location was not deleted. Your account may not have delete permission."
+            );
+        }
+
+        showToast("Location deleted successfully.", "success");
+        await loadLocations();
+
+    } catch (error) {
+        console.error("Unable to delete location:", error);
+
+        showToast(
+            "Could not delete this location. Check your Supabase DELETE policy and whether the location is referenced elsewhere.",
+            "error"
+        );
+    }
+}
+
+/* =========================================================
+   EVENT LISTENERS
+========================================================= */
+
+document.getElementById("addLocationBtn").addEventListener("click", () => {
+    openForm();
+});
+
+document.getElementById("closeModalBtn").addEventListener("click", closeForm);
+document.getElementById("cancelBtn").addEventListener("click", closeForm);
+
+document.getElementById("locationForm").addEventListener("submit", saveLocation);
+
+document.getElementById("searchInput").addEventListener("input", renderLocations);
+
+document.getElementById("locationsTable").addEventListener("click", event => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+
+    const { action, id } = button.dataset;
+
+    if (action === "edit") {
+        const location = findLocation(id);
+        if (location) openForm(location);
+    }
+
+    if (action === "delete") {
+        deleteLocation(id);
+    }
+});
+
+document.getElementById("locationModal").addEventListener("click", event => {
+    if (event.target.id === "locationModal") closeForm();
+});
+
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape") closeForm();
+});
+
+/* =========================================================
+   START PAGE
+========================================================= */
+
+async function initPage() {
+    const authenticated = await loadCurrentUserProfile();
+
+    if (authenticated) {
+        await loadLocations();
+    }
+}
+
+initPage();
 </script>
-<script src="./firesafe-control-bar.js" defer></script>
+
 </body>
 </html>
