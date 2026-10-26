@@ -178,149 +178,6 @@
         }
 
 
-        
-/* =====================================================
-   USER PROFILE DROPDOWN
-===================================================== */
-
-.profile-menu {
-    position: relative;
-    flex-shrink: 0;
-}
-
-.profile-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    min-width: 44px;
-    height: 44px;
-    padding: 0 8px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.07);
-    color: #ffffff;
-    cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease;
-}
-
-.profile-trigger:hover,
-.profile-trigger[aria-expanded="true"] {
-    background: #ff3b30;
-    border-color: #ff3b30;
-}
-
-.profile-head {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.profile-chevron {
-    font-size: 12px;
-}
-
-.profile-dropdown {
-    position: absolute;
-    top: calc(100% + 10px);
-    right: 0;
-    width: 230px;
-    padding: 8px;
-    background: #ffffff;
-    color: #172337;
-    border: 1px solid #dce3eb;
-    border-radius: 10px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
-    z-index: 1500;
-}
-
-.profile-dropdown[hidden] {
-    display: none !important;
-}
-
-.profile-dropdown-header {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    padding: 12px;
-    border-bottom: 1px solid #e5eaf0;
-    overflow-wrap: anywhere;
-}
-
-.profile-dropdown-header strong {
-    font-size: 13px;
-    color: #172337;
-}
-
-.profile-dropdown-header span {
-    font-size: 11px;
-    color: #64748b;
-    font-weight: bold;
-}
-
-.profile-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 12px;
-    margin-top: 4px;
-    border: none;
-    border-radius: 6px;
-    background: transparent;
-    color: #243247;
-    text-decoration: none;
-    text-align: left;
-    font: inherit;
-    font-size: 13px;
-    cursor: pointer;
-}
-
-.profile-menu-item:hover {
-    background: #eef2f7;
-}
-
-.logout-item {
-    color: #d92d25;
-}
-
-.logout-item:hover {
-    background: #fff0ef;
-}
-
-.logout-item:disabled {
-    opacity: 0.6;
-    cursor: wait;
-}
-
-.profile-menu-error {
-    padding: 10px;
-    color: #b42318;
-    font-size: 12px;
-    overflow-wrap: anywhere;
-}
-
-.profile-menu-error[hidden] {
-    display: none !important;
-}
-
-@media (max-width: 650px) {
-    .topbar-right {
-        gap: 8px;
-    }
-
-    .profile-trigger {
-        min-width: 40px;
-        height: 40px;
-        padding: 0 6px;
-    }
-
-    .profile-dropdown {
-        width: min(230px, calc(100vw - 24px));
-    }
-}
-
-
         /* =====================================================
            SIDEBAR
         ===================================================== */
@@ -1268,6 +1125,45 @@
 
     
 
+
+        /* SAFETY TRENDS & INSIGHTS */
+        .trends-section { margin: 28px 0 24px; width: 100%; }
+        .trends-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:18px; margin:0 0 18px; flex-wrap:wrap; }
+        .trends-heading h2 { margin:0 0 7px; font-size:21px; font-weight:700; }
+        .trends-heading p { margin:0; color:#b9c8d9; font-size:13px; line-height:1.5; }
+        #trendPeriod { background:#102743; color:#fff; border:1px solid rgba(255,255,255,.18); border-radius:8px; padding:10px 12px; min-width:155px; outline:none; }
+        .trend-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-bottom:18px; }
+        .trend-card { min-width:0; overflow:hidden; }
+        .chart-container { position:relative; height:280px; min-height:240px; padding:14px 16px 18px; }
+        .chart-container canvas { width:100% !important; height:100% !important; }
+        .trend-empty { position:absolute; inset:20px; display:flex; align-items:center; justify-content:center; text-align:center; color:#aebed0; font-size:13px; margin:0; }
+        .trend-empty[hidden] { display:none; }
+        .repeat-card { margin-bottom:18px; }
+        .trend-subtitle { color:#aebed0; font-size:11px; }
+        .trend-insights { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:0 0 18px; }
+        .insight-card { background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.09); border-radius:12px; padding:16px; min-width:0; }
+        .insight-label { color:#b9c8d9; font-size:11px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:9px; }
+        .insight-value { font-size:23px; font-weight:700; line-height:1.25; overflow-wrap:anywhere; }
+        .insight-detail { color:#aebed0; font-size:12px; line-height:1.5; margin-top:8px; }
+        .insight-card.alert .insight-value { color:#ff7770; }
+        .insight-card.good .insight-value { color:#69d6a1; }
+        .trend-loading { color:#aebed0; padding:18px 0; font-size:13px; }
+        @media(max-width:1150px) { .trend-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .trend-card:last-child { grid-column:1 / -1; } .trend-insights { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media(max-width:700px) { .trend-grid { grid-template-columns:1fr; } .trend-card:last-child { grid-column:auto; } .chart-container { height:260px; } .trend-insights { grid-template-columns:1fr 1fr; gap:10px; } .insight-card { padding:13px; } .insight-value { font-size:20px; } .trends-heading h2 { font-size:19px; } }
+        @media(max-width:420px) { .trend-insights { grid-template-columns:1fr; } }
+
+
+        .user-menu-wrap { position:relative; display:flex; align-items:center; gap:10px; }
+        .user-menu-toggle { width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#fff; cursor:pointer; font-size:18px; }
+        .user-menu-toggle:hover, .user-menu-toggle:focus { background:rgba(255,255,255,.16); outline:2px solid rgba(255,204,0,.45); }
+        .user-menu { position:absolute; right:0; top:calc(100% + 10px); min-width:185px; background:#102743; border:1px solid rgba(255,255,255,.15); border-radius:10px; padding:7px; box-shadow:0 12px 30px rgba(0,0,0,.35); z-index:1200; }
+        .user-menu[hidden] { display:none; }
+        .user-menu-heading { color:#aebed0; font-size:11px; padding:9px 10px; overflow-wrap:anywhere; }
+        .user-menu button { width:100%; text-align:left; border:0; border-radius:7px; padding:10px; background:transparent; color:#fff; cursor:pointer; font:inherit; font-size:13px; }
+        .user-menu button:hover { background:rgba(255,255,255,.1); }
+        .user-menu .logout-option { color:#ff8580; }
+        @media(max-width:600px) { .user-menu-wrap { gap:6px; } .user-display { max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .user-menu-toggle { width:35px;height:35px; } }
+
     </style>
 
 </head>
@@ -1516,88 +1412,17 @@
         </div>
 
 
-        
-<div class="topbar-right">
-
-    <div
-        class="user-display"
-        id="userDisplay"
-    >
-        Loading...
-    </div>
-
-    <div
-        class="role-badge"
-        id="roleBadge"
-    >
-        ...
-    </div>
-
-    <!-- USER PROFILE MENU -->
-    <div class="profile-menu" id="profileMenu">
-
-        <button
-            type="button"
-            class="profile-trigger"
-            id="profileTrigger"
-            aria-label="Open user menu"
-            aria-expanded="false"
-            aria-controls="profileDropdown"
-        >
-            <span class="profile-head" aria-hidden="true">
-                <svg
-                    viewBox="0 0 24 24"
-                    width="22"
-                    height="22"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <circle cx="12" cy="8" r="4"></circle>
-                    <path d="M5 21v-2a7 7 0 0 1 14 0v2"></path>
-                </svg>
-            </span>
-
-            <span class="profile-chevron" aria-hidden="true">▾</span>
-        </button>
-
-        <div
-            class="profile-dropdown"
-            id="profileDropdown"
-            hidden
-        >
-            <div class="profile-dropdown-header">
-                <strong id="profileMenuName">Signed-in user</strong>
-                <span id="profileMenuRole">USER</span>
+        <div class="topbar-right">
+            <div class="user-menu-wrap">
+                <div class="user-display" id="userDisplay">Loading...</div>
+                <div class="role-badge" id="roleBadge">...</div>
+                <button class="user-menu-toggle" id="userMenuToggle" type="button" aria-label="Open user menu" aria-expanded="false" aria-controls="userMenu">♙</button>
+                <div class="user-menu" id="userMenu" hidden>
+                    <div class="user-menu-heading" id="userMenuName">Signed in</div>
+                    <button type="button" id="userMenuLogout" class="logout-option">LOG OUT</button>
+                </div>
             </div>
-
-            <a href="settings.html" class="profile-menu-item">
-                <span aria-hidden="true">⚙</span>
-                Settings
-            </a>
-
-            <button
-                type="button"
-                class="profile-menu-item logout-item"
-                id="logoutButton"
-            >
-                <span aria-hidden="true">↪</span>
-                <span id="logoutButtonText">Log Out</span>
-            </button>
-
-            <div
-                class="profile-menu-error"
-                id="profileMenuError"
-                role="alert"
-                hidden
-            ></div>
         </div>
-
-    </div>
-
-</div>
 
     </header>
 
@@ -1752,7 +1577,7 @@
                     </div>
 
                     <div class="stat-note">
-    Based on deviations & overdue items
+    Based on inspection answers (Pass ÷ Pass + Fail)
 </div>
 
                 </div>
@@ -1999,21 +1824,6 @@
             </section>
 
 
-            <!-- FOOTER -->
-
-            <div class="footer">
-
-                © 2026 A-eye Group | FireSafe Track System
-
-            </div>
-
-
-        </div>
-
-    </main>
-     
-
-    
 <!-- SAFETY TRENDS & INSIGHTS -->
 <section class="trends-section">
 
@@ -2068,6 +1878,20 @@
 
     </div>
 
+    <div class="trend-insights" id="trendInsights" aria-live="polite">
+        <div class="insight-card"><div class="insight-label">Records in period</div><div class="insight-value" id="insightTotal">—</div><div class="insight-detail" id="insightTotalDetail">Loading recorded deviations</div></div>
+        <div class="insight-card alert"><div class="insight-label">Open high-risk</div><div class="insight-value" id="insightHighRisk">—</div><div class="insight-detail">Open Critical or High severity deviations</div></div>
+        <div class="insight-card alert"><div class="insight-label">Overdue actions</div><div class="insight-value" id="insightOverdue">—</div><div class="insight-detail">Open items past their due or target date</div></div>
+        <div class="insight-card"><div class="insight-label">Most affected location</div><div class="insight-value" id="insightTopLocation" style="font-size:17px">—</div><div class="insight-detail" id="insightTopLocationDetail">Based on linked equipment records</div></div>
+    </div>
+
+    <div class="trend-grid trend-grid-secondary">
+        <div class="card trend-card">
+            <div class="card-header"><div class="card-title">Deviations by Severity</div></div>
+            <div class="card-body chart-container"><canvas id="severityDeviationsChart"></canvas><p class="trend-empty" id="severityDeviationsEmpty" hidden>No severity records found for this period.</p></div>
+        </div>
+    </div>
+
     <div class="card repeat-card">
         <div class="card-header">
             <div class="card-title">Most Frequent Deviation Types</div>
@@ -2096,7 +1920,23 @@
 </section>
 
 
-    <!-- =====================================================
+
+            <!-- FOOTER -->
+
+            <div class="footer">
+
+                © 2026 A-eye Group | FireSafe Track System
+
+            </div>
+
+
+        </div>
+
+    </main>
+     
+
+    
+<!-- =====================================================
          JAVASCRIPT
     ====================================================== -->
 
@@ -2121,6 +1961,31 @@
             SUPABASE_URL,
             SUPABASE_ANON_KEY
         );
+
+
+    const trendCharts = {};
+    let latestTrendDeviations = [];
+    let latestTrendEquipment = [];
+    let latestTrendInspections = [];
+    let complianceLoaded = false;
+
+    async function fetchAllRows(table, columns = "*") {
+        const pageSize = 1000;
+        let from = 0;
+        let allRows = [];
+        while (true) {
+            const { data, error } = await supabaseClient
+                .from(table)
+                .select(columns)
+                .range(from, from + pageSize - 1);
+            if (error) throw new Error(`${table} query failed: ${error.message}`);
+            const batch = data || [];
+            allRows = allRows.concat(batch);
+            if (batch.length < pageSize) break;
+            from += pageSize;
+        }
+        return allRows;
+    }
 
 
     /* =====================================================
@@ -2304,6 +2169,47 @@ const dashboardStats = {
         );
 
 
+    const userMenuToggle = document.getElementById("userMenuToggle");
+    const userMenu = document.getElementById("userMenu");
+    const userMenuName = document.getElementById("userMenuName");
+    const userMenuLogout = document.getElementById("userMenuLogout");
+
+    function closeUserMenu() {
+        if (userMenu) userMenu.hidden = true;
+        if (userMenuToggle) userMenuToggle.setAttribute("aria-expanded", "false");
+    }
+
+    userMenuToggle?.addEventListener("click", event => {
+        event.stopPropagation();
+        const opening = userMenu.hidden;
+        userMenu.hidden = !opening;
+        userMenuToggle.setAttribute("aria-expanded", String(opening));
+    });
+
+    document.addEventListener("click", event => {
+        if (userMenu && !userMenu.contains(event.target) && !userMenuToggle?.contains(event.target)) closeUserMenu();
+    });
+
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape") closeUserMenu();
+    });
+
+    userMenuLogout?.addEventListener("click", async () => {
+        userMenuLogout.disabled = true;
+        userMenuLogout.textContent = "Signing out...";
+        try {
+            const { error } = await supabaseClient.auth.signOut();
+            if (error) throw error;
+            window.location.href = "./index.html";
+        } catch (error) {
+            console.error("Logout failed:", error);
+            userMenuLogout.disabled = false;
+            userMenuLogout.textContent = "LOG OUT";
+            showDatabaseError("Could not log out: " + (error.message || "Please try again."));
+        }
+    });
+
+
     /* =====================================================
        DATABASE ERROR HANDLING
     ====================================================== */
@@ -2447,6 +2353,26 @@ const dashboardStats = {
     }
 
 
+    function localDateKey(value = new Date()) {
+        const d = value instanceof Date ? value : new Date(value);
+        if (Number.isNaN(d.getTime())) return "";
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    }
+
+    function deviationDueDate(deviation) {
+        return deviation?.due_date || deviation?.target_date || "";
+    }
+
+    function isActiveDeviation(deviation) {
+        return !["CLOSED", "RESOLVED"].includes(normalizeStatus(deviation?.status));
+    }
+
+    function isOverdueDeviation(deviation) {
+        const due = deviationDueDate(deviation);
+        return Boolean(due && isActiveDeviation(deviation) && String(due).slice(0,10) < localDateKey());
+    }
+
+
     /* =====================================================
        LOAD CURRENT USER
     ====================================================== */
@@ -2499,28 +2425,15 @@ const dashboardStats = {
             }
 
 
+            userDisplay.textContent =
+                user.email ||
+                "User";
+
+
             const {
-    data: profile,
-    error: profileError
-} = await supabaseClient
-    .from("profiles")
-    .select("full_name, role")
-    .eq("id", user.id)
-    .maybeSingle();
-
-if (profileError) {
-    console.error("Could not load user profile:", profileError);
-}
-
-userDisplay.textContent =
-    profile?.full_name?.trim() ||
-    user.email ||
-    "Signed-in user";
-
-roleBadge.textContent =
-    String(profile?.role || "USER").toUpperCase();
-
-    
+                data: profile,
+                error: profileError
+            } =
                 await supabaseClient
                     .from("profiles")
                     .select("role")
@@ -2567,226 +2480,23 @@ roleBadge.textContent =
     }
 
 
-    
-/* =====================================================
-   USER PROFILE DROPDOWN
-===================================================== */
-
-const profileMenu = document.getElementById("profileMenu");
-const profileTrigger = document.getElementById("profileTrigger");
-const profileDropdown = document.getElementById("profileDropdown");
-const profileMenuName = document.getElementById("profileMenuName");
-const profileMenuRole = document.getElementById("profileMenuRole");
-const logoutButton = document.getElementById("logoutButton");
-const logoutButtonText = document.getElementById("logoutButtonText");
-const profileMenuError = document.getElementById("profileMenuError");
-
-function setProfileMenuOpen(open) {
-    profileDropdown.hidden = !open;
-    profileTrigger.setAttribute("aria-expanded", String(open));
-
-    if (!open) {
-        profileMenuError.hidden = true;
-        profileMenuError.textContent = "";
-    }
-}
-
-profileTrigger.addEventListener("click", function (event) {
-    event.stopPropagation();
-
-    setProfileMenuOpen(profileDropdown.hidden);
-});
-
-profileDropdown.addEventListener("click", function (event) {
-    event.stopPropagation();
-});
-
-document.addEventListener("click", function (event) {
-    if (!profileMenu.contains(event.target)) {
-        setProfileMenuOpen(false);
-    }
-});
-
-document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && !profileDropdown.hidden) {
-        setProfileMenuOpen(false);
-        profileTrigger.focus();
-    }
-});
-
-/* Keep the dropdown name and role aligned with the top bar. */
-function syncProfileMenu() {
-    profileMenuName.textContent =
-        userDisplay.textContent.trim() || "Signed-in user";
-
-    profileMenuRole.textContent =
-        roleBadge.textContent.trim() || "USER";
-}
-
-const originalLoadCurrentUser = loadCurrentUser;
-
-loadCurrentUser = async function () {
-    await originalLoadCurrentUser();
-    syncProfileMenu();
-};
-
-/* Sign out through Supabase. */
-logoutButton.addEventListener("click", async function () {
-    logoutButton.disabled = true;
-    logoutButtonText.textContent = "Logging out...";
-    profileMenuError.hidden = true;
-    profileMenuError.textContent = "";
-
-    try {
-        const { error } = await supabaseClient.auth.signOut();
-
-        if (error) {
-            throw error;
-        }
-
-        window.location.replace("./index.html");
-    } catch (error) {
-        console.error("Logout failed:", error);
-
-        profileMenuError.textContent =
-            "Logout failed. Please check your connection and try again.";
-
-        profileMenuError.hidden = false;
-        logoutButton.disabled = false;
-        logoutButtonText.textContent = "Log Out";
-    }
-});
-
-/* Initialize the menu labels on page load. */
-syncProfileMenu();
-
-
     /* =====================================================
        LOAD EQUIPMENT
     ====================================================== */
 
     async function loadEquipment() {
-
-        const {
-            data,
-            error,
-            count
-        } =
-            await supabaseClient
-                .from("equipment")
-                .select(
-                    "*",
-                    {
-                        count: "exact"
-                    }
-                );
-
-
-        if (error) {
-
-            throw new Error(
-                "Equipment query failed: " +
-                error.message
-            );
-
-        }
-
-
-        const equipment =
-            data || [];
-
-
-        const total =
-            count !== null &&
-            count !== undefined
-                ? count
-                : equipment.length;
-
-
-        totalEquipmentEl.textContent =
-            total;
-
-
-        /* -------------------------------------------------
-           DUE / OVERDUE EQUIPMENT
-
-           Correct database field:
-           next_inspection_date
-        -------------------------------------------------- */
-
-        const today =
-            new Date();
-
-        today.setHours(
-            0,
-            0,
-            0,
-            0
-        );
-
-
+        const equipment = await fetchAllRows("equipment", "*");
+        latestTrendEquipment = equipment;
+        totalEquipmentEl.textContent = equipment.length;
+        const today = localDateKey();
         let dueCount = 0;
-
-
-        equipment.forEach(
-            function(item) {
-
-                if (
-                    !item.next_inspection_date
-                ) {
-
-                    return;
-
-                }
-
-
-                const dueDate =
-                    new Date(
-                        item.next_inspection_date
-                    );
-
-
-                if (
-                    Number.isNaN(
-                        dueDate.getTime()
-                    )
-                ) {
-
-                    return;
-
-                }
-
-
-                dueDate.setHours(
-                    0,
-                    0,
-                    0,
-                    0
-                );
-
-
-                if (
-                    dueDate <= today
-                ) {
-
-                    dueCount++;
-
-                }
-
-            }
-        );
-
-
+        equipment.forEach(item => {
+            if (item.next_inspection_date && String(item.next_inspection_date).slice(0,10) <= today) dueCount++;
+        });
         dueEquipmentEl.textContent = dueCount;
-
-dashboardStats.totalEquipment = total;
-dashboardStats.overdueEquipment = dueCount;
-
-calculateCompliance();
-
-
+        dashboardStats.totalEquipment = equipment.length;
+        dashboardStats.overdueEquipment = dueCount;
         return equipment;
-
     }
 
 
@@ -2923,141 +2633,20 @@ calculateCompliance();
     ====================================================== */
 
     async function loadInspectionAnswers() {
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .from("inspection_answers")
-                .select(
-                    `
-                        id,
-                        inspection_id,
-                        item_number,
-                        inspection_requirement,
-                        answer,
-                        remarks
-                    `
-                );
-
-
-        if (error) {
-
-            throw new Error(
-                "Inspection answers query failed: " +
-                error.message
-            );
-
-        }
-
-
-        const answers =
-            data || [];
-
-
-        let passCount = 0;
-
-        let failCount = 0;
-
-        let naCount = 0;
-
-
-        answers.forEach(
-            function(item) {
-
-                const answer =
-                    normalizeStatus(
-                        item.answer
-                    );
-
-
-                if (
-                    answer === "PASS"
-                ) {
-
-                    passCount++;
-
-                }
-                else if (
-                    answer === "FAIL"
-                ) {
-
-                    failCount++;
-
-                }
-                else if (
-                    answer === "N/A" ||
-                    answer === "NA"
-                ) {
-
-                    naCount++;
-
-                }
-
-            }
-        );
-
-
-        /* -------------------------------------------------
-           CORRECT COMPLIANCE FORMULA
-
-           PASS
-           ------------------------------
-           PASS + FAIL
-
-           N/A is excluded.
-        -------------------------------------------------- */
-
-        const evaluated =
-            passCount +
-            failCount;
-
-
-        let compliance = 0;
-
-
-        if (
-            evaluated > 0
-        ) {
-
-            compliance =
-                Math.round(
-                    (
-                        passCount /
-                        evaluated
-                    ) * 100
-                );
-
-        }
-
-
-        console.log(
-            "FireSafe Track Compliance:",
-            {
-                passCount,
-                failCount,
-                naCount,
-                evaluated,
-                compliance
-            }
-        );
-
-
-        updateCompliance(
-            compliance
-        );
-
-
-        return {
-            answers,
-            passCount,
-            failCount,
-            naCount,
-            evaluated,
-            compliance
-        };
-
+        const answers = await fetchAllRows("inspection_answers", "id, inspection_id, item_number, inspection_requirement, answer, remarks");
+        let passCount = 0, failCount = 0, naCount = 0;
+        answers.forEach(item => {
+            const answer = normalizeStatus(item.answer).replace(/\s+/g, "");
+            if (["PASS", "PASSED"].includes(answer)) passCount++;
+            else if (["FAIL", "FAILED", "FAILURE"].includes(answer)) failCount++;
+            else if (["N/A", "NA", "NOTAPPLICABLE"].includes(answer)) naCount++;
+        });
+        const evaluated = passCount + failCount;
+        complianceLoaded = evaluated > 0;
+        const compliance = evaluated > 0 ? Math.round((passCount / evaluated) * 100) : null;
+        updateCompliance(compliance);
+        console.log("FireSafe Track compliance:", { passCount, failCount, naCount, evaluated, compliance });
+        return { answers, passCount, failCount, naCount, evaluated, compliance };
     }
 
 
@@ -3066,135 +2655,33 @@ calculateCompliance();
     ====================================================== */
 
     async function loadDeviations() {
-
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-            .from("deviations")
-            .select("*");
-
-    if (error) {
-
-        throw new Error(
-            "Deviations query failed: " +
-            error.message
-        );
-
+        const deviations = await fetchAllRows("deviations", "*");
+        latestTrendDeviations = deviations;
+        const openCount = deviations.filter(d => isActiveDeviation(d) && normalizeStatus(d.status) === "OPEN").length;
+        const overdue = deviations.filter(isOverdueDeviation).length;
+        openDeviationsEl.textContent = openCount;
+        overdueCount.textContent = overdue;
+        dashboardStats.openDeviations = openCount;
+        renderSafetyTrends();
+        return deviations;
     }
 
-    const deviations = data || [];
-
-    /* ----------------------------
-       OPEN DEVIATIONS
-    ---------------------------- */
-
-    const openCount =
-        deviations.filter(
-            d =>
-                String(d.status || "")
-                    .toUpperCase() === "OPEN"
-        ).length;
-
-    openDeviationsEl.textContent = openCount;
-
-dashboardStats.openDeviations = openCount;
-
-calculateCompliance();
-
-    /* ----------------------------
-       OVERDUE DEVIATIONS
-    ---------------------------- */
-
-    const overdue =
-        deviations.filter(d => {
-
-            if (!d.target_date)
-                return false;
-
-            return (
-                String(d.status || "")
-                    .toUpperCase() !== "CLOSED" &&
-                new Date(d.target_date) <
-                    new Date()
-            );
-
-        }).length;
-
-    overdueCount.textContent =
-        overdue;
-
-    return deviations;
-}
-
-
-
-function calculateCompliance() {
-
-    const total =
-        dashboardStats.totalEquipment;
-
-    const openDeviations =
-        dashboardStats.openDeviations;
-
-    const overdue =
-        dashboardStats.overdueEquipment;
-
-    if (total === 0) {
-
-        updateCompliance(100);
-
-        return;
-    }
-
-    const nonCompliant =
-        openDeviations +
-        overdue;
-
-    let compliance =
-        ((total - nonCompliant) / total) * 100;
-
-    compliance =
-        Math.max(
-            0,
-            Math.round(compliance)
-        );
-
-    updateCompliance(compliance);
-}
 
     /* =====================================================
        UPDATE COMPLIANCE DISPLAY
     ====================================================== */
 
-    function updateCompliance(
-        percentage
-    ) {
-
-        const value =
-            Math.max(
-                0,
-                Math.min(
-                    100,
-                    Number(
-                        percentage
-                    ) || 0
-                )
-            );
-
-
-        complianceValueEl.textContent =
-            value + "%";
-
-
-        complianceSideValueEl.textContent =
-            value + "%";
-
-
-        complianceProgressEl.style.width =
-            value + "%";
-
+    function updateCompliance(percentage) {
+        if (percentage === null || percentage === undefined || !Number.isFinite(Number(percentage))) {
+            complianceValueEl.textContent = "N/A";
+            complianceSideValueEl.textContent = "N/A";
+            complianceProgressEl.style.width = "0%";
+            return;
+        }
+        const value = Math.max(0, Math.min(100, Number(percentage)));
+        complianceValueEl.textContent = `${value}%`;
+        complianceSideValueEl.textContent = `${value}%`;
+        complianceProgressEl.style.width = `${value}%`;
     }
 
 
@@ -3465,76 +2952,164 @@ function calculateCompliance() {
 
 
     /* =====================================================
+       SAFETY TRENDS & INSIGHTS
+    ====================================================== */
+
+    function selectedTrendDeviations() {
+        const period = document.getElementById("trendPeriod")?.value || "90";
+        if (period === "all") return latestTrendDeviations.slice();
+        const cutoff = new Date();
+        cutoff.setHours(0,0,0,0);
+        cutoff.setDate(cutoff.getDate() - Number(period) + 1);
+        return latestTrendDeviations.filter(d => {
+            const date = d.created_at || d.target_date || d.due_date;
+            if (!date) return false;
+            const parsed = new Date(date);
+            return !Number.isNaN(parsed.getTime()) && parsed >= cutoff;
+        });
+    }
+
+    function chartHasData(canvasId, emptyId, hasData, emptyText) {
+        const canvas = document.getElementById(canvasId);
+        const empty = document.getElementById(emptyId);
+        if (canvas) canvas.style.display = hasData ? "block" : "none";
+        if (empty) {
+            if (emptyText) empty.textContent = emptyText;
+            empty.hidden = hasData;
+        }
+    }
+
+    function replaceChart(key, canvasId, config) {
+        if (trendCharts[key]) trendCharts[key].destroy();
+        const canvas = document.getElementById(canvasId);
+        if (!canvas || typeof Chart === "undefined") return;
+        trendCharts[key] = new Chart(canvas, config);
+    }
+
+    function makeChartOptions(horizontal = false) {
+        return {
+            responsive:true, maintainAspectRatio:false,
+            indexAxis: horizontal ? "y" : "x",
+            plugins:{ legend:{display:false}, tooltip:{enabled:true} },
+            scales:{
+                x:{beginAtZero:true,ticks:{precision:0,color:"#c4d1df"},grid:{color:"rgba(255,255,255,.08)"}},
+                y:{beginAtZero:true,ticks:{color:"#c4d1df",autoSkip:false},grid:{color:"rgba(255,255,255,.08)"}}
+            }
+        };
+    }
+
+    function renderSafetyTrends() {
+        const records = selectedTrendDeviations();
+        const equipmentById = {};
+        latestTrendEquipment.forEach(e => equipmentById[e.id] = e);
+        const descriptions = new Map();
+        records.forEach(d => {
+            const label = String(d.deviation_description || d.inspection_requirement || "Unspecified deviation").trim() || "Unspecified deviation";
+            descriptions.set(label, (descriptions.get(label) || 0) + 1);
+        });
+        const common = [...descriptions.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
+        chartHasData("commonDeviationsChart","commonDeviationsEmpty",common.length>0);
+        if (common.length) replaceChart("common", "commonDeviationsChart", {
+            type:"bar", data:{labels:common.map(x=>x[0].length>35?x[0].slice(0,32)+"…":x[0]),datasets:[{data:common.map(x=>x[1]),backgroundColor:"#ff4b45",borderRadius:5}]},options:makeChartOptions(true)
+        });
+
+        const period = document.getElementById("trendPeriod")?.value || "90";
+        const useMonthly = period === "365" || period === "all";
+        const buckets = new Map();
+        records.forEach(d => {
+            const raw = d.created_at || d.target_date || d.due_date;
+            if (!raw) return;
+            const dt = new Date(raw);
+            if (Number.isNaN(dt.getTime())) return;
+            const key = useMonthly ? `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}` : localDateKey(dt);
+            buckets.set(key,(buckets.get(key)||0)+1);
+        });
+        const trendEntries = [...buckets.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+        chartHasData("deviationTrendChart","deviationTrendEmpty",trendEntries.length>0);
+        if (trendEntries.length) replaceChart("trend", "deviationTrendChart", {
+            type:"line", data:{labels:trendEntries.map(x=>x[0]),datasets:[{label:"Deviations",data:trendEntries.map(x=>x[1]),borderColor:"#ff4b45",backgroundColor:"rgba(255,75,69,.16)",fill:true,tension:.25,pointRadius:2}]},options:{...makeChartOptions(false),plugins:{legend:{display:false}}}
+        });
+
+        const locations = new Map();
+        records.forEach(d => {
+            const e = equipmentById[d.equipment_id] || {};
+            const area = String(e.area || "").trim();
+            const location = String(e.location || "").trim();
+            const label = [area,location].filter(Boolean).join(" / ") || location || area || e.name || e.equipment_code || "Unknown location";
+            locations.set(label,(locations.get(label)||0)+1);
+        });
+        const locationEntries = [...locations.entries()].filter(x=>x[0]!=="Unknown location").sort((a,b)=>b[1]-a[1]).slice(0,8);
+        chartHasData("locationDeviationsChart","locationDeviationsEmpty",locationEntries.length>0);
+        if (locationEntries.length) replaceChart("location", "locationDeviationsChart", {
+            type:"bar", data:{labels:locationEntries.map(x=>x[0].length>28?x[0].slice(0,25)+"…":x[0]),datasets:[{data:locationEntries.map(x=>x[1]),backgroundColor:"#f2bd3d",borderRadius:5}]},options:makeChartOptions(true)
+        });
+
+        const severityOrder = ["Critical","High","Medium","Low"];
+        const severityCounts = severityOrder.map(level => records.filter(d=>String(d.severity||"Medium").toLowerCase()===level.toLowerCase()).length);
+        chartHasData("severityDeviationsChart","severityDeviationsEmpty",records.length>0);
+        if (records.length) replaceChart("severity", "severityDeviationsChart", {
+            type:"doughnut", data:{labels:severityOrder,datasets:[{data:severityCounts,backgroundColor:["#ff3b30","#ff8a3d","#f2bd3d","#47c98b"],borderColor:"#142d4c",borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#d5dfeb",padding:14}}}}
+        });
+
+        const activeHighRisk = records.filter(d=>isActiveDeviation(d)&&["HIGH","CRITICAL"].includes(normalizeStatus(d.severity))).length;
+        const overdue = records.filter(isOverdueDeviation).length;
+        const countEl = document.getElementById("insightTotal");
+        if (countEl) countEl.textContent = records.length;
+        const countDetail = document.getElementById("insightTotalDetail");
+        if (countDetail) countDetail.textContent = period === "all" ? "All available deviation records" : `Records created in the last ${period} days`;
+        const highEl = document.getElementById("insightHighRisk"); if (highEl) highEl.textContent = activeHighRisk;
+        const overdueEl = document.getElementById("insightOverdue"); if (overdueEl) overdueEl.textContent = overdue;
+        const topLocation = locationEntries[0];
+        const topLocationEl = document.getElementById("insightTopLocation");
+        const topLocationDetail = document.getElementById("insightTopLocationDetail");
+        if (topLocationEl) topLocationEl.textContent = topLocation ? topLocation[0] : "Not available";
+        if (topLocationDetail) topLocationDetail.textContent = topLocation ? `${topLocation[1]} recorded deviation${topLocation[1]===1?"":"s"}` : "No linked equipment location data";
+
+        const tbody = document.getElementById("commonDeviationRows");
+        if (tbody) {
+            if (!common.length) {
+                tbody.innerHTML = '<tr><td colspan="4">No deviation records found for this period.</td></tr>';
+            } else {
+                tbody.innerHTML = common.map(([label,count],i)=>`<tr><td>${i+1}</td><td>${escapeHtml(label)}</td><td>${count}</td><td>${records.length?Math.round(count/records.length*100):0}%</td></tr>`).join("");
+            }
+        }
+    }
+
+    document.getElementById("trendPeriod")?.addEventListener("change", renderSafetyTrends);
+
+    /* =====================================================
        LOAD DASHBOARD
     ====================================================== */
 
     async function loadDashboard() {
-
         clearDatabaseError();
-
-
-        systemStatusText.textContent =
-            "Connecting to database...";
-
-
-        systemStatusDot.classList.remove(
-            "online",
-            "error"
-        );
-
-
+        systemStatusText.textContent = "Connecting to database...";
+        systemStatusDot.classList.remove("online", "error");
         try {
-
-            /* ---------------------------------------------
-               Run all database operations
-               --------------------------------------------- */
-
-            await Promise.all([
-
+            const results = await Promise.allSettled([
                 loadEquipment(),
-
                 loadInspections(),
-
                 loadDeviations(),
-
-                loadCurrentUser()
-
+                loadCurrentUser(),
+                loadInspectionAnswers()
             ]);
-
-
-            /* ---------------------------------------------
-               DATABASE CONNECTED
-               --------------------------------------------- */
-
-            systemStatusDot.classList.add(
-                "online"
-            );
-
-
-            systemStatusText.textContent =
-                "Database connected";
-
-
-            console.log(
-                "FireSafe Track dashboard connected successfully."
-            );
-
-
+            const failed = results.filter(r => r.status === "rejected");
+            if (failed.length) {
+                const messages = failed.map(r => r.reason?.message || "A dashboard data request failed.");
+                throw new Error(messages.join(" | "));
+            }
+            renderSafetyTrends();
+            if (userMenuName) userMenuName.textContent = userDisplay.textContent || "Signed in";
+            systemStatusDot.classList.add("online");
+            systemStatusText.textContent = "Database connected";
+            console.log("FireSafe Track dashboard and safety trends loaded.");
         } catch (error) {
-
-            console.error(
-                "Dashboard loading error:",
-                error
-            );
-
-
-            showDatabaseError(
-                error.message ||
-                "Unable to load dashboard data."
-            );
-
+            console.error("Dashboard loading error:", error);
+            showDatabaseError(error.message || "Unable to load dashboard data.");
+            // Keep trend panels informative if the deviation data could not be read.
+            const tbody = document.getElementById("commonDeviationRows");
+            if (tbody && !latestTrendDeviations.length) tbody.innerHTML = '<tr><td colspan="4">Trend data could not be loaded. Check database access and RLS policies.</td></tr>';
         }
-
     }
 
 
@@ -3567,8 +3142,8 @@ function calculateCompliance() {
 
 </script>
 
-
 <script src="./firesafe-control-bar.js" defer></script>
+
 </body>
 
 </html>
