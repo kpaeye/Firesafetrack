@@ -2425,42 +2425,26 @@ const dashboardStats = {
             }
 
 
-            userDisplay.textContent =
-                user.email ||
-                "User";
-
-
+            // Load the user's display name and role from their profile.
             const {
                 data: profile,
                 error: profileError
             } =
                 await supabaseClient
                     .from("profiles")
-                    .select("role")
-                    .eq(
-                        "id",
-                        user.id
-                    )
+                    .select("full_name, role")
+                    .eq("id", user.id)
                     .maybeSingle();
 
-
-            if (
-                !profileError &&
-                profile
-            ) {
-
-                roleBadge.textContent =
-                    String(
-                        profile.role ||
-                        "USER"
-                    ).toUpperCase();
-
-            } else {
-
-                roleBadge.textContent =
-                    "USER";
-
+            if (profileError) {
+                console.warn("Profile lookup:", profileError.message);
             }
+
+            // Prefer the profile's full name. Use email only if the name is missing.
+            const fullName = String(profile?.full_name || "").trim();
+            userDisplay.textContent = fullName || user.email || "User";
+
+            roleBadge.textContent = String(profile?.role || "USER").toUpperCase();
 
         } catch (error) {
 
