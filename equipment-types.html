@@ -546,6 +546,21 @@ tbody tr:hover {
         flex: 1;
     }
 }
+
+/* FireSafe Track PWA control bar spacing */
+@media screen and (max-width: 768px) {
+    body {
+        padding-bottom: calc(
+            112px + env(safe-area-inset-bottom)
+        ) !important;
+    }
+
+    html {
+        scroll-padding-bottom: calc(
+            112px + env(safe-area-inset-bottom)
+        );
+    }
+}
 </style>
 </head>
 
@@ -1202,6 +1217,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadEquipmentTypes();
 });
 </script>
-
+<script src="./firesafe-control-bar.js" defer></script>
 </body>
 </html>
