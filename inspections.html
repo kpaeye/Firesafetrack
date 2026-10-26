@@ -1634,7 +1634,113 @@ tbody tr:hover{
                 </div>
 
             </div>
+<!-- ONBOARD FIRE SUPPRESSION SYSTEM SELECTOR -->
 
+<div
+    id="suppressionSystemSection"
+    class="form-section"
+    style="display:none;"
+>
+    <h3 class="section-title">
+        Suppression System Details
+    </h3>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+
+            <label
+                for="suppressionSystemType"
+                class="form-label"
+            >
+                Suppression System Type
+            </label>
+
+            <select
+                id="suppressionSystemType"
+                class="select"
+                onchange="changeSuppressionSystem()"
+            >
+                <option value="">
+                    Select system type
+                </option>
+
+                <option value="ANSUL">
+                    ANSUL Suppression System
+                </option>
+
+                <option value="MANTA">
+                    MANTA Suppression System
+                </option>
+
+                <option value="GAS">
+                    Gas Suppression System
+                </option>
+
+                <option value="FOAM">
+                    Foam Suppression System
+                </option>
+            </select>
+
+        </div>
+
+        <div class="form-group">
+
+            <label
+                for="fleetNumber"
+                class="form-label"
+            >
+                Fleet Number
+            </label>
+
+            <input
+                id="fleetNumber"
+                class="input"
+                type="text"
+                placeholder="Enter fleet number"
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label
+                for="machineType"
+                class="form-label"
+            >
+                Machine Type
+            </label>
+
+            <input
+                id="machineType"
+                class="input"
+                type="text"
+                placeholder="Enter machine type"
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label
+                for="systemCylinderCount"
+                class="form-label"
+            >
+                Number of Cylinders
+            </label>
+
+            <input
+                id="systemCylinderCount"
+                class="input"
+                type="number"
+                min="0"
+                placeholder="Enter number"
+            >
+
+        </div>
+
+    </div>
+</div>
 
             <!-- CHECKLIST -->
 
@@ -2119,7 +2225,140 @@ const INSPECTION_FORMS = {
             "Pneumatic Actuators Functional"
         ]
 
+    },
+    
+"Onboard fire suppression": {
+
+    frequency: "Monthly",
+
+    systems: {
+
+        ANSUL: {
+
+            readings: [
+                "End of line resistance readings",
+                "Full mass readings (cartridges)",
+                "Input voltage",
+                "Release / discharge voltage output",
+                "Full mass of portable fire extinguisher"
+            ],
+
+            checklist: [
+                "Green light flashing — 3 seconds",
+                "Inspect display screen for faults / fire",
+                "Check whether buzzer alarm is activated",
+                "Inspect linear detection wire",
+                "Remove detonator wire before servicing / checks",
+                "Reset panel before reconnecting detonator",
+                "Blow off discharge hoses",
+                "Position nozzles properly",
+                "Cover nozzles with blow-off caps",
+                "Check hoses are properly secured",
+                "Check detection wire is properly secured",
+                "Check hoses for damage / cracks",
+                "Check brackets are properly secured",
+                "Inspect agent level, caking and foreign objects",
+                "Inspect shutdown line / relay functionality",
+                "Inspect manual / electric actuators for foreign objects, damage, functionality and obstruction",
+                "Inspect pneumatic actuators for damage, looseness and obstruction"
+            ]
+
+        },
+
+        MANTA: {
+
+            readings: [
+                "Full mass of agent tank",
+                "Full mass of portable fire extinguisher"
+            ],
+
+            checklist: [
+                "Check gauges are in the green range",
+                "Inspect the manual gauge in the cab for the green range",
+                "Check for loss of system pressure",
+                "Inspect the detection tube",
+                "Isolate with safety pin before servicing / checks",
+                "Inspect detection tube before activating the system",
+                "Blow off discharge hoses",
+                "Position nozzles properly",
+                "Cover nozzles with blow-off caps",
+                "Check hoses are properly secured",
+                "Check detection wire is properly secured",
+                "Check hoses for damage / cracks",
+                "Check brackets are properly secured",
+                "Inspect agent level, caking and foreign objects",
+                "Inspect shutdown line / relay functionality",
+                "Inspect manual / electric actuators for foreign objects, damage, functionality and obstruction",
+                "Inspect for leaks in all connections"
+            ]
+
+        },
+
+        GAS: {
+
+            readings: [
+                "Full mass of agent tank",
+                "Full mass of portable fire extinguisher",
+                "Readings of gauges on agent tank"
+            ],
+
+            checklist: [
+                "Gas control unit powered ON",
+                "Inspect display screen for faults / fire",
+                "Check whether buzzer alarm is activated",
+                "Inspect linear detection wire / detectors",
+                "Remove detonator wire before servicing / checks",
+                "Reset panel before reconnecting detonator",
+                "Inspect manual and automatic key change",
+                "Position nozzles properly",
+                "Test double-knock response",
+                "Check pipes are properly secured",
+                "Check detection wire / detectors are properly secured",
+                "Check pipes for damage / cracks",
+                "Check brackets are properly secured",
+                "Inspect shutdown line / relay functionality",
+                "Inspect manual / electric actuators for foreign objects, damage, functionality and obstruction",
+                "Inspect pneumatic actuators for damage, looseness and obstruction"
+            ]
+
+        },
+
+        FOAM: {
+
+            readings: [
+                "End of line resistance readings",
+                "Full mass readings (cartridges)",
+                "Input voltage",
+                "Release / discharge voltage output",
+                "Full mass of portable fire extinguisher"
+            ],
+
+            checklist: [
+                "Green light flashing — 3 seconds",
+                "Inspect display screen for faults / fire",
+                "Check whether buzzer alarm is activated",
+                "Inspect linear detection wire",
+                "Remove detonator wire before servicing / checks",
+                "Reset panel before reconnecting detonator",
+                "Blow off discharge hoses",
+                "Position nozzles properly",
+                "Cover nozzles with blow-off caps",
+                "Check hoses are properly secured",
+                "Check detection wire is properly secured",
+                "Check hoses for damage / cracks",
+                "Check brackets are properly secured",
+                "Inspect agent level, caking and foreign objects",
+                "Inspect shutdown line / relay functionality",
+                "Inspect manual / electric actuators for foreign objects, damage, functionality and obstruction",
+                "Inspect pneumatic actuators for damage, looseness and obstruction"
+            ]
+
+        }
+
     }
+
+},
+    
 
 };
 
