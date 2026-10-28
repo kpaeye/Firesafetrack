@@ -1,37 +1,2041 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b1f3a">
-<meta name="description" content="FireSafe Track fire safety inspections">
-<link rel="manifest" href="./manifest.json">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
 <title>FireSafe Track | Inspections</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
-:root{--navy:#0b1f3a;--panel:#142d4c;--red:#ff3b30;--text:#f4f7fb;--muted:#a9b8ca;--line:rgba(255,255,255,.12);--green:#26c281;--gold:#f5bd4f}*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,var(--navy),#102943);color:var(--text);font-family:Arial,sans-serif;min-height:100vh}button,input,select,textarea{font:inherit}button{cursor:pointer}.topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;background:#08182bdc;backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px}.brand-mark{background:var(--red);border-radius:9px;padding:8px 10px}.top-actions{display:flex;align-items:center;gap:12px}.status{font-size:12px;color:var(--muted)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold);margin-right:6px}.layout{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:calc(100vh - 60px)}aside{padding:20px 12px;border-right:1px solid var(--line);background:#08182b55}aside a{display:block;color:var(--muted);text-decoration:none;padding:12px;border-radius:8px;margin:3px 0;font-size:14px}aside a:hover,aside a.active{background:#ff3b301a;color:white}main{padding:24px;max-width:1500px;width:100%;margin:auto}.heading{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:20px}.heading h1{margin:0 0 8px;font-size:27px}.heading p{margin:0;color:var(--muted);line-height:1.5}.button{border:0;border-radius:8px;padding:10px 14px;font-weight:700}.primary{background:var(--red);color:white}.secondary{background:#ffffff12;color:white;border:1px solid var(--line)}.button:disabled{opacity:.45;cursor:not-allowed}.queue{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#0002;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:18px;font-size:13px;color:var(--muted)}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}.stat,.panel{background:#ffffff08;border:1px solid var(--line);border-radius:12px}.stat{padding:16px}.stat-label{font-size:12px;color:var(--muted)}.stat-value{font-size:27px;font-weight:800;margin-top:7px}.panel{padding:18px;margin-bottom:18px}.panel h2{font-size:17px;margin:0 0 14px}.filters{display:grid;grid-template-columns:minmax(180px,2fr) minmax(150px,1fr) minmax(150px,1fr);gap:10px;margin-bottom:14px}.field{width:100%;background:#07182a;color:white;border:1px solid #52647a;border-radius:8px;padding:11px;min-width:0}.field option{background:#07182a}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:750px}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--muted);font-weight:600}td small{display:block;color:var(--muted);margin-top:4px}.pill{display:inline-block;padding:5px 8px;border-radius:99px;font-size:11px;font-weight:700;background:#ffffff12}.pill.due{color:#ffd166;background:#ffd16618}.pill.overdue,.pill.fail{color:#ff8a83;background:#ff3b3018}.pill.ok{color:#7ee4b4;background:#26c28118}.empty{text-align:center;padding:30px;color:var(--muted)}.modal{display:none;position:fixed;inset:0;background:#000b;z-index:30;overflow:auto;padding:22px}.modal.open{display:block}.modal-card{max-width:900px;margin:20px auto;background:#0e2540;border:1px solid var(--line);border-radius:14px;padding:22px}.modal-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}.modal-head h2{margin:0 0 7px}.subtle{color:var(--muted);font-size:13px;line-height:1.5}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.form-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:7px}.section-title{font-size:15px;margin:22px 0 10px}.check-row{border:1px solid var(--line);border-radius:10px;padding:13px;margin:9px 0}.check-label{font-weight:700;font-size:14px;margin-bottom:10px}.answers{display:flex;gap:8px;flex-wrap:wrap}.answer{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-size:12px}.answer input{accent-color:var(--red)}.remarks{margin-top:9px}.modal-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:20px;flex-wrap:wrap}.progress{font-size:12px;color:var(--muted)}.toast-wrap{position:fixed;right:16px;bottom:16px;z-index:50;display:grid;gap:8px;max-width:min(420px,calc(100vw - 32px))}.toast{background:#142d4c;border:1px solid var(--line);padding:13px 15px;border-radius:9px;box-shadow:0 8px 25px #0005;font-size:13px}.toast.error{border-color:#ff3b30}.toast.success{border-color:var(--green)}.mobile-nav{display:none}@media(max-width:850px){.layout{grid-template-columns:1fr}aside{display:none}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:16px}.filters{grid-template-columns:1fr}.heading h1{font-size:23px}.modal{padding:8px}.modal-card{margin:8px auto;padding:16px}.form-grid{grid-template-columns:1fr}.topbar{padding:12px}.brand{font-size:16px}}@media(max-width:520px){.status{max-width:95px}.queue{align-items:flex-start}.stats{gap:8px}.stat{padding:12px}.stat-value{font-size:23px}.heading{display:block}.heading>.button{margin-top:12px}.mobile-nav{display:flex;position:sticky;bottom:0;z-index:12;justify-content:space-around;background:#07182af2;border-top:1px solid var(--line);padding:10px 4px calc(10px + env(safe-area-inset-bottom))}.mobile-nav a{color:var(--muted);text-decoration:none;font-size:11px;text-align:center}.mobile-nav a.active{color:white}}
+
+*{
+    box-sizing:border-box;
+}
+
+html,
+body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    min-height:100vh;
+    color:#ffffff;
+    background:linear-gradient(135deg,#0b1f3a,#142d4c);
+}
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+.sidebar-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.55);
+    z-index:900;
+    display:none;
+}
+
+.sidebar-overlay.active{
+    display:block;
+}
+
+.sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:290px;
+    height:100vh;
+    background:#091a2e;
+    border-right:1px solid rgba(255,255,255,0.1);
+    z-index:1000;
+    transform:translateX(-100%);
+    transition:transform 0.25s ease;
+    overflow-y:auto;
+}
+
+.sidebar.open{
+    transform:translateX(0);
+}
+
+.sidebar-header{
+    padding:24px 20px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.brand-mark{
+    width:42px;
+    height:42px;
+    border-radius:10px;
+    background:#ff3b30;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:21px;
+    font-weight:bold;
+}
+
+.brand-text{
+    font-size:20px;
+    font-weight:bold;
+}
+
+.brand-subtitle{
+    color:#9fb1c5;
+    font-size:11px;
+    margin-top:3px;
+}
+
+.nav{
+    padding:14px 10px 30px;
+}
+
+.nav-section{
+    margin:18px 10px 8px;
+    color:#71859b;
+    font-size:10px;
+    font-weight:bold;
+    text-transform:uppercase;
+    letter-spacing:1px;
+}
+
+.nav-link{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 14px;
+    margin:3px 0;
+    color:#c9d4df;
+    text-decoration:none;
+    border-radius:8px;
+    font-size:14px;
+    transition:0.2s;
+}
+
+.nav-link:hover{
+    background:rgba(255,255,255,0.07);
+    color:#ffffff;
+}
+
+.nav-link.active{
+    background:#ff3b30;
+    color:#ffffff;
+}
+
+.nav-icon{
+    width:22px;
+    text-align:center;
+    font-size:16px;
+}
+
+/* =====================================================
+   TOPBAR
+===================================================== */
+
+.topbar{
+    height:70px;
+    background:rgba(0,0,0,0.3);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 22px;
+    position:sticky;
+    top:0;
+    z-index:500;
+}
+
+.menu-button{
+    width:42px;
+    height:42px;
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:8px;
+    background:rgba(255,255,255,0.07);
+    color:#ffffff;
+    font-size:22px;
+    cursor:pointer;
+}
+
+.menu-button:hover{
+    background:rgba(255,255,255,0.13);
+}
+
+.topbar-title{
+    font-size:18px;
+    font-weight:bold;
+}
+
+.topbar-right{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.database-status{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:12px;
+    color:#aebdca;
+}
+
+.status-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#ffcc00;
+}
+
+.status-dot.online{
+    background:#28d17c;
+}
+
+.status-dot.offline{
+    background:#ff3b30;
+}
+
+/* =====================================================
+   MAIN
+===================================================== */
+
+.main{
+    padding:25px;
+    max-width:1500px;
+    margin:auto;
+}
+
+.page-heading{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+    margin-bottom:25px;
+}
+
+.page-heading h1{
+    margin:0;
+    font-size:28px;
+}
+
+.page-heading p{
+    margin:8px 0 0;
+    color:#aebdca;
+    font-size:14px;
+}
+
+.refresh-button{
+    border:1px solid rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.08);
+    color:#ffffff;
+    padding:11px 16px;
+    border-radius:7px;
+    cursor:pointer;
+}
+
+.refresh-button:hover{
+    background:rgba(255,255,255,0.14);
+}
+
+/* =====================================================
+   STATS
+===================================================== */
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:15px;
+    margin-bottom:22px;
+}
+
+.stat-card{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.09);
+    border-radius:10px;
+    padding:18px;
+}
+
+.stat-label{
+    color:#9fb1c5;
+    font-size:12px;
+}
+
+.stat-value{
+    margin-top:8px;
+    font-size:26px;
+    font-weight:bold;
+}
+
+/* =====================================================
+   CARD
+===================================================== */
+
+.card{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.09);
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.card-header{
+    padding:18px 20px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.card-header h2{
+    margin:0;
+    font-size:17px;
+}
+
+.card-header p{
+    margin:6px 0 0;
+    color:#9fb1c5;
+    font-size:12px;
+}
+
+/* =====================================================
+   FILTERS
+===================================================== */
+
+.filters{
+    padding:18px 20px;
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr 1fr auto;
+    gap:10px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.input,
+.select{
+    width:100%;
+    padding:11px 12px;
+    border-radius:7px;
+    border:1px solid rgba(255,255,255,0.15);
+    background:rgba(0,0,0,0.22);
+    color:#ffffff;
+    outline:none;
+}
+
+.input:focus,
+.select:focus{
+    border-color:#ff3b30;
+}
+
+.select option{
+    background:#142d4c;
+    color:#ffffff;
+}
+
+.button{
+    border:none;
+    border-radius:7px;
+    padding:10px 15px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.button-primary{
+    background:#ff3b30;
+    color:#ffffff;
+}
+
+.button-primary:hover{
+    background:#cc2f26;
+}
+
+.button-primary:disabled{
+    background:#7d2a25;
+    color:#b9c1c9;
+    cursor:not-allowed;
+}
+
+.button-secondary{
+    background:rgba(255,255,255,0.1);
+    color:#ffffff;
+    border:1px solid rgba(255,255,255,0.13);
+}
+
+.button-secondary:hover{
+    background:rgba(255,255,255,0.16);
+}
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+.table-container{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:850px;
+}
+
+thead{
+    background:rgba(0,0,0,0.18);
+}
+
+th{
+    text-align:left;
+    padding:13px 15px;
+    color:#9fb1c5;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+}
+
+td{
+    padding:14px 15px;
+    border-top:1px solid rgba(255,255,255,0.06);
+    font-size:13px;
+    vertical-align:middle;
+}
+
+tbody tr:hover{
+    background:rgba(255,255,255,0.04);
+}
+
+.equipment-name{
+    font-weight:bold;
+}
+
+.equipment-code{
+    color:#9fb1c5;
+    font-size:11px;
+    margin-top:4px;
+}
+
+.type-text{
+    color:#d4dde6;
+}
+
+.action-button{
+    border:none;
+    border-radius:6px;
+    padding:8px 12px;
+    background:#ff3b30;
+    color:#ffffff;
+    cursor:pointer;
+    font-weight:bold;
+    font-size:12px;
+}
+
+.action-button:hover{
+    background:#cc2f26;
+}
+
+.empty-state{
+    text-align:center;
+    padding:45px 20px;
+    color:#9fb1c5;
+}
+
+.loading{
+    text-align:center;
+    padding:40px;
+    color:#9fb1c5;
+}
+
+/* =====================================================
+   MODALS
+===================================================== */
+
+.modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.72);
+    z-index:1500;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.modal-overlay.active{
+    display:flex;
+}
+
+.modal{
+    width:min(1050px,100%);
+    max-height:92vh;
+    overflow-y:auto;
+    background:#102943;
+    border:1px solid rgba(255,255,255,0.13);
+    border-radius:12px;
+    box-shadow:0 25px 70px rgba(0,0,0,0.45);
+}
+
+.modal-header{
+    position:sticky;
+    top:0;
+    z-index:2;
+    background:#102943;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:15px;
+    padding:20px;
+    border-bottom:1px solid rgba(255,255,255,0.09);
+}
+
+.modal-header h2{
+    margin:0;
+    font-size:20px;
+}
+
+.modal-header p{
+    margin:6px 0 0;
+    color:#9fb1c5;
+    font-size:12px;
+}
+
+.close-button{
+    width:34px;
+    height:34px;
+    border:none;
+    border-radius:6px;
+    background:rgba(255,255,255,0.08);
+    color:#ffffff;
+    cursor:pointer;
+    font-size:19px;
+}
+
+.close-button:hover{
+    background:rgba(255,255,255,0.16);
+}
+
+.modal-body{
+    padding:20px;
+}
+
+.modal-footer{
+    position:sticky;
+    bottom:0;
+    background:#102943;
+    padding:15px 20px;
+    border-top:1px solid rgba(255,255,255,0.09);
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+}
+
+/* =====================================================
+   EQUIPMENT INFORMATION
+===================================================== */
+
+.equipment-info{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:22px;
+}
+
+.info-box{
+    background:rgba(0,0,0,0.18);
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:7px;
+    padding:12px;
+}
+
+.info-label{
+    font-size:10px;
+    color:#8195aa;
+    text-transform:uppercase;
+    margin-bottom:5px;
+}
+
+.info-value{
+    font-size:13px;
+    font-weight:bold;
+    word-break:break-word;
+}
+
+/* =====================================================
+   INSPECTION HEADER
+===================================================== */
+
+.form-section{
+    margin-top:20px;
+}
+
+.section-title{
+    margin:0 0 10px;
+    font-size:15px;
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:12px;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.form-group.full{
+    grid-column:1/-1;
+}
+
+.form-label{
+    color:#aebdca;
+    font-size:11px;
+    font-weight:bold;
+    text-transform:uppercase;
+}
+
+.textarea{
+    min-height:90px;
+    resize:vertical;
+}
+
+/* =====================================================
+   CHECKLIST
+===================================================== */
+
+.checklist-wrapper{
+    margin-top:25px;
+}
+
+.checklist-title{
+    font-size:17px;
+    margin:0 0 5px;
+}
+
+.checklist-subtitle{
+    color:#9fb1c5;
+    font-size:12px;
+    margin:0 0 15px;
+}
+
+.checklist-progress{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    padding:12px 14px;
+    margin-bottom:12px;
+    background:rgba(0,0,0,0.18);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:7px;
+}
+
+.progress-message{
+    font-size:12px;
+    color:#cbd5df;
+}
+
+.progress-message.complete{
+    color:#54e39a;
+}
+
+.progress-count{
+    font-size:12px;
+    font-weight:bold;
+    color:#ffcc00;
+    white-space:nowrap;
+}
+
+.progress-count.complete{
+    color:#54e39a;
+}
+
+.checklist{
+    border:1px solid rgba(255,255,255,0.09);
+    border-radius:8px;
+    overflow:hidden;
+}
+
+.check-row{
+    display:grid;
+    grid-template-columns:55px minmax(300px,1fr) 170px minmax(180px,0.8fr);
+    gap:12px;
+    align-items:center;
+    padding:12px 14px;
+    border-top:1px solid rgba(255,255,255,0.06);
+    transition:background 0.15s ease;
+}
+
+.check-row:first-child{
+    border-top:none;
+}
+
+.check-row.header{
+    background:rgba(0,0,0,0.2);
+    color:#9fb1c5;
+    font-size:10px;
+    font-weight:bold;
+    text-transform:uppercase;
+}
+
+.check-row.unanswered{
+    background:rgba(255,204,0,0.055);
+}
+
+.check-row.unanswered .item-number{
+    color:#ffcc00;
+}
+
+.item-number{
+    font-weight:bold;
+    color:#9fb1c5;
+}
+
+.requirement{
+    font-size:13px;
+    line-height:1.4;
+}
+
+.answer-group{
+    display:flex;
+    gap:5px;
+}
+
+.answer-button{
+    flex:1;
+    min-width:48px;
+    padding:8px 6px;
+    border:1px solid rgba(255,255,255,0.13);
+    border-radius:5px;
+    background:rgba(255,255,255,0.05);
+    color:#cbd5df;
+    cursor:pointer;
+    font-size:10px;
+    font-weight:bold;
+}
+
+.answer-button:hover{
+    background:rgba(255,255,255,0.11);
+}
+
+.answer-button.selected-pass{
+    background:#1c8f5a;
+    border-color:#28d17c;
+    color:#ffffff;
+}
+
+.answer-button.selected-fail{
+    background:#b72e28;
+    border-color:#ff3b30;
+    color:#ffffff;
+}
+
+.answer-button.selected-na{
+    background:#6b5b00;
+    border-color:#ffcc00;
+    color:#ffffff;
+}
+
+.remarks-input{
+    width:100%;
+    padding:8px 9px;
+    border-radius:5px;
+    border:1px solid rgba(255,255,255,0.12);
+    background:rgba(0,0,0,0.18);
+    color:#ffffff;
+    outline:none;
+    font-size:11px;
+}
+
+.remarks-input:focus{
+    border-color:#ff3b30;
+}
+
+/* =====================================================
+   HISTORY
+===================================================== */
+
+.history-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.history-item{
+    background:rgba(0,0,0,0.18);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:8px;
+    padding:14px;
+}
+
+.history-top{
+    display:flex;
+    justify-content:space-between;
+    gap:15px;
+}
+
+.history-date{
+    font-weight:bold;
+}
+
+.history-type{
+    color:#9fb1c5;
+    font-size:12px;
+    margin-top:4px;
+}
+
+.history-status{
+    font-size:11px;
+    font-weight:bold;
+    padding:5px 9px;
+    border-radius:5px;
+    height:max-content;
+}
+
+.status-pass{
+    background:rgba(40,209,124,0.16);
+    color:#54e39a;
+}
+
+.status-fail{
+    background:rgba(255,59,48,0.16);
+    color:#ff7169;
+}
+
+.status-na{
+    background:rgba(255,204,0,0.14);
+    color:#ffcc00;
+}
+
+.status-pending{
+    background:rgba(255,255,255,0.1);
+    color:#cbd5df;
+}
+
+/* =====================================================
+   TOAST
+===================================================== */
+
+.toast-container{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    z-index:3000;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.toast{
+    min-width:260px;
+    max-width:380px;
+    background:#102943;
+    border:1px solid rgba(255,255,255,0.13);
+    border-left:4px solid #ffcc00;
+    color:#ffffff;
+    padding:13px 15px;
+    border-radius:7px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+    font-size:13px;
+}
+
+.toast.success{
+    border-left-color:#28d17c;
+}
+
+.toast.error{
+    border-left-color:#ff3b30;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media(max-width:1100px){
+
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .filters{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .equipment-info{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .form-grid{
+        grid-template-columns:1fr 1fr;
+    }
+
+}
+
+@media(max-width:700px){
+
+    .main{
+        padding:15px;
+    }
+
+    .page-heading{
+        flex-direction:column;
+    }
+
+    .stats{
+        grid-template-columns:1fr;
+    }
+
+    .filters{
+        grid-template-columns:1fr;
+    }
+
+    .equipment-info{
+        grid-template-columns:1fr;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+
+    .check-row{
+        grid-template-columns:35px 1fr;
+    }
+
+    .check-row.header{
+        display:none;
+    }
+
+    .answer-group,
+    .remarks-input{
+        grid-column:2;
+    }
+
+    .topbar-title{
+        display:none;
+    }
+
+    .checklist-progress{
+        align-items:flex-start;
+        flex-direction:column;
+        gap:5px;
+    }
+
+}
+
+
+
+/* Show bottom control bar on mobile only */
+.control-bar {
+    display: none;
+}
+
+@media screen and (max-width: 768px) {
+    .control-bar {
+        display: grid;
+    }
+
+    body {
+        padding-bottom: 82px;
+    }
+}
+
 </style>
+
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0b1f3a">
 </head>
+
 <body>
-<header class="topbar"><div class="brand"><span class="brand-mark">FS</span><span>FireSafe Track <small style="display:block;color:var(--muted);font-size:10px;font-weight:400;margin-top:2px">INSPECTION MANAGEMENT</small></span></div><div class="top-actions"><span class="status"><i class="dot" id="statusDot"></i><span id="databaseStatus">Connecting</span></span><button class="button secondary" onclick="location.href='dashboard.html'">Dashboard</button></div></header>
-<div class="layout"><aside><a href="dashboard.html">▦ &nbsp; Dashboard</a><a href="equipment.html">▣ &nbsp; Equipment</a><a class="active" href="inspections.html">✓ &nbsp; Inspections</a><a href="deviations.html">! &nbsp; Deviations</a><a href="corrective-actions.html">↻ &nbsp; Corrective Actions</a><a href="reports.html">▤ &nbsp; Inspection Reports</a><a href="users.html">♙ &nbsp; Users</a><a href="settings.html">⚙ &nbsp; Settings</a></aside>
-<main><div class="heading"><div><h1>Fire Safety Inspections</h1><p>Select equipment, complete every checklist item, and save. Failed answers become deviations from the saved answers through a secure database operation.</p></div><button class="button secondary" id="refreshButton">↻ Refresh</button></div>
-<div class="queue"><span id="offlineQueueMessage">Checking local inspection queue…</span><button class="button primary" id="syncNowButton">Sync pending inspections</button></div>
-<section class="stats"><div class="stat"><div class="stat-label">Equipment available</div><div class="stat-value" id="totalEquipment">—</div></div><div class="stat"><div class="stat-label">Inspections recorded</div><div class="stat-value" id="totalInspections">—</div></div><div class="stat"><div class="stat-label">Passed</div><div class="stat-value" id="passedInspections">—</div></div><div class="stat"><div class="stat-label">Failed</div><div class="stat-value" id="failedInspections">—</div></div></section>
-<section class="panel"><h2>Equipment register</h2><div class="filters"><input id="searchInput" class="field" placeholder="Search name, code, area or location"><select id="typeFilter" class="field"><option value="">All equipment types</option></select><select id="dueFilter" class="field"><option value="">All inspection dates</option><option value="overdue">Overdue</option><option value="due">Due within 3 days</option><option value="current">Not due soon</option></select></div><div class="table-wrap"><table><thead><tr><th>Equipment</th><th>Type</th><th>Area / location</th><th>Last inspection</th><th>Next inspection</th><th>Status</th><th>Action</th></tr></thead><tbody id="equipmentTableBody"><tr><td colspan="7" class="empty">Loading equipment…</td></tr></tbody></table></div></section>
-<section class="panel"><h2>Recent inspections</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Equipment</th><th>Inspector</th><th>Result</th><th>Notes</th></tr></thead><tbody id="recentTableBody"><tr><td colspan="5" class="empty">Loading inspections…</td></tr></tbody></table></div></section>
-</main></div>
-<nav class="mobile-nav"><a href="dashboard.html">▦<br>Dashboard</a><a href="equipment.html">▣<br>Equipment</a><a class="active" href="inspections.html">✓<br>Inspect</a><a href="deviations.html">!<br>Deviations</a><a href="reports.html">▤<br>Reports</a></nav>
-<div class="modal" id="inspectionModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-card"><div class="modal-head"><div><h2 id="modalTitle">Equipment inspection</h2><div id="equipmentSummary" class="subtle"></div></div><button class="button secondary" id="closeModalButton">Close</button></div><div class="form-grid"><div class="form-group"><label for="inspectionDate">Inspection date</label><input class="field" id="inspectionDate" type="date" required></div><div class="form-group"><label for="inspectorName">Inspector name</label><input class="field" id="inspectorName" autocomplete="name" required></div></div><div id="readingSection"><h3 class="section-title">Recorded readings</h3><div id="readingFields" class="form-grid"></div></div><h3 class="section-title" id="checklistTitle">Inspection checklist</h3><p class="subtle">Select PASS, FAIL or N/A for every item. A FAIL answer requires remarks so the deviation is meaningful.</p><div id="checklist"></div><div class="form-group" style="margin-top:18px"><label for="inspectionNotes">General inspection notes (optional)</label><textarea id="inspectionNotes" class="field" rows="3" placeholder="Additional observations"></textarea></div><div class="modal-footer"><span id="checklistProgress" class="progress">0 items answered</span><button id="saveInspectionButton" class="button primary">Save inspection</button></div></div></div>
-<div id="toastContainer" class="toast-wrap" aria-live="polite"></div>
+
+<!-- =====================================================
+     SIDEBAR OVERLAY
+===================================================== -->
+
+<div
+    id="sidebarOverlay"
+    class="sidebar-overlay"
+    onclick="closeSidebar()"
+></div>
+
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
+<aside
+    id="sidebar"
+    class="sidebar"
+>
+
+    <div class="sidebar-header">
+
+        <div class="brand">
+
+            <div class="brand-mark">
+                FS
+            </div>
+
+            <div>
+
+                <div class="brand-text">
+                    FireSafe Track
+                </div>
+
+                <div class="brand-subtitle">
+                    Fire Safety Inspection System
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <nav class="nav">
+
+        <div class="nav-section">
+            Main
+        </div>
+
+        <a
+            href="dashboard.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">▦</span>
+            <span>Dashboard</span>
+        </a>
+
+
+        <div class="nav-section">
+            Fire Safety Management
+        </div>
+
+        <a
+            href="equipment.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">▣</span>
+            <span>Equipment Register</span>
+        </a>
+
+        <a
+            href="equipment-types.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">◫</span>
+            <span>Equipment Types</span>
+        </a>
+
+        <a
+            href="locations.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">⌖</span>
+            <span>Locations</span>
+        </a>
+
+        <a
+            href="inspections.html"
+            class="nav-link active"
+        >
+            <span class="nav-icon">✓</span>
+            <span>Inspections</span>
+        </a>
+
+        <a
+            href="deviations.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">!</span>
+            <span>Deviations</span>
+        </a>
+
+        <a
+            href="corrective-actions.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">↻</span>
+            <span>Corrective Actions</span>
+        </a>
+
+        <a
+            href="reports.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">▤</span>
+            <span>Inspection Reports</span>
+        </a>
+
+
+        <div class="nav-section">
+            Administration
+        </div>
+
+        <a
+            href="users.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">♙</span>
+            <span>Users</span>
+        </a>
+
+        <a
+            href="settings.html"
+            class="nav-link"
+        >
+            <span class="nav-icon">⚙</span>
+            <span>Settings</span>
+        </a>
+
+    </nav>
+
+</aside>
+
+
+<!-- =====================================================
+     TOPBAR
+===================================================== -->
+
+<header class="topbar">
+
+    <div style="display:flex;align-items:center;gap:14px;">
+
+        <button
+            class="menu-button"
+            onclick="openSidebar()"
+            aria-label="Open menu"
+        >
+            ☰
+        </button>
+
+        <div class="topbar-title">
+            Inspections
+        </div>
+
+    </div>
+
+
+    <div class="topbar-right">
+
+        <div class="database-status">
+
+            <span
+                id="statusDot"
+                class="status-dot"
+            ></span>
+
+            <span id="databaseStatus">
+                Connecting...
+            </span>
+
+        </div>
+
+    </div>
+
+</header>
+
+<div id="offlineQueueBar" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 22px;background:rgba(0,0,0,.22);border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;">
+  <span id="offlineQueueMessage">Offline-ready inspection queue: checking saved inspections…</span>
+  <button type="button" class="button button-secondary" id="syncNowButton" onclick="syncPendingInspections(true)">Sync pending inspections</button>
+</div>
+
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
+
+<main class="main">
+
+    <div class="page-heading">
+
+        <div>
+
+            <h1>
+                Fire Safety Inspections
+            </h1>
+
+            <p>
+                Select equipment from the register and FireSafe Track will automatically open the correct inspection form.
+            </p>
+
+        </div>
+
+        <button
+            class="refresh-button"
+            onclick="loadEquipment()"
+        >
+            ↻ Refresh
+        </button>
+
+    </div>
+
+
+    <!-- =================================================
+         STATS
+    ================================================== -->
+
+    <section class="stats">
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Equipment Available
+            </div>
+
+            <div
+                id="totalEquipment"
+                class="stat-value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Inspections
+            </div>
+
+            <div
+                id="totalInspections"
+                class="stat-value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Passed
+            </div>
+
+            <div
+                id="passedInspections"
+                class="stat-value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Failed
+            </div>
+
+            <div
+                id="failedInspections"
+                class="stat-value"
+            >
+                0
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         EQUIPMENT SELECTION
+    ================================================== -->
+
+    <section class="card">
+
+        <div class="card-header">
+
+            <h2>
+                Select Equipment
+            </h2>
+
+            <p>
+                The inspection form is determined automatically from the equipment type stored in the Equipment Register.
+            </p>
+
+        </div>
+
+
+        <div class="filters">
+
+            <input
+                id="searchInput"
+                class="input"
+                type="text"
+                placeholder="Search equipment name, code, manufacturer, area or location..."
+                oninput="applyFilters()"
+            >
+
+
+            <select
+                id="typeFilter"
+                class="select"
+                onchange="applyFilters()"
+            >
+
+                <option value="">
+                    All Equipment Types
+                </option>
+
+                <option value="Fire extinguisher">
+                    Fire extinguisher
+                </option>
+
+                <option value="Onboard fire suppression">
+                    Onboard fire suppression
+                </option>
+
+                <option value="Fire hydrant">
+                    Fire hydrant
+                </option>
+
+                <option value="Fire hose reel">
+                    Fire hose reel
+                </option>
+
+                <option value="Installation control valve">
+                    Installation control valve
+                </option>
+
+                <option value="Fire Alarm">
+                    Fire Alarm
+                </option>
+
+            </select>
+
+
+            <input
+                id="areaFilter"
+                class="input"
+                type="text"
+                placeholder="Area"
+                oninput="applyFilters()"
+            >
+
+
+            <input
+                id="locationFilter"
+                class="input"
+                type="text"
+                placeholder="Location"
+                oninput="applyFilters()"
+            >
+
+
+            <button
+                class="button button-secondary"
+                onclick="resetFilters()"
+            >
+                Reset
+            </button>
+
+        </div>
+
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Equipment
+                        </th>
+
+                        <th>
+                            Type
+                        </th>
+
+                        <th>
+                            Area
+                        </th>
+
+                        <th>
+                            Location
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="equipmentTableBody">
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="loading"
+                        >
+                            Loading equipment...
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- =====================================================
+     INSPECTION FORM MODAL
+===================================================== -->
+
+<div
+    id="inspectionModal"
+    class="modal-overlay"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2 id="inspectionModalTitle">
+                    Inspection
+                </h2>
+
+                <p id="inspectionModalSubtitle">
+                    Fire safety equipment inspection
+                </p>
+
+            </div>
+
+            <button
+                class="close-button"
+                onclick="closeInspectionModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="modal-body">
+
+            <!-- EQUIPMENT INFORMATION -->
+
+            <div class="equipment-info">
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Equipment
+                    </div>
+
+                    <div
+                        id="infoName"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Equipment Code
+                    </div>
+
+                    <div
+                        id="infoCode"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Equipment Type
+                    </div>
+
+                    <div
+                        id="infoType"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Location
+                    </div>
+
+                    <div
+                        id="infoLocation"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Area
+                    </div>
+
+                    <div
+                        id="infoArea"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Manufacturer
+                    </div>
+
+                    <div
+                        id="infoManufacturer"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Model
+                    </div>
+
+                    <div
+                        id="infoModel"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Serial Number
+                    </div>
+
+                    <div
+                        id="infoSerial"
+                        class="info-value"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- INSPECTION DETAILS -->
+
+            <div class="form-section">
+
+                <h3 class="section-title">
+                    Inspection Details
+                </h3>
+
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label class="form-label">
+                            Inspection Date
+                        </label>
+
+                        <input
+                            id="inspectionDate"
+                            class="input"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label class="form-label">
+                            Inspector Name
+                        </label>
+
+                        <input
+                            id="inspectorName"
+                            class="input"
+                            type="text"
+                            placeholder="Enter inspector name"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label class="form-label">
+                            Inspection Type
+                        </label>
+
+                        <input
+                            id="inspectionTypeDisplay"
+                            class="input"
+                            type="text"
+                            readonly
+                        >
+
+                    </div>
+
+
+                    <div class="form-group full">
+
+                        <label class="form-label">
+                            General Notes
+                        </label>
+
+                        <textarea
+                            id="inspectionNotes"
+                            class="input textarea"
+                            placeholder="Enter general inspection notes..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- CHECKLIST -->
+
+
+            <div
+    id="readingSection"
+    class="form-section"
+    style="display:none;"
+>
+    <h3 class="section-title">
+        Recorded Readings
+    </h3>
+
+    <div
+        id="readingFields"
+        class="form-grid"
+    ></div>
+</div>
+            <div class="checklist-wrapper">
+
+                <h3
+                    id="checklistTitle"
+                    class="checklist-title"
+                >
+                    Inspection Checklist
+                </h3>
+
+                <p class="checklist-subtitle">
+                    Every requirement must be deliberately marked PASS, FAIL or N/A before the inspection can be saved.
+                </p>
+
+
+                <!-- CHECKLIST PROGRESS -->
+
+                <div
+                    id="checklistProgress"
+                    class="checklist-progress"
+                >
+
+                    <div
+                        id="progressMessage"
+                        class="progress-message"
+                    >
+                        No items answered yet.
+                    </div>
+
+                    <div
+                        id="progressCount"
+                        class="progress-count"
+                    >
+                        0 answered
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="checklist"
+                    class="checklist"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <div class="modal-footer">
+
+            <button
+                class="button button-secondary"
+                onclick="closeInspectionModal()"
+            >
+                Cancel
+            </button>
+
+            <button
+                id="saveInspectionButton"
+                class="button button-primary"
+                onclick="saveInspection()"
+            >
+                Save Inspection
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     HISTORY MODAL
+===================================================== -->
+
+<div
+    id="historyModal"
+    class="modal-overlay"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2>
+                    Inspection History
+                </h2>
+
+                <p id="historySubtitle">
+                    Previous inspections
+                </p>
+
+            </div>
+
+            <button
+                class="close-button"
+                onclick="closeHistoryModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="modal-body">
+
+            <div
+                id="historyList"
+                class="history-list"
+            ></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     TOASTS
+===================================================== -->
+
+<div
+    id="toastContainer"
+    class="toast-container"
+></div>
+
+
 <script>
+
+/* =====================================================
+   SUPABASE
+===================================================== */
+
 const SUPABASE_URL =
     "https://syiemjazbawflavxibzv.supabase.co";
 
 const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5aWVtamF6YmF3ZmxhdnhpYnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Njg5MzEsImV4cCI6MjEwNDU0NDkzMX0.RJ6siFDLg3LAsP2ZPDgdFVGAFasg05hK4GikdIO68PM";
 
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+let supabaseClient = null;
+
+function ensureSupabaseClient(){
+    if(!supabaseClient && window.supabase && typeof window.supabase.createClient === "function"){
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+    return supabaseClient;
+}
+
+ensureSupabaseClient();
+
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let equipmentList = [];
+
+let filteredEquipment = [];
+
+let currentEquipment = null;
+
+let currentChecklist = [];
+
+/*
+ * IMPORTANT:
+ *
+ * Each checklist item starts as null.
+ *
+ * null = unanswered
+ * PASS = explicitly passed
+ * FAIL = explicitly failed
+ * N/A = explicitly marked not applicable
+ *
+ * We DO NOT automatically assign N/A.
+ */
+
+let checklistAnswers = [];
+
+/* =====================================================
+   OFFLINE INSPECTION QUEUE (IndexedDB)
+   Local save is confirmed separately from server sync.
+===================================================== */
+const OFFLINE_DB_NAME = "firesafe-track-offline";
+const OFFLINE_DB_VERSION = 1;
+const OFFLINE_STORE = "pendingInspections";
+let offlineDbPromise = null;
+
+function openOfflineDb(){
+    if(!("indexedDB" in window)) return Promise.reject(new Error("This browser does not support local offline storage."));
+    if(offlineDbPromise) return offlineDbPromise;
+    offlineDbPromise = new Promise((resolve,reject)=>{
+        const request = indexedDB.open(OFFLINE_DB_NAME,OFFLINE_DB_VERSION);
+        request.onupgradeneeded = () => {
+            const db = request.result;
+            if(!db.objectStoreNames.contains(OFFLINE_STORE)) db.createObjectStore(OFFLINE_STORE,{keyPath:"queueId"});
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error("Could not open local inspection storage."));
+    });
+    return offlineDbPromise;
+}
+
+async function putQueuedInspection(item){
+    const db = await openOfflineDb();
+    return new Promise((resolve,reject)=>{
+        const tx = db.transaction(OFFLINE_STORE,"readwrite");
+        tx.objectStore(OFFLINE_STORE).put(item);
+        tx.oncomplete = () => resolve(item);
+        tx.onerror = () => reject(tx.error || new Error("Could not save inspection locally."));
+        tx.onabort = () => reject(tx.error || new Error("Local inspection save was interrupted."));
+    });
+}
+
+async function getQueuedInspections(){
+    const db = await openOfflineDb();
+    return new Promise((resolve,reject)=>{
+        const tx = db.transaction(OFFLINE_STORE,"readonly");
+        const req = tx.objectStore(OFFLINE_STORE).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error || new Error("Could not read local inspection queue."));
+    });
+}
+
+async function removeQueuedInspection(queueId){
+    const db = await openOfflineDb();
+    return new Promise((resolve,reject)=>{
+        const tx = db.transaction(OFFLINE_STORE,"readwrite");
+        tx.objectStore(OFFLINE_STORE).delete(queueId);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error || new Error("Could not clear synced inspection."));
+    });
+}
+
+function makeQueueId(){
+    return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `fst-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+async function updateOfflineQueueUi(){
+    const message = document.getElementById("offlineQueueMessage");
+    const button = document.getElementById("syncNowButton");
+    if(!message || !button) return;
+    try{
+        const pending = await getQueuedInspections();
+        const waiting = pending.filter(x=>x.status !== "synced").length;
+        message.textContent = waiting ? `${waiting} inspection${waiting===1?"":"s"} saved on this device and awaiting server sync.` : (navigator.onLine ? "No pending inspections. Local offline storage is ready." : "You are offline. Completed inspections will be saved on this device until connection returns.");
+        button.disabled = waiting === 0 || !navigator.onLine;
+        button.textContent = waiting ? `Sync pending inspections (${waiting})` : "No pending inspections";
+    }catch(error){
+        message.textContent = "Offline storage unavailable: inspections require an internet connection to save.";
+        button.disabled = true;
+        console.error("Offline queue status error:",error);
+    }
+}
+
+async function syncPendingInspections(manual=false){
+    if(!navigator.onLine){
+        if(manual) showToast("You are offline. Inspections remain saved on this device.","error");
+        await updateOfflineQueueUi();
+        return;
+    }
+    const client = ensureSupabaseClient();
+    if(!client){
+        if(manual) showToast("The database library did not load. Keep this page open and try again when connected.","error");
+        await updateOfflineQueueUi();
+        return;
+    }
+    const button = document.getElementById("syncNowButton");
+    if(button){button.disabled=true;button.textContent="Syncing…";}
+    try{
+        const queue = await getQueuedInspections();
+        let synced = 0;
+        for(let item of queue){
+            try{
+                // Persist every completed stage so a refresh does not restart from step one.
+                if(!item.inspectionId){
+                    const {data,error} = await client.from("inspections").insert({
+                        equipment_id:item.equipment.id,
+                        inspection_date:item.inspectionDate,
+                        inspector_name:item.inspectorName,
+                        inspection_type:item.equipment.equipment_type,
+                        overall_status:item.overallStatus,
+                        notes:item.notes || null
+                    }).select().single();
+                    if(error) throw error;
+                    item.inspectionId = data.id;
+                    item.stage = "inspection-created";
+                    await putQueuedInspection(item);
+                }
+                if(!item.answersSaved){
+                    const answerRows = item.answers.map(a=>({
+                        inspection_id:item.inspectionId,
+                        item_number:a.item_number,
+                        inspection_requirement:a.inspection_requirement,
+                        answer:a.answer,
+                        remarks:a.remarks || null,
+                        severity:a.severity || "Medium"
+                    }));
+                    const {error} = await client.from("inspection_answers").insert(answerRows);
+                    if(error) throw error;
+                    item.answersSaved = true;
+                    item.stage = "answers-saved";
+                    await putQueuedInspection(item);
+                }
+                if(!item.deviationsSaved){
+                    const {data:existing,error:existingError} = await client.from("deviations").select("item_number").eq("inspection_id",item.inspectionId);
+                    if(existingError) throw existingError;
+                    const existingItems = new Set((existing||[]).map(d=>Number(d.item_number)));
+                    const missingFailed = item.answers.filter(a=>a.answer === "FAIL" && !existingItems.has(Number(a.item_number)));
+                    if(missingFailed.length){
+                        const result = await createDeviations(item.inspectionId,item.equipment.id,missingFailed);
+                        if(!result || result.created !== missingFailed.length) throw new Error("Not all deviations were confirmed as saved.");
+                    }
+                    item.deviationsSaved = true;
+                    item.stage = "deviations-saved";
+                    await putQueuedInspection(item);
+                }
+                if(!item.equipmentUpdated){
+                    const nextInspection = calculateNextInspectionDate(item.inspectionDate);
+                    const {error} = await client.from("equipment").update({last_inspection_date:item.inspectionDate,next_inspection_date:nextInspection}).eq("id",item.equipment.id);
+                    if(error) throw error;
+                    item.equipmentUpdated = true;
+                    item.stage = "equipment-updated";
+                    await putQueuedInspection(item);
+                }
+                await removeQueuedInspection(item.queueId);
+                synced++;
+            }catch(itemError){
+                console.error("Inspection sync paused; item remains queued:",item.queueId,itemError);
+                item.lastError = itemError.message || "Sync failed";
+                item.lastAttemptAt = new Date().toISOString();
+                await putQueuedInspection(item);
+            }
+        }
+        if(synced){
+            showToast(`${synced} inspection${synced===1?"":"s"} synced to the database.`,"success");
+            await loadEquipment();
+        }else if(manual && queue.length){
+            showToast("Some inspections are still waiting to sync. Check the connection and try again.","error");
+        }
+        if(navigator.onLine) setDatabaseStatus("online");
+    }catch(error){
+        console.error("Pending inspection sync error:",error);
+        if(manual) showToast("Could not sync pending inspections: "+(error.message||"Unknown error"),"error");
+    }finally{
+        await updateOfflineQueueUi();
+        if(button && navigator.onLine){
+            button.disabled=false;
+        }
+    }
+}
+
+window.addEventListener("online",()=>{ updateOfflineQueueUi(); syncPendingInspections(false); });
+window.addEventListener("offline",()=>{ setDatabaseStatus("offline"); updateOfflineQueueUi(); });
+window.addEventListener("pageshow",()=>{ updateOfflineQueueUi(); if(navigator.onLine) syncPendingInspections(false); });
+
+
+/* =====================================================
+   INSPECTION CHECKLISTS
+===================================================== */
+
 const INSPECTION_FORMS = {
 
     "Fire extinguisher": {
@@ -137,49 +2141,2226 @@ const INSPECTION_FORMS = {
     }
 
 };
-const DB_NAME="firesafe-track-offline", DB_VERSION=1, STORE="pendingInspections";
-let dbPromise=null, equipmentList=[], currentEquipment=null, checklistAnswers=[];
-const $=id=>document.getElementById(id);
-function toast(message,type="info"){const el=document.createElement("div");el.className=`toast ${type}`;el.textContent=message;$("toastContainer").appendChild(el);setTimeout(()=>el.remove(),5000)}
-function setDbStatus(text,ok=false){$("databaseStatus").textContent=text;$("statusDot").style.background=ok?"var(--green)":"var(--gold)"}
-function openDb(){if(dbPromise)return dbPromise;dbPromise=new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE,{keyPath:"queueId"})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)});return dbPromise}
-async function queuePut(item){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(item);tx.oncomplete=()=>resolve(item);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||new Error("Local save failed"))})}
-async function queueGet(){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readonly"),r=tx.objectStore(STORE).getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error)})}
-async function queueDelete(id){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}
-function uuid(){return crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)})}
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function today(){return new Date().toISOString().slice(0,10)}
-function dateLabel(v){if(!v)return "—";const d=new Date(v+"T00:00:00");return isNaN(d)?esc(v):d.toLocaleDateString()}
-function dueState(e){if(!e.next_inspection_date)return {label:"No due date",cls:""};const diff=Math.ceil((new Date(e.next_inspection_date+"T00:00:00")-new Date(today()+"T00:00:00"))/86400000);if(diff<0)return {label:"Overdue",cls:"overdue",key:"overdue"};if(diff<=3)return {label:diff===0?"Due today":`Due in ${diff} day(s)`,cls:"due",key:"due"};return {label:"Not due",cls:"ok",key:"current"}}
-async function init(){try{const {data,error}=await supabaseClient.auth.getUser();if(error)throw error;if(!data.user){setDbStatus("Sign-in required");toast("Please sign in to FireSafe Track before syncing inspections.","error")}else{setDbStatus("Connected",true)} }catch(e){setDbStatus("Connection unavailable");console.warn(e)}await updateQueueUi();await loadEquipment();await loadRecentInspections()}
-async function loadEquipment(){const body=$("equipmentTableBody");body.innerHTML='<tr><td colspan="7" class="empty">Loading equipment…</td></tr>';try{const {data,error}=await supabaseClient.from("equipment").select("id,name,equipment_code,equipment_type,area,location,manufacturer,model,serial_number,last_inspection_date,next_inspection_date,status,department_id").order("name");if(error)throw error;equipmentList=data||[];localStorage.setItem("firesafeTrackEquipmentCache",JSON.stringify(equipmentList));$("totalEquipment").textContent=equipmentList.length;const types=[...new Set(equipmentList.map(e=>e.equipment_type).filter(Boolean))].sort();const select=$("typeFilter"),old=select.value;select.innerHTML='<option value="">All equipment types</option>'+types.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join("");select.value=old;renderEquipment();setDbStatus("Connected",true)}catch(error){console.error("Equipment load failed",error);try{equipmentList=JSON.parse(localStorage.getItem("firesafeTrackEquipmentCache")||"[]");renderEquipment();setDbStatus("Offline cache",false);if(!equipmentList.length)throw error}catch(e){body.innerHTML=`<tr><td colspan="7" class="empty">Could not load equipment: ${esc(error.message||error)}</td></tr>`;setDbStatus("Connection error")}}}
-function renderEquipment(){const q=$("searchInput").value.trim().toLowerCase(),type=$("typeFilter").value,due=$("dueFilter").value;const rows=equipmentList.filter(e=>{const hay=[e.name,e.equipment_code,e.equipment_type,e.area,e.location,e.manufacturer].join(" ").toLowerCase();return(!q||hay.includes(q))&&(!type||e.equipment_type===type)&&(!due||dueState(e).key===due)});$("equipmentTableBody").innerHTML=rows.length?rows.map(e=>{const ds=dueState(e);const canInspect=ds.key==="overdue"||ds.key==="due";return `<tr><td><strong>${esc(e.name)}</strong><small>${esc(e.equipment_code||"")}</small></td><td>${esc(e.equipment_type||"—")}</td><td>${esc([e.area,e.location].filter(Boolean).join(" / ")||"—")}</td><td>${dateLabel(e.last_inspection_date)}</td><td>${dateLabel(e.next_inspection_date)}</td><td><span class="pill ${ds.cls}">${esc(ds.label)}</span></td><td>${canInspect?`<button class="button primary" onclick="openInspection('${e.id}')">Inspect</button>`:'<span class="subtle">Not available yet</span>'}</td></tr>`}).join(""):'<tr><td colspan="7" class="empty">No equipment matches these filters.</td></tr>'}
-async function loadRecentInspections(){try{const {data,error,count}=await supabaseClient.from("inspections").select("id,equipment_id,inspection_date,inspector_name,overall_status,notes,equipment(name,equipment_code)",{count:"exact"}).order("inspection_date",{ascending:false}).limit(100);if(error)throw error;const rows=data||[];$("totalInspections").textContent=count??rows.length;$("passedInspections").textContent=rows.filter(x=>String(x.overall_status||"").toLowerCase()==="passed").length;$("failedInspections").textContent=rows.filter(x=>String(x.overall_status||"").toLowerCase()==="failed").length;$("recentTableBody").innerHTML=rows.length?rows.slice(0,12).map(x=>`<tr><td>${dateLabel(x.inspection_date)}</td><td>${esc(x.equipment?.name||x.equipment_id)}<small>${esc(x.equipment?.equipment_code||"")}</small></td><td>${esc(x.inspector_name||"—")}</td><td><span class="pill ${String(x.overall_status).toLowerCase()==="failed"?"fail":"ok"}">${esc(x.overall_status||"—")}</span></td><td>${esc(x.notes||"—")}</td></tr>`).join(""):'<tr><td colspan="5" class="empty">No inspections recorded yet.</td></tr>'}catch(e){console.warn("Recent inspections unavailable",e);$("recentTableBody").innerHTML=`<tr><td colspan="5" class="empty">Could not load recent inspections: ${esc(e.message||e)}</td></tr>`}}
-function openInspection(id){currentEquipment=equipmentList.find(e=>e.id===id);if(!currentEquipment)return;const form=INSPECTION_FORMS[currentEquipment.equipment_type];if(!form){toast(`No approved checklist is configured for “${currentEquipment.equipment_type||"this equipment type"}”. No generic checklist was substituted.`,"error");return}checklistAnswers=form.checklist.map((requirement,index)=>({item_number:index+1,inspection_requirement:requirement,answer:null,remarks:"",severity:"Medium"}));$("modalTitle").textContent=`Inspect: ${currentEquipment.name}`;$("equipmentSummary").textContent=[currentEquipment.equipment_code,currentEquipment.equipment_type,currentEquipment.area,currentEquipment.location].filter(Boolean).join(" • ");$("inspectionDate").value=today();$("inspectorName").value="";$("inspectionNotes").value="";renderReadings(form);renderChecklist();$("inspectionModal").classList.add("open");document.body.style.overflow="hidden"}
-function renderReadings(form){const section=$("readingSection"),container=$("readingFields");if(!form.readings?.length){section.style.display="none";container.innerHTML="";return}section.style.display="block";container.innerHTML=form.readings.map((r,i)=>`<div class="form-group"><label for="reading-${i}">${esc(r)}</label><input class="field" id="reading-${i}" data-reading-label="${esc(r)}" placeholder="Enter reading"></div>`).join("")}
-function renderChecklist(){const root=$("checklist");root.innerHTML=checklistAnswers.map((a,i)=>`<div class="check-row" data-index="${i}"><div class="check-label">${i+1}. ${esc(a.inspection_requirement)}</div><div class="answers">${["PASS","FAIL","N/A"].map(v=>`<label class="answer"><input type="radio" name="answer-${i}" value="${v}" onchange="setAnswer(${i},'${v}')">${v}</label>`).join("")}</div><div class="remarks" id="remarksWrap-${i}" style="display:none"><textarea class="field" rows="2" placeholder="Explain the failure / observation" onchange="setRemarks(${i},this.value)"></textarea><div style="margin-top:8px;max-width:220px"><label class="subtle" for="severity-${i}">Severity</label><select class="field" id="severity-${i}" onchange="setSeverity(${i},this.value)"><option>Low</option><option selected>Medium</option><option>High</option><option>Critical</option></select></div></div></div>`).join("");updateProgress()}
-function setAnswer(i,v){checklistAnswers[i].answer=v;const wrap=$("remarksWrap-"+i);wrap.style.display=v==="FAIL"?"block":"none";updateProgress()}
-function setRemarks(i,v){checklistAnswers[i].remarks=v}
-function setSeverity(i,v){checklistAnswers[i].severity=v}
-function updateProgress(){const done=checklistAnswers.filter(a=>a.answer).length;$("checklistProgress").textContent=`${done} of ${checklistAnswers.length} items answered`;$("checklistProgress").style.color=done===checklistAnswers.length?"var(--green)":"var(--muted)"}
-function closeModal(){$("inspectionModal").classList.remove("open");document.body.style.overflow="";currentEquipment=null}
-function overallStatus(answers){return answers.some(a=>a.answer==="FAIL")?"Failed":"Passed"}
-function nextDate(date){const d=new Date(date+"T00:00:00");d.setMonth(d.getMonth()+1);return d.toISOString().slice(0,10)}
-async function saveInspection(){if(!currentEquipment)return;const date=$("inspectionDate").value,name=$("inspectorName").value.trim(),notes=$("inspectionNotes").value.trim();if(!date||!name){toast("Inspection date and inspector name are required.","error");return}const missing=checklistAnswers.findIndex(a=>!a.answer);if(missing>=0){document.querySelector(`[data-index="${missing}"]`)?.scrollIntoView({behavior:"smooth",block:"center"});toast(`Please answer checklist item ${missing+1}.`,"error");return}const noRemarks=checklistAnswers.findIndex(a=>a.answer==="FAIL"&&!a.remarks.trim());if(noRemarks>=0){$("remarksWrap-"+noRemarks).querySelector("textarea").focus();toast(`Please add remarks for failed item ${noRemarks+1}.`,"error");return}const readings=[...document.querySelectorAll("[data-reading-label]")].map(el=>`${el.dataset.readingLabel}: ${el.value.trim()}`).filter(x=>!x.endsWith(": "));const allNotes=[notes,readings.length?"Readings — "+readings.join("; "):""].filter(Boolean).join("\n");const queueId=uuid();const item={queueId,createdAt:new Date().toISOString(),status:"pending",stage:"local-saved",equipment:{id:currentEquipment.id,name:currentEquipment.name,equipment_code:currentEquipment.equipment_code,equipment_type:currentEquipment.equipment_type},inspectionDate:date,inspectorName:name,notes:allNotes||null,answers:checklistAnswers.map(a=>({...a})),overallStatus:overallStatus(checklistAnswers),inspectionId:null,answersSaved:false,deviationsSaved:false,equipmentUpdated:false};const btn=$("saveInspectionButton");btn.disabled=true;btn.textContent="Saving locally…";try{await queuePut(item);await updateQueueUi();closeModal();toast("Inspection saved safely on this device. Syncing now if online…","success");if(navigator.onLine)await syncPendingInspections(false)}catch(e){console.error(e);toast("Could not save locally: "+(e.message||e),"error")}finally{btn.disabled=false;btn.textContent="Save inspection"}}
-async function syncPendingInspections(manual=false){if(!navigator.onLine){if(manual)toast("You are offline. Your inspection remains saved on this device.","error");await updateQueueUi();return}const {data:userData,error:userError}=await supabaseClient.auth.getUser();if(userError||!userData?.user){if(manual)toast("Please sign in before syncing. Pending inspections are still saved locally.","error");setDbStatus("Sign-in required");return}const button=$("syncNowButton");button.disabled=true;button.textContent="Syncing…";let success=0,failures=0;try{for(const item of await queueGet()){try{
-// Stage 1: use the queue UUID as the inspection primary key. This makes retry after a lost response idempotent.
-if(!item.inspectionId){const inspectionId=item.queueId;const {data:existing,error:lookupError}=await supabaseClient.from("inspections").select("id").eq("id",inspectionId).maybeSingle();if(lookupError)throw lookupError;if(existing){item.inspectionId=existing.id}else{const {data,error}=await supabaseClient.from("inspections").insert({id:inspectionId,equipment_id:item.equipment.id,inspection_date:item.inspectionDate,inspector_name:item.inspectorName,inspection_type:item.equipment.equipment_type,overall_status:item.overallStatus,notes:item.notes||null}).select("id").single();if(error){if(error.code==="23505"){const retry=await supabaseClient.from("inspections").select("id").eq("id",inspectionId).maybeSingle();if(retry.error||!retry.data)throw error;item.inspectionId=retry.data.id}else throw error}else item.inspectionId=data.id}item.stage="inspection-created";await queuePut(item)}
-// Stage 2: check saved answers before inserting missing items, preventing duplicate answers after interrupted requests.
-if(!item.answersSaved){const {data:existingAnswers,error:answerLookupError}=await supabaseClient.from("inspection_answers").select("item_number").eq("inspection_id",item.inspectionId);if(answerLookupError)throw answerLookupError;const existingNums=new Set((existingAnswers||[]).map(a=>Number(a.item_number)));const missing=item.answers.filter(a=>!existingNums.has(Number(a.item_number)));if(missing.length){const rows=missing.map(a=>({inspection_id:item.inspectionId,item_number:a.item_number,inspection_requirement:a.inspection_requirement,answer:a.answer,remarks:a.remarks||null,severity:a.severity||"Medium"}));const {error}=await supabaseClient.from("inspection_answers").insert(rows);if(error)throw error}item.answersSaved=true;item.stage="answers-saved";await queuePut(item)}
-// Stage 3: the database function reads saved FAIL answers itself and enforces the authenticated profile/department rules.
-if(!item.deviationsSaved){const {data,error}=await supabaseClient.rpc("create_inspection_deviations",{p_inspection_id:item.inspectionId});if(error)throw new Error("Secure deviation creation failed: "+error.message);if(!data||typeof data.created!=="number"||!Array.isArray(data.deviation_ids))throw new Error("Deviation operation returned an unexpected confirmation.");item.deviationsSaved=true;item.stage="deviations-saved";await queuePut(item)}
-// Stage 4: update the equipment schedule only after inspection, answers and deviations are confirmed.
-if(!item.equipmentUpdated){const {error}=await supabaseClient.from("equipment").update({last_inspection_date:item.inspectionDate,next_inspection_date:nextDate(item.inspectionDate)}).eq("id",item.equipment.id);if(error)throw error;item.equipmentUpdated=true;item.stage="equipment-updated";await queuePut(item)}
-await queueDelete(item.queueId);success++;
-}catch(e){failures++;console.error("Inspection sync stopped at stage",item.stage,item.queueId,e);item.lastError=String(e.message||e);item.status="pending-error";await queuePut(item);if(manual)toast(`One inspection is still queued at stage “${item.stage}": ${item.lastError}`,"error")}}
-await updateQueueUi();await loadEquipment();await loadRecentInspections();if(success)toast(`${success} inspection(s) synced successfully${failures?`; ${failures} remain queued`:""}.`,failures?"error":"success");else if(manual&&!failures)toast("There are no pending inspections.","info")}catch(e){console.error("Queue sync error",e);if(manual)toast("Sync could not finish: "+(e.message||e),"error")}finally{button.disabled=false;await updateQueueUi()}}
-async function updateQueueUi(){try{const items=await queueGet(),pending=items.filter(x=>x.status!=="synced");$("offlineQueueMessage").textContent=pending.length?`${pending.length} inspection(s) safely stored on this device and awaiting sync.`:(navigator.onLine?"No pending inspections. Offline queue is ready.":"Offline: completed inspections will remain on this device until reconnected.");$("syncNowButton").disabled=!pending.length||!navigator.onLine;$("syncNowButton").textContent=pending.length?`Sync pending inspections (${pending.length})`:"No pending inspections"}catch(e){$("offlineQueueMessage").textContent="Local offline storage could not be opened. Do not clear browser data.";$("syncNowButton").disabled=true;console.error(e)}}
-$("searchInput").addEventListener("input",renderEquipment);$("typeFilter").addEventListener("change",renderEquipment);$("dueFilter").addEventListener("change",renderEquipment);$("refreshButton").addEventListener("click",async()=>{await loadEquipment();await loadRecentInspections()});$("syncNowButton").addEventListener("click",()=>syncPendingInspections(true));$("saveInspectionButton").addEventListener("click",saveInspection);$("closeModalButton").addEventListener("click",closeModal);$("inspectionModal").addEventListener("click",e=>{if(e.target===$("inspectionModal"))closeModal()});window.addEventListener("online",()=>{setDbStatus("Online",true);updateQueueUi();syncPendingInspections(false)});window.addEventListener("offline",()=>{setDbStatus("Offline");updateQueueUi()});init();
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+function openSidebar(){
+
+    document
+        .getElementById("sidebar")
+        .classList
+        .add("open");
+
+    document
+        .getElementById("sidebarOverlay")
+        .classList
+        .add("active");
+
+}
+
+
+function closeSidebar(){
+
+    document
+        .getElementById("sidebar")
+        .classList
+        .remove("open");
+
+    document
+        .getElementById("sidebarOverlay")
+        .classList
+        .remove("active");
+
+}
+
+
+/* =====================================================
+   TOAST
+===================================================== */
+
+function showToast(
+    message,
+    type = "info"
+){
+
+    const container =
+        document.getElementById(
+            "toastContainer"
+        );
+
+    const toast =
+        document.createElement("div");
+
+    toast.className =
+        "toast " + type;
+
+    toast.textContent =
+        message;
+
+    container.appendChild(toast);
+
+    setTimeout(
+        () => {
+
+            toast.remove();
+
+        },
+        3500
+    );
+
+}
+
+
+/* =====================================================
+   HTML ESCAPE
+===================================================== */
+
+function escapeHtml(value){
+
+    if(
+        value === null ||
+        value === undefined
+    ){
+
+        return "";
+
+    }
+
+    return String(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+/* =====================================================
+   DATE
+===================================================== */
+
+function getToday(){
+
+    const now =
+        new Date();
+
+    const year =
+        now.getFullYear();
+
+    const month =
+        String(
+            now.getMonth() + 1
+        ).padStart(2,"0");
+
+    const day =
+        String(
+            now.getDate()
+        ).padStart(2,"0");
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+/* =====================================================
+   DATABASE STATUS
+===================================================== */
+
+function setDatabaseStatus(
+    status
+){
+
+    const dot =
+        document.getElementById(
+            "statusDot"
+        );
+
+    const text =
+        document.getElementById(
+            "databaseStatus"
+        );
+
+    dot.className =
+        "status-dot";
+
+    if(status === "online"){
+
+        dot.classList.add("online");
+
+        text.textContent =
+            "Database connected";
+
+    }
+    else if(status === "offline"){
+
+        dot.classList.add("offline");
+
+        text.textContent =
+            "Database error";
+
+    }
+    else{
+
+        text.textContent =
+            "Connecting...";
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD EQUIPMENT
+===================================================== */
+
+async function loadEquipment(){
+
+    if(!ensureSupabaseClient()){
+        setDatabaseStatus("offline");
+        try{
+            const cached = JSON.parse(localStorage.getItem("firesafeTrackEquipmentCache") || "[]");
+            if(cached.length){equipmentList=cached;filteredEquipment=[...equipmentList];renderEquipment();await updateOfflineQueueUi();return;}
+        }catch(e){console.warn(e);}
+        const tbody = document.getElementById("equipmentTableBody");
+        if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Database library unavailable. Connect online and reload this page once before offline use.</td></tr>';
+        await updateOfflineQueueUi();
+        return;
+    }
+
+    setDatabaseStatus("connecting");
+
+    const tbody =
+        document.getElementById(
+            "equipmentTableBody"
+        );
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="6" class="loading">
+                Loading equipment...
+            </td>
+        </tr>
+    `;
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("equipment")
+            .select(`
+                id,
+                name,
+                equipment_code,
+                equipment_type,
+                manufacture_date,
+                area,
+                location,
+                manufacturer,
+                model,
+                serial_number,
+                installation_date,
+                last_inspection_date,
+                next_inspection_date,
+                status,
+                description,
+                notes,
+                created_at,
+                updated_at
+            `)
+            .order(
+                "name",
+                {
+                    ascending:true
+                }
+            );
+
+
+    if(error){
+
+        console.error(
+            "Equipment loading error:",
+            error
+        );
+
+        setDatabaseStatus("offline");
+        try{
+            const cached = JSON.parse(localStorage.getItem("firesafeTrackEquipmentCache") || "[]");
+            if(cached.length){
+                equipmentList = cached;
+                filteredEquipment = [...equipmentList];
+                renderEquipment();
+                showToast("Offline mode: showing the last equipment list saved on this device.","error");
+                await updateOfflineQueueUi();
+                return;
+            }
+        }catch(cacheError){console.warn("Equipment cache unavailable:",cacheError);}
+        tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">Unable to load equipment. Connect to the internet and load this page once before using offline inspections.<br><br>${escapeHtml(error.message)}</div></td></tr>`;
+        showToast("Could not load equipment: " + error.message,"error");
+        await updateOfflineQueueUi();
+        return;
+
+    }
+
+
+    setDatabaseStatus("online");
+
+    equipmentList =
+        data || [];
+
+    try{localStorage.setItem("firesafeTrackEquipmentCache",JSON.stringify(equipmentList));}
+    catch(cacheError){console.warn("Could not cache equipment list:",cacheError);}
+
+    filteredEquipment =
+        [...equipmentList];
+
+    document.getElementById(
+        "totalEquipment"
+    ).textContent =
+        equipmentList.length;
+
+    renderEquipment();
+
+    await loadInspectionStats();
+
+}
+
+
+/* =====================================================
+   INSPECTION AVAILABILITY
+===================================================== */
+
+function getInspectionAvailability(equipment){
+
+    /*
+     * Only ACTIVE equipment can be inspected.
+     */
+
+    if(
+        String(equipment.status || "")
+            .trim()
+            .toLowerCase() !== "active"
+    ){
+
+        return {
+            available:false,
+            label:"Not available",
+            reason:"Equipment is not active."
+        };
+
+    }
+
+
+    /*
+     * Equipment must have a next inspection date.
+     */
+
+    if(!equipment.next_inspection_date){
+
+        return {
+            available:false,
+            label:"No due date",
+            reason:"Next inspection date has not been set."
+        };
+
+    }
+
+
+    /*
+     * Convert the database date into a local date
+     * without introducing timezone shifts.
+     */
+
+    const today =
+        new Date(
+            getToday() + "T00:00:00"
+        );
+
+
+    const dueDate =
+        new Date(
+            equipment.next_inspection_date +
+            "T00:00:00"
+        );
+
+
+    /*
+     * Calculate the number of days between
+     * today and the inspection due date.
+     */
+
+    const millisecondsPerDay =
+        1000 * 60 * 60 * 24;
+
+
+    const daysUntilDue =
+        Math.round(
+            (
+                dueDate.getTime() -
+                today.getTime()
+            ) /
+            millisecondsPerDay
+        );
+
+
+    /*
+     * More than 3 days before due date:
+     * inspection is not yet available.
+     */
+
+    if(daysUntilDue > 3){
+
+        return {
+            available:false,
+            daysUntilDue:daysUntilDue,
+            label:`Due in ${daysUntilDue} days`,
+            reason:"Inspection window has not opened yet."
+        };
+
+    }
+
+
+    /*
+     * OVERDUE
+     */
+
+    if(daysUntilDue < 0){
+
+        const overdueDays =
+            Math.abs(daysUntilDue);
+
+
+        return {
+            available:true,
+            overdue:true,
+            daysUntilDue:daysUntilDue,
+            label:
+                `OVERDUE by ${overdueDays} day${overdueDays === 1 ? "" : "s"}`,
+            reason:"Inspection is overdue."
+        };
+
+    }
+
+
+    /*
+     * DUE TODAY
+     */
+
+    if(daysUntilDue === 0){
+
+        return {
+            available:true,
+            dueToday:true,
+            daysUntilDue:0,
+            label:"DUE TODAY",
+            reason:"Inspection is due today."
+        };
+
+    }
+
+
+    /*
+     * WITHIN 3-DAY WINDOW
+     */
+
+    return {
+        available:true,
+        daysUntilDue:daysUntilDue,
+        label:
+            `Due in ${daysUntilDue} day${daysUntilDue === 1 ? "" : "s"}`,
+        reason:"Inspection window is open."
+    };
+
+}
+
+
+/* =====================================================
+   RENDER EQUIPMENT
+===================================================== */
+
+function renderEquipment(){
+
+    const tbody =
+        document.getElementById(
+            "equipmentTableBody"
+        );
+
+
+    if(
+        filteredEquipment.length === 0
+    ){
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6">
+
+                    <div class="empty-state">
+                        No equipment matches your search.
+                    </div>
+
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    tbody.innerHTML =
+        filteredEquipment
+            .map(
+                equipment => {
+
+                    const inspection =
+                        getInspectionAvailability(
+                            equipment
+                        );
+
+
+                    /*
+                     * Build the Action column.
+                     */
+
+                    let actionHtml = `
+                        <span
+                            style="
+                                color:#71859b;
+                                font-size:11px;
+                            "
+                        >
+                            Not due
+                        </span>
+                    `;
+
+
+                    /*
+                     * If inspection is available,
+                     * show the Inspect button.
+                     */
+
+                    if(
+                        inspection.available
+                    ){
+
+                        let timingClass =
+                            "";
+
+                        if(
+                            inspection.overdue
+                        ){
+
+                            timingClass =
+                                "overdue";
+
+                        }
+                        else if(
+                            inspection.dueToday
+                        ){
+
+                            timingClass =
+                                "due-today";
+
+                        }
+
+
+                        actionHtml = `
+
+                            <div
+                                style="
+                                    display:flex;
+                                    flex-direction:column;
+                                    align-items:flex-start;
+                                    gap:5px;
+                                "
+                            >
+
+                                <button
+                                    class="action-button"
+                                    onclick="startInspection('${equipment.id}')"
+                                >
+                                    Inspect
+                                </button>
+
+                                <span
+                                    style="
+                                        font-size:10px;
+                                        font-weight:bold;
+                                        color:${
+                                            inspection.overdue
+                                                ? "#ff7169"
+                                                : inspection.dueToday
+                                                    ? "#ffcc00"
+                                                    : "#54e39a"
+                                        };
+                                    "
+                                >
+                                    ${escapeHtml(
+                                        inspection.label
+                                    )}
+                                </span>
+
+                            </div>
+
+                        `;
+
+                    }
+
+
+                    return `
+                        <tr>
+
+                            <td>
+
+                                <div class="equipment-name">
+                                    ${escapeHtml(
+                                        equipment.name ||
+                                        "Unnamed equipment"
+                                    )}
+                                </div>
+
+                                <div class="equipment-code">
+                                    ${escapeHtml(
+                                        equipment.equipment_code ||
+                                        "No code"
+                                    )}
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                <div class="type-text">
+                                    ${escapeHtml(
+                                        equipment.equipment_type ||
+                                        "Not assigned"
+                                    )}
+                                </div>
+
+                            </td>
+
+
+                            <td>
+                                ${escapeHtml(
+                                    equipment.area ||
+                                    "—"
+                                )}
+                            </td>
+
+
+                            <td>
+                                ${escapeHtml(
+                                    equipment.location ||
+                                    "—"
+                                )}
+                            </td>
+
+
+                            <td>
+                                ${escapeHtml(
+                                    equipment.status ||
+                                    "—"
+                                )}
+                            </td>
+
+
+                            <td>
+
+                                ${actionHtml}
+
+                            </td>
+
+                        </tr>
+                    `;
+
+                }
+            )
+            .join("");
+
+}
+
+/* =====================================================
+   FILTERS
+===================================================== */
+
+function applyFilters(){
+
+    const search =
+        document
+            .getElementById("searchInput")
+            .value
+            .trim()
+            .toLowerCase();
+
+    const type =
+        document
+            .getElementById("typeFilter")
+            .value;
+
+    const area =
+        document
+            .getElementById("areaFilter")
+            .value
+            .trim()
+            .toLowerCase();
+
+    const location =
+        document
+            .getElementById("locationFilter")
+            .value
+            .trim()
+            .toLowerCase();
+
+
+    filteredEquipment =
+        equipmentList.filter(
+            equipment => {
+
+                const searchable = [
+
+                    equipment.name,
+
+                    equipment.equipment_code,
+
+                    equipment.equipment_type,
+
+                    equipment.area,
+
+                    equipment.location,
+
+                    equipment.manufacturer,
+
+                    equipment.model,
+
+                    equipment.serial_number
+
+                ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+
+                const matchesSearch =
+                    !search ||
+                    searchable.includes(search);
+
+
+                const matchesType =
+                    !type ||
+                    equipment.equipment_type === type;
+
+
+                const matchesArea =
+                    !area ||
+                    String(
+                        equipment.area || ""
+                    )
+                    .toLowerCase()
+                    .includes(area);
+
+
+                const matchesLocation =
+                    !location ||
+                    String(
+                        equipment.location || ""
+                    )
+                    .toLowerCase()
+                    .includes(location);
+
+
+                return (
+                    matchesSearch &&
+                    matchesType &&
+                    matchesArea &&
+                    matchesLocation
+                );
+
+            }
+        );
+
+
+    renderEquipment();
+
+}
+
+
+function resetFilters(){
+
+    document.getElementById(
+        "searchInput"
+    ).value = "";
+
+    document.getElementById(
+        "typeFilter"
+    ).value = "";
+
+    document.getElementById(
+        "areaFilter"
+    ).value = "";
+
+    document.getElementById(
+        "locationFilter"
+    ).value = "";
+
+    filteredEquipment =
+        [...equipmentList];
+
+    renderEquipment();
+
+}
+
+
+/* =====================================================
+   START INSPECTION
+===================================================== */
+
+function startInspection(
+    equipmentId
+){
+
+    const equipment =
+        equipmentList.find(
+            item =>
+                String(item.id) ===
+                String(equipmentId)
+        );
+
+
+    if(!equipment){
+
+        showToast(
+            "Equipment record could not be found.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if(!equipment.equipment_type){
+
+        showToast(
+            "This equipment does not have an Equipment Type assigned.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const checklist =
+        INSPECTION_FORMS[
+            equipment.equipment_type
+        ];
+
+
+    if(!checklist){
+
+        showToast(
+            "No inspection form is configured for: " +
+            equipment.equipment_type,
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    currentEquipment =
+        equipment;
+
+    currentChecklist =
+    checklist.checklist;
+
+
+    /*
+     * CRITICAL:
+     *
+     * Every item starts as null.
+     *
+     * Nothing is automatically answered.
+     */
+
+    checklistAnswers =
+        currentChecklist.map(
+            () => null
+        );
+
+
+    openInspectionForm(
+        equipment
+    );
+
+}
+
+
+/* =====================================================
+   OPEN INSPECTION FORM
+===================================================== */
+
+function openInspectionForm(
+    equipment
+){
+
+    document.getElementById(
+        "inspectionModalTitle"
+    ).textContent =
+        equipment.equipment_type +
+        " Inspection";
+
+
+    document.getElementById(
+        "inspectionModalSubtitle"
+    ).textContent =
+        "Inspection for " +
+        (
+            equipment.name ||
+            equipment.equipment_code ||
+            "selected equipment"
+        );
+
+
+    document.getElementById(
+        "infoName"
+    ).textContent =
+        equipment.name ||
+        "—";
+
+
+    document.getElementById(
+        "infoCode"
+    ).textContent =
+        equipment.equipment_code ||
+        "—";
+
+
+    document.getElementById(
+        "infoType"
+    ).textContent =
+        equipment.equipment_type ||
+        "—";
+
+
+    document.getElementById(
+        "infoLocation"
+    ).textContent =
+        equipment.location ||
+        "—";
+
+
+    document.getElementById(
+        "infoArea"
+    ).textContent =
+        equipment.area ||
+        "—";
+
+
+    document.getElementById(
+        "infoManufacturer"
+    ).textContent =
+        equipment.manufacturer ||
+        "—";
+
+
+    document.getElementById(
+        "infoModel"
+    ).textContent =
+        equipment.model ||
+        "—";
+
+
+    document.getElementById(
+        "infoSerial"
+    ).textContent =
+        equipment.serial_number ||
+        "—";
+
+
+    document.getElementById(
+        "inspectionDate"
+    ).value =
+        getToday();
+
+
+    document.getElementById(
+        "inspectorName"
+    ).value = "";
+
+
+    document.getElementById(
+        "inspectionTypeDisplay"
+    ).value =
+        equipment.equipment_type;
+
+
+    document.getElementById(
+        "inspectionNotes"
+    ).value = "";
+
+
+    document.getElementById(
+        "checklistTitle"
+    ).textContent =
+        equipment.equipment_type +
+        " Inspection Checklist";
+
+
+
+     renderReadingFields();
+        
+    renderChecklist();
+
+    updateChecklistProgress();
+
+
+    const saveButton =
+        document.getElementById(
+            "saveInspectionButton"
+        );
+
+    saveButton.disabled =
+        false;
+
+    saveButton.textContent =
+        "Save Inspection";
+
+
+    document.getElementById(
+        "inspectionModal"
+    ).classList.add("active");
+
+}
+
+
+/* =====================================================
+   RENDER CHECKLIST
+===================================================== */
+function renderReadingFields(){
+
+    const section =
+        document.getElementById(
+            "readingSection"
+        );
+
+    const container =
+        document.getElementById(
+            "readingFields"
+        );
+
+    const form =
+        INSPECTION_FORMS[
+            currentEquipment.equipment_type
+        ];
+
+    if(
+        !form ||
+        !form.readings ||
+        form.readings.length === 0
+    ){
+
+        section.style.display =
+            "none";
+
+        container.innerHTML = "";
+
+        return;
+
+    }
+
+    section.style.display =
+        "block";
+
+    container.innerHTML =
+        form.readings.map(
+            (reading,index) => `
+                <div class="form-group">
+
+                    <label class="form-label">
+                        ${reading}
+                    </label>
+
+                    <input
+                        id="reading-${index}"
+                        class="input"
+                        type="text"
+                    >
+
+                </div>
+            `
+        ).join("");
+
+}
+
+
+function renderChecklist(){
+
+    const container =
+        document.getElementById(
+            "checklist"
+        );
+
+
+    if(
+        !currentChecklist ||
+        currentChecklist.length === 0
+    ){
+
+        container.innerHTML = `
+            <div class="empty-state">
+                No inspection requirements configured.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    let html = `
+
+        <div class="check-row header">
+
+            <div>
+                #
+            </div>
+
+            <div>
+                Inspection Requirement
+            </div>
+
+            <div>
+                Result
+            </div>
+
+            <div>
+                Remarks
+            </div>
+
+        </div>
+
+    `;
+
+
+    currentChecklist.forEach(
+        (requirement,index) => {
+
+            html += `
+
+                <div
+                    class="check-row unanswered"
+                    data-item-index="${index}"
+                >
+
+                    <div class="item-number">
+                        ${index + 1}
+                    </div>
+
+
+                    <div class="requirement">
+                        ${escapeHtml(
+                            requirement
+                        )}
+                    </div>
+
+
+                    <div class="answer-group">
+
+                        <button
+                            type="button"
+                            class="answer-button"
+                            data-answer="PASS"
+                            onclick="setAnswer(${index},'PASS')"
+                        >
+                            PASS
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="answer-button"
+                            data-answer="FAIL"
+                            onclick="setAnswer(${index},'FAIL')"
+                        >
+                            FAIL
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="answer-button"
+                            data-answer="N/A"
+                            onclick="setAnswer(${index},'N/A')"
+                        >
+                            N/A
+                        </button>
+
+                    </div>
+
+
+                    <div>
+
+                        <div style="display:flex;gap:5px;">
+
+    <select
+        id="severity-${index}"
+        class="remarks-input"
+        style="max-width:110px;"
+    >
+        <option value="Low">Low</option>
+        <option value="Medium" selected>Medium</option>
+        <option value="High">High</option>
+        <option value="Critical">Critical</option>
+    </select>
+
+    <input
+        id="remarks-${index}"
+        class="remarks-input"
+        type="text"
+        placeholder="Remarks"
+    >
+
+</div>
+
+                    </div>
+
+                </div>
+
+            `;
+
+        }
+    );
+
+
+    container.innerHTML =
+        html;
+
+}
+
+
+/* =====================================================
+   SET ANSWER
+===================================================== */
+
+function setAnswer(
+    index,
+    answer
+){
+
+    if(
+        index < 0 ||
+        index >= checklistAnswers.length
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        ![
+            "PASS",
+            "FAIL",
+            "N/A"
+        ].includes(answer)
+    ){
+
+        return;
+
+    }
+
+
+    /*
+     * Store the answer in state.
+     */
+
+    checklistAnswers[index] =
+        answer;
+
+
+    const row =
+        document.querySelector(
+            `[data-item-index="${index}"]`
+        );
+
+
+    if(!row){
+        return;
+    }
+
+
+    /*
+     * Remove unanswered visual state.
+     */
+
+    row.classList.remove(
+        "unanswered"
+    );
+
+
+    const buttons =
+        row.querySelectorAll(
+            ".answer-button"
+        );
+
+
+    buttons.forEach(
+        button => {
+
+            button.classList.remove(
+                "selected-pass",
+                "selected-fail",
+                "selected-na"
+            );
+
+
+            const buttonAnswer =
+                button.dataset.answer;
+
+
+            if(
+                buttonAnswer === answer
+            ){
+
+                if(answer === "PASS"){
+
+                    button.classList.add(
+                        "selected-pass"
+                    );
+
+                }
+                else if(answer === "FAIL"){
+
+                    button.classList.add(
+                        "selected-fail"
+                    );
+
+                }
+                else if(answer === "N/A"){
+
+                    button.classList.add(
+                        "selected-na"
+                    );
+
+                }
+
+            }
+
+        }
+    );
+
+
+    updateChecklistProgress();
+
+}
+
+
+/* =====================================================
+   CHECKLIST COMPLETION
+===================================================== */
+
+function getUnansweredIndexes(){
+
+    return checklistAnswers
+        .map(
+            (answer,index) =>
+                answer === null
+                    ? index
+                    : null
+        )
+        .filter(
+            index =>
+                index !== null
+        );
+
+}
+
+
+function getUnansweredCount(){
+
+    return getUnansweredIndexes().length;
+
+}
+
+
+/* =====================================================
+   UPDATE CHECKLIST PROGRESS
+===================================================== */
+
+function updateChecklistProgress(){
+
+    const total =
+        currentChecklist.length;
+
+    const unanswered =
+        getUnansweredCount();
+
+    const answered =
+        total - unanswered;
+
+
+    const message =
+        document.getElementById(
+            "progressMessage"
+        );
+
+    const count =
+        document.getElementById(
+            "progressCount"
+        );
+
+
+    if(total === 0){
+
+        message.textContent =
+            "No inspection items.";
+
+        message.classList.remove(
+            "complete"
+        );
+
+        count.textContent =
+            "0 items";
+
+        count.classList.remove(
+            "complete"
+        );
+
+        return;
+
+    }
+
+
+    if(unanswered === 0){
+
+        message.textContent =
+            "Inspection checklist complete. All items have been answered.";
+
+        message.classList.add(
+            "complete"
+        );
+
+        count.textContent =
+            `${answered} / ${total} answered`;
+
+        count.classList.add(
+            "complete"
+        );
+
+    }
+    else{
+
+        message.textContent =
+            `${unanswered} item${unanswered === 1 ? "" : "s"} still require${unanswered === 1 ? "s" : ""} an answer.`;
+
+        message.classList.remove(
+            "complete"
+        );
+
+        count.textContent =
+            `${answered} / ${total} answered`;
+
+        count.classList.remove(
+            "complete"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   GET CHECKLIST ANSWERS
+===================================================== */
+
+function getChecklistAnswers(){
+
+    const answers = [];
+
+    currentChecklist.forEach(
+        (requirement,index) => {
+
+            const remarksElement =
+                document.getElementById(
+                    `remarks-${index}`
+                );
+
+
+            const remarks =
+                remarksElement
+                    ? remarksElement.value.trim()
+                    : "";
+
+           const severityElement =
+    document.getElementById(
+        `severity-${index}`
+    );
+            const severity =
+                severityElement
+                    ? severityElement.value
+                    : "Medium";
+
+
+answers.push({
+
+    item_number:
+        index + 1,
+
+    inspection_requirement:
+        requirement,
+
+    answer:
+        checklistAnswers[index],
+
+    remarks:
+        remarks,
+
+    severity:
+        severity
+
+});
+
+        }
+    );
+
+    return answers;
+
+}
+
+
+/* =====================================================
+   DETERMINE OVERALL STATUS
+===================================================== */
+
+function calculateOverallStatus(
+    answers
+){
+
+    /*
+     * This function should only be called
+     * after every item has been answered.
+     */
+
+    const hasFail =
+        answers.some(
+            item =>
+                item.answer === "FAIL"
+        );
+
+
+    if(hasFail){
+
+        return "Fail";
+
+    }
+
+
+    const passCount =
+        answers.filter(
+            item =>
+                item.answer === "PASS"
+        )
+        .length;
+
+
+    if(passCount > 0){
+
+        return "Pass";
+
+    }
+
+
+    /*
+     * If all answers are explicitly N/A,
+     * the overall result is N/A.
+     */
+
+    return "N/A";
+
+}
+
+
+/* =====================================================
+   SCROLL TO FIRST UNANSWERED ITEM
+===================================================== */
+
+function focusFirstUnanswered(){
+
+    const unansweredIndexes =
+        getUnansweredIndexes();
+
+
+    if(
+        unansweredIndexes.length === 0
+    ){
+
+        return;
+
+    }
+
+
+    const firstIndex =
+        unansweredIndexes[0];
+
+
+    const row =
+        document.querySelector(
+            `[data-item-index="${firstIndex}"]`
+        );
+
+
+    if(row){
+
+        row.scrollIntoView({
+            behavior:"smooth",
+            block:"center"
+        });
+
+    }
+
+}
+
+
+/* =====================================================
+   SAVE INSPECTION
+===================================================== */
+
+async function saveInspection(){
+    if(!currentEquipment){ showToast("No equipment selected.","error"); return; }
+    const unansweredIndexes = getUnansweredIndexes();
+    if(unansweredIndexes.length){
+        showToast(`Inspection incomplete — ${unansweredIndexes.length} item(s) still require an answer.`,"error");
+        unansweredIndexes.forEach(index=>{const row=document.querySelector(`[data-item-index="${index}"]`);if(row)row.classList.add("unanswered");});
+        updateChecklistProgress(); focusFirstUnanswered(); return;
+    }
+    const inspectionDate = document.getElementById("inspectionDate").value;
+    const inspectorName = document.getElementById("inspectorName").value.trim();
+    const notes = document.getElementById("inspectionNotes").value.trim();
+    if(!inspectionDate){showToast("Please select an inspection date.","error");return;}
+    if(!inspectorName){showToast("Please enter the inspector name.","error");return;}
+    const answers = getChecklistAnswers();
+    const failedWithoutRemarks = answers.find(item=>item.answer === "FAIL" && !item.remarks?.trim());
+    if(failedWithoutRemarks){showToast(`Checklist item ${failedWithoutRemarks.item_number} is marked FAIL and requires remarks.`,"error");return;}
+    if(answers.some(item=>!["PASS","FAIL","N/A"].includes(item.answer))){showToast("Inspection cannot be saved because one or more checklist items are unanswered.","error");return;}
+    const saveButton = document.getElementById("saveInspectionButton");
+    saveButton.disabled = true;
+    saveButton.textContent = "Saving on this device…";
+    try{
+        // First commit the complete inspection payload to IndexedDB, regardless of connectivity.
+        const queueItem = {
+            queueId:makeQueueId(), createdAt:new Date().toISOString(), status:"pending", stage:"local-saved",
+            equipment:{id:currentEquipment.id,name:currentEquipment.name,equipment_code:currentEquipment.equipment_code,equipment_type:currentEquipment.equipment_type},
+            inspectionDate, inspectorName, notes, answers,
+            overallStatus:calculateOverallStatus(answers),
+            inspectionId:null, answersSaved:false, deviationsSaved:false, equipmentUpdated:false
+        };
+        await putQueuedInspection(queueItem);
+        await updateOfflineQueueUi();
+        closeInspectionModal();
+        if(navigator.onLine && ensureSupabaseClient()){
+            showToast("Inspection safely saved on this device. Syncing to the database…","success");
+            await syncPendingInspections(false);
+        }else{
+            showToast("Inspection saved on this device. It will sync when internet returns.","success");
+        }
+    }catch(error){
+        console.error("Local inspection save error:",error);
+        showToast("Inspection was NOT saved: "+(error.message||"Local storage error"),"error");
+    }finally{
+        saveButton.disabled = false;
+        saveButton.textContent = "Save Inspection";
+    }
+}
+
+/* =====================================================
+   CREATE DEVIATIONS AUTOMATICALLY
+===================================================== */
+
+async function createDeviations(inspectionId, equipmentId, answers) {
+
+    // Get only failed inspection items
+    const failedItems = answers.filter(
+        item => item.answer === "FAIL"
+    );
+
+    // No failed items = no deviations
+    if (failedItems.length === 0) {
+        return {
+            created: 0,
+            data: []
+        };
+    }
+
+    // Avoid recreating deviations if a previous sync stopped after a partial insert.
+    const {data:existingDeviations,error:existingDeviationError} = await supabaseClient
+        .from("deviations").select("item_number").eq("inspection_id",inspectionId);
+    if(existingDeviationError) throw existingDeviationError;
+    const existingNumbers = new Set((existingDeviations || []).map(item=>Number(item.item_number)));
+    const missingFailedItems = failedItems.filter(item=>!existingNumbers.has(Number(item.item_number)));
+    if(missingFailedItems.length === 0){
+        return {created:0,data:[]};
+    }
+
+    // Build deviation records only for failed items not already saved.
+    const deviationRows = missingFailedItems.map((item, index) => ({
+        deviation_number: `DEV-${Date.now()}-${index + 1}`,
+
+        inspection_id: inspectionId,
+
+        equipment_id: equipmentId,
+
+        item_number: item.item_number,
+
+        inspection_requirement: item.inspection_requirement,
+
+        deviation_description:
+            item.remarks && item.remarks.trim()
+                ? item.remarks.trim()
+                : item.inspection_requirement,
+
+        severity: item.severity || "Medium",
+
+        status: "Open"
+    }));
+
+    console.log("Creating deviations:", deviationRows);
+
+    // Save deviations
+    const { data, error } = await supabaseClient
+        .from("deviations")
+        .insert(deviationRows)
+        .select();
+
+        if(data){
+
+    await createCorrectiveAction(
+        data
+    );
+
+}
+
+    if (error) {
+
+        console.error(
+            "Deviation creation error:",
+            error
+        );
+
+        throw new Error(
+            "Inspection was saved, but the deviation records could not be created: " +
+            error.message
+        );
+    }
+
+    console.log(
+        `${deviationRows.length} deviation(s) created successfully.`,
+        data
+    );
+
+    return {
+        created: deviationRows.length,
+        data: data || []
+    };
+}
+
+/* =====================================================
+   CREATE CORRECTIVE ACTION FROM DEVIATION
+===================================================== */
+
+async function createCorrectiveAction(deviations){
+    try{
+        const list = Array.isArray(deviations) ? deviations : [deviations];
+        for(const deviation of list){
+            if(!deviation || !deviation.id) continue;
+            const {data:existing,error:lookupError} = await supabaseClient.from("corrective_actions").select("id").eq("deviation_id",deviation.id).limit(1);
+            if(lookupError) throw lookupError;
+            if(existing && existing.length) continue;
+            const actionNumber = await generateActionNumber();
+            const {error} = await supabaseClient.from("corrective_actions").insert({
+                action_number:actionNumber,deviation_id:deviation.id,equipment_id:deviation.equipment_id,
+                action_description:deviation.deviation_description,priority:deviation.severity || "Medium",status:"Open",
+                responsible_person:deviation.responsible_person || null,target_date:deviation.target_date || null,verification_required:true
+            });
+            if(error) throw error;
+        }
+    }catch(error){console.error("Corrective Action Creation Error:",error);}
+}
+
+
+
+/* =====================================================
+   NEXT INSPECTION DATE
+===================================================== */
+
+function calculateNextInspectionDate(
+    inspectionDate
+){
+
+    /*
+     * Temporary MVP rule:
+     * next inspection = 12 months later.
+     *
+     * This can be changed later when the
+     * official Debswana inspection frequency
+     * is confirmed.
+     */
+
+    const date =
+        new Date(
+            inspectionDate +
+            "T00:00:00"
+        );
+
+
+   date.setMonth(
+    date.getMonth() + 1
+);
+
+
+    const year =
+        date.getFullYear();
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(2,"0");
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(2,"0");
+
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+/* =====================================================
+   LOAD INSPECTION STATS
+===================================================== */
+
+async function loadInspectionStats(){
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("inspections")
+            .select(
+                "id, overall_status"
+            );
+
+
+    if(error){
+
+        console.error(
+            "Inspection stats error:",
+            error
+        );
+
+        return;
+
+    }
+
+
+    const inspections =
+        data || [];
+
+
+    document.getElementById(
+        "totalInspections"
+    ).textContent =
+        inspections.length;
+
+
+    document.getElementById(
+        "passedInspections"
+    ).textContent =
+        inspections.filter(
+            item =>
+                item.overall_status ===
+                "Pass"
+        ).length;
+
+
+    document.getElementById(
+        "failedInspections"
+    ).textContent =
+        inspections.filter(
+            item =>
+                item.overall_status ===
+                "Fail"
+        ).length;
+
+}
+
+
+/* =====================================================
+   CLOSE INSPECTION MODAL
+===================================================== */
+
+function closeInspectionModal(){
+
+    document.getElementById(
+        "inspectionModal"
+    ).classList.remove("active");
+
+    currentEquipment =
+        null;
+
+    currentChecklist =
+        [];
+
+    checklistAnswers =
+        [];
+
+}
+
+
+/* =====================================================
+   INSPECTION HISTORY
+===================================================== */
+
+async function openHistory(
+    equipmentId
+){
+
+    const equipment =
+        equipmentList.find(
+            item =>
+                String(item.id) ===
+                String(equipmentId)
+        );
+
+
+    if(!equipment){
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "historySubtitle"
+    ).textContent =
+        "Inspection history for " +
+        (
+            equipment.name ||
+            equipment.equipment_code
+        );
+
+
+    const historyList =
+        document.getElementById(
+            "historyList"
+        );
+
+
+    historyList.innerHTML = `
+        <div class="loading">
+            Loading inspection history...
+        </div>
+    `;
+
+
+    document.getElementById(
+        "historyModal"
+    ).classList.add("active");
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("inspections")
+            .select(`
+                id,
+                inspection_date,
+                inspector_name,
+                inspection_type,
+                overall_status,
+                notes,
+                created_at
+            `)
+            .eq(
+                "equipment_id",
+                equipment.id
+            )
+            .order(
+                "inspection_date",
+                {
+                    ascending:false
+                }
+            );
+
+
+    if(error){
+
+        historyList.innerHTML = `
+            <div class="empty-state">
+
+                Unable to load inspection history.
+
+                <br><br>
+
+                ${escapeHtml(
+                    error.message
+                )}
+
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    if(!data || data.length === 0){
+
+        historyList.innerHTML = `
+            <div class="empty-state">
+                No previous inspections found for this equipment.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    historyList.innerHTML =
+        data
+            .map(
+                inspection => {
+
+                    let statusClass =
+                        "status-pending";
+
+
+                    if(
+                        inspection.overall_status ===
+                        "Pass"
+                    ){
+
+                        statusClass =
+                            "status-pass";
+
+                    }
+                    else if(
+                        inspection.overall_status ===
+                        "Fail"
+                    ){
+
+                        statusClass =
+                            "status-fail";
+
+                    }
+                    else if(
+                        inspection.overall_status ===
+                        "N/A"
+                    ){
+
+                        statusClass =
+                            "status-na";
+
+                    }
+
+
+                    return `
+
+                        <div class="history-item">
+
+                            <div class="history-top">
+
+                                <div>
+
+                                    <div class="history-date">
+                                        ${escapeHtml(
+                                            inspection.inspection_date
+                                        )}
+                                    </div>
+
+                                    <div class="history-type">
+
+                                        ${escapeHtml(
+                                            inspection.inspection_type
+                                        )}
+
+                                        —
+
+                                        Inspector:
+
+                                        ${escapeHtml(
+                                            inspection.inspector_name
+                                        )}
+
+                                    </div>
+
+                                </div>
+
+
+                                <div
+                                    class="history-status ${statusClass}"
+                                >
+                                    ${escapeHtml(
+                                        inspection.overall_status
+                                    )}
+                                </div>
+
+                            </div>
+
+
+                            ${
+                                inspection.notes
+                                ? `
+
+                                    <div
+                                        style="
+                                            margin-top:10px;
+                                            color:#b9c6d2;
+                                            font-size:12px;
+                                        "
+                                    >
+
+                                        ${escapeHtml(
+                                            inspection.notes
+                                        )}
+
+                                    </div>
+
+                                `
+                                : ""
+                            }
+
+                        </div>
+
+                    `;
+
+                }
+            )
+            .join("");
+
+}
+
+
+/* =====================================================
+   CLOSE HISTORY
+===================================================== */
+
+function closeHistoryModal(){
+
+    document.getElementById(
+        "historyModal"
+    ).classList.remove("active");
+
+}
+
+
+/* =====================================================
+   MODAL OUTSIDE CLICK
+===================================================== */
+
+document
+    .getElementById("inspectionModal")
+    .addEventListener(
+        "click",
+        function(event){
+
+            if(
+                event.target ===
+                this
+            ){
+
+                closeInspectionModal();
+
+            }
+
+        }
+    );
+
+
+document
+    .getElementById("historyModal")
+    .addEventListener(
+        "click",
+        function(event){
+
+            if(
+                event.target ===
+                this
+            ){
+
+                closeHistoryModal();
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   ESCAPE KEY
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(
+            event.key ===
+            "Escape"
+        ){
+
+            closeSidebar();
+
+            closeInspectionModal();
+
+            closeHistoryModal();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   INITIAL LOAD
+===================================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+        document.getElementById(
+            "inspectionDate"
+        ).value =
+            getToday();
+
+
+        loadEquipment();
+        updateOfflineQueueUi();
+        if("serviceWorker" in navigator){
+            navigator.serviceWorker.register("./firesafe-sw.js").catch(error=>console.warn("Offline page caching could not be enabled:",error));
+        }
+        if(navigator.onLine) syncPendingInspections(false);
+
+    }
+);
+
 </script>
+
+
+<script src="./firesafe-control-bar.js" defer></script>
 </body>
+
 </html>
