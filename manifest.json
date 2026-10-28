@@ -1,0 +1,13 @@
+{
+  "id": "./index.html",
+  "name": "FireSafe Track | A-eye Group",
+  "short_name": "FireSafe Track",
+  "description": "Fire safety equipment inspection and management platform.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1f3a",
+  "theme_color": "#0b1f3a",
+  "orientation": "any",
+  "icons": [{"src":"./icons/firesafe-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

@@ -1,0 +1,24 @@
+FIRESAFE TRACK PWA UPGRADE — NETLIFY
+
+PACKAGE CONTENTS
+- index.html: refreshed public landing page
+- manifest.json and icons/: install identity and icon
+- firesafe-sw.js: caches the app shell/pages and supported browser libraries
+- firesafe-control-bar.js: shared responsive bottom bar with More menu
+- offline.html: fallback when a page is not yet cached
+- Existing page files included here are patched copies with their original page code preserved, plus the shared navigation/manifest registration.
+
+DEPLOY SAFELY
+1. Download and unzip this package. Back up your current Netlify publish folder first.
+2. Compare the included existing HTML files against your latest live/local files before replacing them. These copies came from the latest versions available in the project library on 20 Oct 2026; if you have newer local edits, keep those edits and add only the manifest link, firesafe-control-bar.js script, and service worker registration.
+3. Upload the package contents to the same Netlify publish root as dashboard.html. Keep any other current app pages (equipment-types.html, users.html, settings.html, login/auth files, etc.) that are not included.
+4. Ensure the site is deployed over HTTPS (Netlify provides HTTPS).
+5. Open index.html and each main page while online once. Then reload after the service worker activates.
+6. In Edge/Chrome DevTools > Application, verify Manifest and Service Worker. Test offline only after initial online caching.
+7. Test inspection queue using the existing “Sync pending inspections” workflow after reconnecting. Confirm records in Supabase.
+
+IMPORTANT
+- The service worker caches page shells and selected JS libraries; it does not cache private Supabase API responses. Auth/session checks and live database operations may still need a network.
+- The inspection page's existing IndexedDB queue is retained. Do not clear site data while inspections are pending.
+- Service-worker cache install skips unavailable optional pages; open every required page online at least once.
+- Test on a staging Netlify deploy before production use.
