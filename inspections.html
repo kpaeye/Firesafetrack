@@ -25,8 +25,12 @@
 <div class="modal" id="inspectionModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-card"><div class="modal-head"><div><h2 id="modalTitle">Equipment inspection</h2><div id="equipmentSummary" class="subtle"></div></div><button class="button secondary" id="closeModalButton">Close</button></div><div class="form-grid"><div class="form-group"><label for="inspectionDate">Inspection date</label><input class="field" id="inspectionDate" type="date" required></div><div class="form-group"><label for="inspectorName">Inspector name</label><input class="field" id="inspectorName" autocomplete="name" required></div></div><div id="readingSection"><h3 class="section-title">Recorded readings</h3><div id="readingFields" class="form-grid"></div></div><h3 class="section-title" id="checklistTitle">Inspection checklist</h3><p class="subtle">Select PASS, FAIL or N/A for every item. A FAIL answer requires remarks so the deviation is meaningful.</p><div id="checklist"></div><div class="form-group" style="margin-top:18px"><label for="inspectionNotes">General inspection notes (optional)</label><textarea id="inspectionNotes" class="field" rows="3" placeholder="Additional observations"></textarea></div><div class="modal-footer"><span id="checklistProgress" class="progress">0 items answered</span><button id="saveInspectionButton" class="button primary">Save inspection</button></div></div></div>
 <div id="toastContainer" class="toast-wrap" aria-live="polite"></div>
 <script>
-const SUPABASE_URL="https://syiemjazbawflavxibzv.supabase.co";
-const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbGciOiJIUzI1NiIsInJlZiI6InN5aWVtamF6YmF3ZmxhdnhpYnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Njg5MzEsImV4cCI6MjEwNDU0NDkzMX0.RJ6siFDLg3LAsP2ZPDgdFVGAFasg05hK4GikdIO68PM";
+const SUPABASE_URL =
+    "https://syiemjazbawflavxibzv.supabase.co";
+
+const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5aWVtamF6YmF3ZmxhdnhpYnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Njg5MzEsImV4cCI6MjEwNDU0NDkzMX0.RJ6siFDLg3LAsP2ZPDgdFVGAFasg05hK4GikdIO68PM";
+
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const INSPECTION_FORMS = {
 
