@@ -347,6 +347,21 @@ footer { color:#7f91a7;font-size:10px;text-align:center;margin-top:30px; }
     h1 { font-size:23px; }
     .mobile-menu { display:inline-flex; }
 }
+
+/* FireSafe Track PWA control bar spacing */
+@media screen and (max-width: 768px) {
+    body {
+        padding-bottom: calc(
+            112px + env(safe-area-inset-bottom)
+        ) !important;
+    }
+
+    html {
+        scroll-padding-bottom: calc(
+            112px + env(safe-area-inset-bottom)
+        );
+    }
+}
 </style>
 </head>
 
@@ -645,12 +660,7 @@ footer { color:#7f91a7;font-size:10px;text-align:center;margin-top:30px; }
 </div>
 
 <script>
-/*
- * IMPORTANT:
- * Replace these two values with the same Supabase project URL and
- * publishable/anon key used by your existing FireSafe Track pages.
- * Never put a Supabase service_role key in browser-side HTML.
- */
+
 const SUPABASE_URL =
 "https://syiemjazbawflavxibzv.supabase.co";
 
@@ -962,5 +972,6 @@ byId("resetPreferencesButton").addEventListener("click", resetPreferences);
 
 initialisePage();
 </script>
+<script src="./firesafe-control-bar.js" defer></script>
 </body>
 </html>
