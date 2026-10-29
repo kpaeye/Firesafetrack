@@ -2378,90 +2378,89 @@ const dashboardStats = {
     ====================================================== */
 
     async function loadCurrentUser() {
+    const {
+        data: { user },
+        error: authError
+    } = await supabaseClient.auth.getUser();
 
-        try {
+    if (authError) {
+        throw new Error("Could not verify login: " + authError.message);
+    }
 
-            const {
-                data,
-                error
-            } =
-                await supabaseClient
-                    .auth
-                    .getUser();
+    if (!user) {
+        throw new Error("You are not signed in. Please log in again.");
+    }
 
+    const { data: profile, error: profileError } =
+        await supabaseClient
+            .from("profiles")
+            .select("id, full_name, role, department_id, active")
+            .eq("id", user.id)
+            .maybeSingle();
 
-            if (error) {
+    if (profileError) {
+        throw new Error("Could not load your profile: " + profileError.message);
+    }
 
-                console.warn(
-                    "Auth user lookup:",
-                    error
-                );
+    if (!profile) {
+        throw new Error("Your user profile was not found.");
+    }
 
-                userDisplay.textContent =
-                    "Administrator";
+    if (profile.active !== true) {
+        throw new Error("Your account is inactive. Contact your administrator.");
+    }
 
-                roleBadge.textContent =
-                    "ADMIN";
+    const role = String(profile.role || "").trim().toLowerCase();
 
-                return;
+    if (!["administrator", "supervisor", "inspector"].includes(role)) {
+        throw new Error("Your account has an unrecognised role.");
+    }
 
-            }
+    let departmentName = "";
 
+    if (profile.department_id) {
+        const { data: department, error: departmentError } =
+            await supabaseClient
+                .from("departments")
+                .select("name")
+                .eq("id", profile.department_id)
+                .maybeSingle();
 
-            const user =
-                data?.user;
-
-
-            if (!user) {
-
-                userDisplay.textContent =
-                    "Administrator";
-
-                roleBadge.textContent =
-                    "ADMIN";
-
-                return;
-
-            }
-
-
-            // Load the user's display name and role from their profile.
-            const {
-                data: profile,
-                error: profileError
-            } =
-                await supabaseClient
-                    .from("profiles")
-                    .select("full_name, role")
-                    .eq("id", user.id)
-                    .maybeSingle();
-
-            if (profileError) {
-                console.warn("Profile lookup:", profileError.message);
-            }
-
-            // Prefer the profile's full name. Use email only if the name is missing.
-            const fullName = String(profile?.full_name || "").trim();
-            userDisplay.textContent = fullName || user.email || "User";
-
-            roleBadge.textContent = String(profile?.role || "USER").toUpperCase();
-
-        } catch (error) {
-
-            console.warn(
-                "Could not load current user:",
-                error
-            );
-
-            userDisplay.textContent =
-                "Administrator";
-
-            roleBadge.textContent =
-                "ADMIN";
-
+        if (departmentError) {
+            console.warn("Department lookup:", departmentError.message);
         }
 
+        departmentName = department?.name || "";
     }
+
+    if (role !== "administrator" && !profile.department_id) {
+        throw new Error("Your profile has no department assigned.");
+    }
+
+    window.fireSafeTrackCurrentUser = {
+        id: user.id,
+        role,
+        departmentId: profile.department_id,
+        departmentName
+    };
+
+    userDisplay.textContent =
+        String(profile.full_name || "").trim() || user.email || "User";
+
+    roleBadge.textContent = role.toUpperCase();
+
+    const departmentElement = document.getElementById("departmentName");
+
+    if (departmentElement) {
+        departmentElement.textContent = departmentName || "No department";
+    }
+
+    if (userMenuName) {
+        userMenuName.textContent = userDisplay.textContent;
+    }
+
+    return window.fireSafeTrackCurrentUser;
+}
 
 
     /* =====================================================
@@ -2489,126 +2488,34 @@ const dashboardStats = {
     ====================================================== */
 
     async function loadInspections() {
+    const inspections = await fetchAllRows(
+        "inspections",
+        "id, equipment_id, inspection_date, inspector_name, inspector_id, inspection_type, overall_status, notes, created_at"
+    );
 
-        const {
-            data,
-            error,
-            count
-        } =
-            await supabaseClient
-                .from("inspections")
-                .select(
-                    `
-                        id,
-                        equipment_id,
-                        inspection_date,
-                        inspector_name,
-                        inspection_type,
-                        overall_status,
-                        notes,
-                        created_at
-                    `,
-                    {
-                        count: "exact"
-                    }
-                )
-                .order(
-                    "inspection_date",
-                    {
-                        ascending: false
-                    }
-                );
+    inspections.sort((a, b) => {
+        const dateA = a.inspection_date || a.created_at || "";
+        const dateB = b.inspection_date || b.created_at || "";
+        return String(dateB).localeCompare(String(dateA));
+    });
 
+    totalInspectionsEl.textContent = inspections.length;
 
-        if (error) {
+    let passed = 0;
+    let failed = 0;
 
-            throw new Error(
-                "Inspections query failed: " +
-                error.message
-            );
+    inspections.forEach(item => {
+        if (isPassed(item.overall_status)) passed++;
+        if (isFailed(item.overall_status)) failed++;
+    });
 
-        }
+    passedInspectionsEl.textContent = passed;
+    failedInspectionsEl.textContent = failed;
 
+    await renderRecentInspections(inspections.slice(0, 8));
 
-        const inspections =
-            data || [];
-
-
-        const total =
-            count !== null &&
-            count !== undefined
-                ? count
-                : inspections.length;
-
-
-        totalInspectionsEl.textContent =
-            total;
-
-
-        /* -------------------------------------------------
-           PASSED / FAILED INSPECTIONS
-
-           Correct database field:
-           overall_status
-        -------------------------------------------------- */
-
-        let passed = 0;
-
-        let failed = 0;
-
-
-        inspections.forEach(
-            function(item) {
-
-                if (
-                    isPassed(
-                        item.overall_status
-                    )
-                ) {
-
-                    passed++;
-
-                }
-
-
-                if (
-                    isFailed(
-                        item.overall_status
-                    )
-                ) {
-
-                    failed++;
-
-                }
-
-            }
-        );
-
-
-        passedInspectionsEl.textContent =
-            passed;
-
-
-        failedInspectionsEl.textContent =
-            failed;
-
-
-        /* -------------------------------------------------
-           RECENT INSPECTIONS
-        -------------------------------------------------- */
-
-        renderRecentInspections(
-            inspections.slice(
-                0,
-                8
-            )
-        );
-
-
-        return inspections;
-
-    }
-
+    return inspections;
+}
 
     /* =====================================================
        LOAD INSPECTION ANSWERS
@@ -2616,39 +2523,158 @@ const dashboardStats = {
        THIS IS THE IMPORTANT PART FOR COMPLIANCE
     ====================================================== */
 
-    async function loadInspectionAnswers() {
-        const answers = await fetchAllRows("inspection_answers", "id, inspection_id, item_number, inspection_requirement, answer, remarks");
-        let passCount = 0, failCount = 0, naCount = 0;
-        answers.forEach(item => {
-            const answer = normalizeStatus(item.answer).replace(/\s+/g, "");
-            if (["PASS", "PASSED"].includes(answer)) passCount++;
-            else if (["FAIL", "FAILED", "FAILURE"].includes(answer)) failCount++;
-            else if (["N/A", "NA", "NOTAPPLICABLE"].includes(answer)) naCount++;
-        });
-        const evaluated = passCount + failCount;
-        complianceLoaded = evaluated > 0;
-        const compliance = evaluated > 0 ? Math.round((passCount / evaluated) * 100) : null;
-        updateCompliance(compliance);
-        console.log("FireSafe Track compliance:", { passCount, failCount, naCount, evaluated, compliance });
-        return { answers, passCount, failCount, naCount, evaluated, compliance };
-    }
+async function loadInspectionAnswers() {
+    const answers = await fetchAllRows(
+        "inspection_answers",
+        "id, inspection_id, item_number, inspection_requirement, answer, remarks"
+    );
 
+    let passCount = 0;
+    let failCount = 0;
+    let naCount = 0;
 
+    answers.forEach(item => {
+        const answer = normalizeStatus(item.answer)
+            .replace(/\s+/g, "");
+
+        if (["PASS", "PASSED"].includes(answer)) {
+            passCount++;
+        } else if (["FAIL", "FAILED", "FAILURE"].includes(answer)) {
+            failCount++;
+        } else if (["N/A", "NA", "NOTAPPLICABLE"].includes(answer)) {
+            naCount++;
+        }
+    });
+
+    const evaluated = passCount + failCount;
+
+    // Checklist statistics are retained for reporting.
+    // Site Compliance will be calculated from deviations separately.
+    complianceLoaded = false;
+
+    console.log("FireSafe Track checklist statistics:", {
+        passCount,
+        failCount,
+        naCount,
+        evaluated
+    });
+
+    return {
+        answers,
+        passCount,
+        failCount,
+        naCount,
+        evaluated
+    };
+}
     /* =====================================================
        LOAD DEVIATIONS
     ====================================================== */
 
-    async function loadDeviations() {
-        const deviations = await fetchAllRows("deviations", "*");
-        latestTrendDeviations = deviations;
-        const openCount = deviations.filter(d => isActiveDeviation(d) && normalizeStatus(d.status) === "OPEN").length;
-        const overdue = deviations.filter(isOverdueDeviation).length;
-        openDeviationsEl.textContent = openCount;
-        overdueCount.textContent = overdue;
-        dashboardStats.openDeviations = openCount;
-        renderSafetyTrends();
-        return deviations;
-    }
+async function loadDeviations() {
+    const deviations = await fetchAllRows("deviations", "*");
+
+    latestTrendDeviations = deviations;
+
+    // Count unresolved deviations.
+    const unresolvedStatuses = [
+        "OPEN",
+        "IN PROGRESS",
+        "ASSIGNED",
+        "PENDING"
+    ];
+
+    const unresolvedDeviations = deviations.filter(d =>
+        isActiveDeviation(d) &&
+        unresolvedStatuses.includes(normalizeStatus(d.status))
+    );
+
+    const openCount = unresolvedDeviations.length;
+
+    const overdue = unresolvedDeviations.filter(isOverdueDeviation).length;
+
+    // Update deviation indicators.
+    openDeviationsEl.textContent = openCount;
+    overdueCount.textContent = overdue;
+
+    dashboardStats.openDeviations = openCount;
+    dashboardStats.overdueEquipment = overdue;
+
+    // Keep deviation-based safety trends updated.
+    renderSafetyTrends();
+
+    return deviations;
+}
+    /* =====================================================
+       LOAD SITE COMPLIANCE
+    ====================================================== */
+
+
+
+async function loadSiteCompliance() {
+    const equipment = await fetchAllRows(
+        "equipment",
+        "id"
+    );
+
+    const deviations = await fetchAllRows(
+        "deviations",
+        "id, equipment_id, status"
+    );
+
+    const unresolvedStatuses = [
+        "OPEN",
+        "IN PROGRESS",
+        "ASSIGNED",
+        "PENDING"
+    ];
+
+    const equipmentWithOpenDeviations = new Set();
+
+    deviations.forEach(deviation => {
+        const status = normalizeStatus(deviation.status);
+
+        if (
+            deviation.equipment_id &&
+            isActiveDeviation(deviation) &&
+            unresolvedStatuses.includes(status)
+        ) {
+            equipmentWithOpenDeviations.add(
+                deviation.equipment_id
+            );
+        }
+    });
+
+    const totalEquipment = equipment.length;
+
+    const compliantEquipment = equipment.filter(
+        item => !equipmentWithOpenDeviations.has(item.id)
+    ).length;
+
+    const compliance = totalEquipment > 0
+        ? Math.round(
+            (compliantEquipment / totalEquipment) * 100
+        )
+        : null;
+
+    updateCompliance(compliance);
+
+    console.log("FireSafe Track deviation-based compliance:", {
+        totalEquipment,
+        compliantEquipment,
+        equipmentWithOpenDeviations:
+            equipmentWithOpenDeviations.size,
+        compliance
+    });
+
+    return {
+        totalEquipment,
+        compliantEquipment,
+        equipmentWithOpenDeviations:
+            equipmentWithOpenDeviations.size,
+        compliance
+    };
+}
 
 
     /* =====================================================
@@ -3066,36 +3092,74 @@ const dashboardStats = {
     ====================================================== */
 
     async function loadDashboard() {
-        clearDatabaseError();
-        systemStatusText.textContent = "Connecting to database...";
-        systemStatusDot.classList.remove("online", "error");
-        try {
-            const results = await Promise.allSettled([
-                loadEquipment(),
-                loadInspections(),
-                loadDeviations(),
-                loadCurrentUser(),
-                loadInspectionAnswers()
-            ]);
-            const failed = results.filter(r => r.status === "rejected");
-            if (failed.length) {
-                const messages = failed.map(r => r.reason?.message || "A dashboard data request failed.");
-                throw new Error(messages.join(" | "));
-            }
-            renderSafetyTrends();
-            if (userMenuName) userMenuName.textContent = userDisplay.textContent || "Signed in";
-            systemStatusDot.classList.add("online");
-            systemStatusText.textContent = "Database connected";
-            console.log("FireSafe Track dashboard and safety trends loaded.");
-        } catch (error) {
-            console.error("Dashboard loading error:", error);
-            showDatabaseError(error.message || "Unable to load dashboard data.");
-            // Keep trend panels informative if the deviation data could not be read.
-            const tbody = document.getElementById("commonDeviationRows");
-            if (tbody && !latestTrendDeviations.length) tbody.innerHTML = '<tr><td colspan="4">Trend data could not be loaded. Check database access and RLS policies.</td></tr>';
+    clearDatabaseError();
+
+    systemStatusText.textContent = "Connecting to database...";
+    systemStatusDot.classList.remove("online", "error");
+
+    try {
+        // Verify the session and profile first.
+        await loadCurrentUser();
+
+        const results = await Promise.allSettled([
+    loadEquipment(),
+    loadInspections(),
+    loadDeviations(),
+    loadInspectionAnswers(),
+    loadSiteCompliance()
+]);
+        const failed = results
+            .map((result, index) => ({
+                result,
+                name: [
+                    "Equipment",
+                    "Inspections",
+                    "Deviations",
+                    "Checklist answers",
+                    "Site Compliance"
+                ][index]
+            }))
+            .filter(item => item.result.status === "rejected");
+
+        if (failed.length) {
+            const messages = failed.map(item =>
+                item.name + ": " +
+                (item.result.reason?.message || "Request failed")
+            );
+
+            throw new Error(messages.join(" | "));
+        }
+
+        renderSafetyTrends();
+
+        if (userMenuName) {
+            userMenuName.textContent = userDisplay.textContent || "Signed in";
+        }
+
+        systemStatusDot.classList.add("online");
+        systemStatusText.textContent = "Database connected";
+
+        console.log("FireSafe Track department dashboard loaded.");
+
+    } catch (error) {
+        console.error("Dashboard loading error:", error);
+
+        systemStatusDot.classList.remove("online");
+        systemStatusDot.classList.add("error");
+        systemStatusText.textContent = "Dashboard data error";
+
+        showDatabaseError(
+            error.message || "Unable to load dashboard data."
+        );
+
+        const tbody = document.getElementById("commonDeviationRows");
+
+        if (tbody && !latestTrendDeviations.length) {
+            tbody.innerHTML =
+                '<tr><td colspan="4">Trend data could not be loaded. Check database access and RLS policies.</td></tr>';
         }
     }
-
+}
 
     /* =====================================================
        AUTO REFRESH
