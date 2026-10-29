@@ -2289,19 +2289,22 @@ async function loadEquipmentTypes(){
                 .filter(Boolean);
 
 
-        equipmentTypes =
-            [
-                ...new Set(
-                    [
-                        ...values,
-                        ...DEFAULT_EQUIPMENT_TYPES
-                    ]
-                )
-            ]
-            .sort(
-                (a,b) =>
-                    a.localeCompare(b)
-            );
+       equipmentTypes = [
+    ...new Map(
+        [...values, ...DEFAULT_EQUIPMENT_TYPES]
+            .filter(Boolean)
+            .map(type => {
+                const cleanedType = type.trim();
+
+                const standardType =
+                    cleanedType.toLowerCase() === "fire extinguisher"
+                        ? "Fire extinguisher"
+                        : cleanedType;
+
+                return [standardType.toLowerCase(), standardType];
+            })
+    ).values()
+].sort((a, b) => a.localeCompare(b));
 
 
         populateEquipmentTypeControls();
