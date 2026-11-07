@@ -1079,6 +1079,32 @@ tr:hover td{
    RESPONSIVE
 ===================================================== */
 
+
+.operational-filters{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    margin-bottom:18px;
+}
+.operational-preview-stats{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    margin:0;
+}
+.operational-preview-stats .stat-card{
+    padding:14px;
+}
+.operational-preview-stats .stat-value{
+    font-size:23px;
+}
+#generateOperationalReportButton:disabled{
+    opacity:.6;
+    cursor:wait;
+}
+@media(max-width:1100px){
+    .operational-filters{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .operational-preview-stats{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:750px){
+    .operational-filters{grid-template-columns:1fr;}
+}
 @media(max-width:1100px){
 
     .report-grid{
@@ -1387,6 +1413,76 @@ tr:hover td{
 
     </section>
 
+
+
+    <!-- =================================================
+         OPERATIONAL REPORT BUILDER
+    ================================================== -->
+    <section class="card" id="operationalReportBuilder">
+        <div class="card-header">
+            <h2>Operational Report Builder</h2>
+            <span style="color:#aebfd0;font-size:12px;">Combined filters apply to the consolidated workbook</span>
+        </div>
+        <div class="card-body">
+            <p style="color:#aebfd0;margin-top:0;">
+                Generate a consolidated operational report using location, area, equipment type and reporting period.
+                The workbook includes the equipment register, inspection history, checklist details, deviations and corrective actions.
+            </p>
+            <div class="filters operational-filters">
+                <div class="form-group">
+                    <label for="reportLocationFilter">Location</label>
+                    <select id="reportLocationFilter" onchange="updateOperationalReportPreview()">
+                        <option value="">All Locations</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reportAreaFilter">Area</label>
+                    <select id="reportAreaFilter" onchange="updateOperationalReportPreview()">
+                        <option value="">All Areas</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reportEquipmentTypeFilter">Equipment Type</label>
+                    <select id="reportEquipmentTypeFilter" onchange="updateOperationalReportPreview()">
+                        <option value="">All Equipment Types</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reportPeriodFilter">Time Interval</label>
+                    <select id="reportPeriodFilter" onchange="toggleCustomReportDates()">
+                        <option value="all">All Available Records</option>
+                        <option value="7">Last 7 Days</option>
+                        <option value="30" selected>Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="365">Last 12 Months</option>
+                        <option value="custom">Custom Date Range</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reportFromDate">From Date</label>
+                    <input type="date" id="reportFromDate" disabled onchange="updateOperationalReportPreview()">
+                </div>
+                <div class="form-group">
+                    <label for="reportToDate">To Date</label>
+                    <input type="date" id="reportToDate" disabled onchange="updateOperationalReportPreview()">
+                </div>
+            </div>
+            <div class="stats-grid operational-preview-stats">
+                <div class="stat-card"><div class="stat-label">Equipment Matching</div><div class="stat-value" id="builderEquipmentCount">0</div></div>
+                <div class="stat-card"><div class="stat-label">Inspections Matching</div><div class="stat-value" id="builderInspectionCount">0</div></div>
+                <div class="stat-card"><div class="stat-label">Deviations Matching</div><div class="stat-value" id="builderDeviationCount">0</div></div>
+                <div class="stat-card"><div class="stat-label">Corrective Actions Matching</div><div class="stat-value" id="builderActionCount">0</div></div>
+            </div>
+            <div class="header-actions" style="margin-top:18px;">
+                <button class="btn btn-secondary" onclick="resetOperationalReportFilters()">Reset Report Filters</button>
+                <button class="btn btn-primary" id="generateOperationalReportButton" onclick="generateOperationalReport()">Generate Consolidated Excel Report</button>
+            </div>
+            <div class="preview-info" style="margin-top:14px;">
+                <span id="operationalReportScope">All locations · All areas · All equipment types · Last 30 days</span>
+                <span>Inspection dates and issue-raised dates are filtered within the selected interval.</span>
+            </div>
+        </div>
+    </section>
 
     <!-- =================================================
          REPORT GENERATORS
@@ -2241,14 +2337,16 @@ async function loadData(){
 
 
         if(inspectionsResult.error){
-
-            throw new Error(
-                "Inspections: " +
-                inspectionsResult.error.message
-            );
-
+            throw new Error("Inspections: " + inspectionsResult.error.message);
         }
 
+        if(deviationsResult.error){
+            throw new Error("Deviations: " + deviationsResult.error.message);
+        }
+
+        if(correctiveResult.error){
+            throw new Error("Corrective actions: " + correctiveResult.error.message);
+        }
 
         equipmentList =
             equipmentResult.data || [];
@@ -2256,15 +2354,8 @@ async function loadData(){
         inspectionsList =
             inspectionsResult.data || [];
 
-        deviationsList =
-            deviationsResult.error
-                ? []
-                : (deviationsResult.data || []);
-
-        correctiveActionsList =
-            correctiveResult.error
-                ? []
-                : (correctiveResult.data || []);
+        deviationsList = deviationsResult.data || [];
+        correctiveActionsList = correctiveResult.data || [];
 
 
         setDatabaseStatus(
@@ -2274,8 +2365,9 @@ async function loadData(){
 
 
         updateStats();
-
+        populateOperationalReportFilters();
         applyFilters();
+        updateOperationalReportPreview();
 
     }catch(error){
 
@@ -2457,7 +2549,7 @@ function applyFilters(){
 
                 if(
                     status &&
-                    inspection.overall_status !== status
+                    String(inspection.overall_status || "").toLowerCase() !== status.toLowerCase()
                 ){
                     return false;
                 }
@@ -4358,6 +4450,326 @@ async function generateFullSystemReport(){
 }
 
 
+
+/* =====================================================
+   OPERATIONAL REPORT BUILDER
+===================================================== */
+
+function uniqueEquipmentValues(field) {
+    return [...new Set(
+        equipmentList
+            .map(item => String(item?.[field] ?? "").trim())
+            .filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+}
+
+function populateOperationalReportFilters() {
+    const definitions = [
+        ["reportLocationFilter", "All Locations", "location"],
+        ["reportAreaFilter", "All Areas", "area"],
+        ["reportEquipmentTypeFilter", "All Equipment Types", "equipment_type"]
+    ];
+
+    definitions.forEach(([elementId, defaultLabel, field]) => {
+        const select = document.getElementById(elementId);
+        if (!select) return;
+        const previousValue = select.value;
+        const values = uniqueEquipmentValues(field);
+        select.innerHTML =
+            `<option value="">${defaultLabel}</option>` +
+            values.map(value =>
+                `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`
+            ).join("");
+        if (values.includes(previousValue)) select.value = previousValue;
+    });
+}
+
+function getOperationalReportRange() {
+    const period = document.getElementById("reportPeriodFilter")?.value || "30";
+    const fromInput = document.getElementById("reportFromDate")?.value || "";
+    const toInput = document.getElementById("reportToDate")?.value || "";
+
+    if (period === "all") return { from: "", to: "", valid: true };
+    if (period === "custom") {
+        return {
+            from: fromInput,
+            to: toInput,
+            valid: !(fromInput && toInput && fromInput > toInput)
+        };
+    }
+
+    const days = Number(period);
+    if (!Number.isFinite(days) || days <= 0) {
+        return { from: "", to: "", valid: true };
+    }
+
+    const toLocalDateKey = date => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    };
+   const end = new Date();
+    const start = new Date(end);
+    start.setDate(start.getDate() - days + 1);
+    return {
+        from: toLocalDateKey(start),
+        to: toLocalDateKey(end),
+        valid: true
+    };
+}
+
+function isDateWithinRange(value, range) {
+    if (!range.from && !range.to) return true;
+    if (!value) return false;
+    const date = String(value).slice(0, 10);
+    if (range.from && date < range.from) return false;
+    if (range.to && date > range.to) return false;
+    return true;
+}
+
+function getOperationalReportData() {
+    const location = document.getElementById("reportLocationFilter")?.value || "";
+    const area = document.getElementById("reportAreaFilter")?.value || "";
+    const equipmentType = document.getElementById("reportEquipmentTypeFilter")?.value || "";
+    const range = getOperationalReportRange();
+
+    const equipment = equipmentList.filter(item =>
+        (!location || String(item.location || "") === location) &&
+        (!area || String(item.area || "") === area) &&
+        (!equipmentType || String(item.equipment_type || "") === equipmentType)
+    );
+
+    const equipmentIds = new Set(equipment.map(item => String(item.id)));
+    const inspections = inspectionsList.filter(item =>
+        equipmentIds.has(String(item.equipment_id)) &&
+        isDateWithinRange(item.inspection_date, range)
+    );
+
+    const deviations = deviationsList.filter(item =>
+        equipmentIds.has(String(item.equipment_id)) &&
+        isDateWithinRange(item.created_at, range)
+    );
+
+    // Some action records may not carry equipment_id. Resolve those through their linked deviation.
+    const deviationById = new Map(deviationsList.map(item => [String(item.id), item]));
+    const actions = correctiveActionsList.filter(item => {
+        const linkedDeviation = item.deviation_id
+            ? deviationById.get(String(item.deviation_id))
+            : null;
+        const actionEquipmentId = item.equipment_id ?? linkedDeviation?.equipment_id;
+        return actionEquipmentId != null &&
+            equipmentIds.has(String(actionEquipmentId)) &&
+            isDateWithinRange(item.created_at, range);
+    });
+
+    return { location, area, equipmentType, range, equipment, inspections, deviations, actions };
+}
+
+function updateOperationalReportPreview() {
+    if (!document.getElementById("reportLocationFilter")) return;
+    const data = getOperationalReportData();
+    const counts = [
+        ["builderEquipmentCount", data.equipment.length],
+        ["builderInspectionCount", data.inspections.length],
+        ["builderDeviationCount", data.deviations.length],
+        ["builderActionCount", data.actions.length]
+    ];
+    counts.forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    });
+
+    const period = document.getElementById("reportPeriodFilter")?.value || "30";
+    const periodLabels = {
+        all: "All available records",
+        "7": "Last 7 days",
+        "30": "Last 30 days",
+        "90": "Last 90 days",
+        "365": "Last 12 months",
+        custom: "Custom date range"
+    };
+    const scope = [
+        data.location || "All locations",
+        data.area || "All areas",
+        data.equipmentType || "All equipment types",
+        periodLabels[period] || "Selected period"
+    ];
+    if (period === "custom") {
+        scope.push(data.range.from || "Start not set", data.range.to || "End not set");
+    }
+    const scopeElement = document.getElementById("operationalReportScope");
+    if (scopeElement) scopeElement.textContent = scope.join(" · ");
+}
+
+function resetOperationalReportFilters() {
+    document.getElementById("reportLocationFilter").value = "";
+    document.getElementById("reportAreaFilter").value = "";
+    document.getElementById("reportEquipmentTypeFilter").value = "";
+    document.getElementById("reportPeriodFilter").value = "30";
+    document.getElementById("reportFromDate").value = "";
+    document.getElementById("reportToDate").value = "";
+    toggleCustomReportDates();
+    updateOperationalReportPreview();
+}
+
+function toggleCustomReportDates() {
+    const custom = document.getElementById("reportPeriodFilter").value === "custom";
+    document.getElementById("reportFromDate").disabled = !custom;
+    document.getElementById("reportToDate").disabled = !custom;
+    updateOperationalReportPreview();
+}
+
+async function generateOperationalReport() {
+    const data = getOperationalReportData();
+    const button = document.getElementById("generateOperationalReportButton");
+
+    if (!data.range.valid) {
+        showToast("The report start date cannot be later than the end date.", "warning");
+        return;
+    }
+    if (data.range.from && !data.range.to && document.getElementById("reportPeriodFilter").value === "custom") {
+        showToast("Please select an end date for the custom reporting period.", "warning");
+        return;
+    }
+    if (data.range.to && !data.range.from && document.getElementById("reportPeriodFilter").value === "custom") {
+        showToast("Please select a start date for the custom reporting period.", "warning");
+        return;
+    }
+    if (!data.equipment.length) {
+        showToast("No equipment matches the selected location, area and equipment type.", "warning");
+        return;
+    }
+
+    button.disabled = true;
+    const originalText = button.textContent;
+    button.textContent = "Preparing Workbook...";
+
+    try {
+        const workbook = XLSX.utils.book_new();
+        const generatedAt = new Date().toLocaleString();
+
+        const summaryRows = [
+            ["FIRESAFE TRACK — OPERATIONAL REPORT"],
+            ["Generated", generatedAt],
+            ["Location", data.location || "All locations"],
+            ["Area", data.area || "All areas"],
+            ["Equipment Type", data.equipmentType || "All equipment types"],
+            ["Date From", data.range.from || "No start limit"],
+            ["Date To", data.range.to || "No end limit"],
+            [],
+            ["Metric", "Count"],
+            ["Equipment in scope", data.equipment.length],
+            ["Inspections in period", data.inspections.length],
+            ["Passed inspections", data.inspections.filter(x => String(x.overall_status || "").toLowerCase() === "pass").length],
+            ["Failed inspections", data.inspections.filter(x => String(x.overall_status || "").toLowerCase() === "fail").length],
+            ["Deviations raised in period", data.deviations.length],
+            ["Corrective actions raised in period", data.actions.length],
+            ["Open corrective actions", data.actions.filter(x => !["completed", "verified", "closed"].includes(String(x.status || "").toLowerCase())).length]
+        ];
+        const summarySheet = XLSX.utils.aoa_to_sheet(summaryRows);
+        summarySheet["!cols"] = [{ wch: 36 }, { wch: 34 }];
+        summarySheet["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+        XLSX.utils.book_append_sheet(workbook, summarySheet, "Report Summary");
+
+        const equipmentRows = [[
+            "Equipment ID", "Equipment", "Equipment Code", "Equipment Type", "Status",
+            "Area", "Location", "Manufacturer", "Model", "Serial Number",
+            "Last Inspection", "Next Inspection"
+        ]];
+        data.equipment.forEach(e => equipmentRows.push([
+            e.id || "", e.name || e.equipment_name || "", e.equipment_code || e.equipment_number || "",
+            e.equipment_type || "", e.status || "", e.area || "", e.location || "",
+            e.manufacturer || "", e.model || "", e.serial_number || "",
+            e.last_inspection_date || "", e.next_inspection_date || ""
+        ]));
+        const equipmentSheet = XLSX.utils.aoa_to_sheet(equipmentRows);
+        equipmentSheet["!cols"] = [18, 28, 20, 24, 16, 22, 24, 22, 20, 22, 18, 18].map(wch => ({ wch }));
+        XLSX.utils.book_append_sheet(workbook, equipmentSheet, "Equipment Register");
+
+        const inspectionRows = [[
+            "Inspection ID", "Inspection Date", "Equipment", "Equipment Code",
+            "Equipment Type", "Area", "Location", "Inspector", "Inspection Type",
+            "Overall Status", "Notes"
+        ]];
+        data.inspections.forEach(i => {
+            const e = getEquipment(i.equipment_id);
+            inspectionRows.push([
+                i.id || "", i.inspection_date || "", e?.name || e?.equipment_name || "",
+                e?.equipment_code || e?.equipment_number || "", e?.equipment_type || "",
+                e?.area || "", e?.location || "", i.inspector_name || "",
+                i.inspection_type || "", i.overall_status || "", i.notes || ""
+            ]);
+        });
+        const inspectionSheet = XLSX.utils.aoa_to_sheet(inspectionRows);
+        inspectionSheet["!cols"] = [38, 18, 28, 20, 24, 22, 24, 24, 22, 18, 40].map(wch => ({ wch }));
+        XLSX.utils.book_append_sheet(workbook, inspectionSheet, "Inspection History");
+
+        const checklistRows = [["Inspection ID", "Inspection Date", "Equipment", "Equipment Code", "Item Number", "Inspection Requirement", "Answer", "Remarks"]];
+        for (const inspection of data.inspections) {
+            const e = getEquipment(inspection.equipment_id);
+            const answers = await getInspectionAnswers(inspection.id);
+            answers.forEach(a => checklistRows.push([
+                inspection.id || "", inspection.inspection_date || "",
+                e?.name || e?.equipment_name || "", e?.equipment_code || e?.equipment_number || "",
+                a.item_number ?? "", a.inspection_requirement || "", a.answer || "", a.remarks || ""
+            ]));
+        }
+        const checklistSheet = XLSX.utils.aoa_to_sheet(checklistRows);
+        checklistSheet["!cols"] = [38, 18, 28, 20, 14, 60, 18, 45].map(wch => ({ wch }));
+        XLSX.utils.book_append_sheet(workbook, checklistSheet, "Checklist Details");
+
+        const deviationRows = [[
+            "Deviation ID", "Equipment", "Equipment Code", "Inspection ID", "Title",
+            "Description", "Severity", "Priority", "Status", "Due Date",
+            "Responsible Person", "Date Raised"
+        ]];
+        data.deviations.forEach(d => {
+            const e = getEquipment(d.equipment_id);
+            deviationRows.push([
+                d.id || "", e?.name || e?.equipment_name || "",
+                e?.equipment_code || e?.equipment_number || "", d.inspection_id || "",
+                d.title || d.deviation_number || d.name || "", d.description || "",
+                d.severity || "", d.priority || "", d.status || "", d.due_date || "",
+                d.responsible_person || "", d.created_at || ""
+            ]);
+        });
+        const deviationSheet = XLSX.utils.aoa_to_sheet(deviationRows);
+        deviationSheet["!cols"] = [38, 28, 20, 38, 32, 55, 16, 16, 18, 18, 26, 22].map(wch => ({ wch }));
+        XLSX.utils.book_append_sheet(workbook, deviationSheet, "Deviations");
+
+        const deviationById = new Map(deviationsList.map(d => [String(d.id), d]));
+        const actionRows = [[
+            "Action ID", "Equipment", "Equipment Code", "Deviation ID", "Action Title",
+            "Description", "Priority", "Responsible Person", "Due Date", "Status",
+            "Completion Date", "Completion Notes", "Date Raised"
+        ]];
+        data.actions.forEach(a => {
+            const linkedDeviation = a.deviation_id ? deviationById.get(String(a.deviation_id)) : null;
+            const e = getEquipment(a.equipment_id ?? linkedDeviation?.equipment_id);
+            actionRows.push([
+                a.id || "", e?.name || e?.equipment_name || "",
+                e?.equipment_code || e?.equipment_number || "", a.deviation_id || "",
+                a.title || "", a.description || "", a.priority || "",
+                a.responsible_person || "", a.due_date || "", a.status || "",
+                a.completion_date || "", a.completion_notes || "", a.created_at || ""
+            ]);
+        });
+        const actionSheet = XLSX.utils.aoa_to_sheet(actionRows);
+        actionSheet["!cols"] = [38, 28, 20, 38, 32, 55, 16, 26, 18, 18, 20, 40, 22].map(wch => ({ wch }));
+        XLSX.utils.book_append_sheet(workbook, actionSheet, "Corrective Actions");
+
+        XLSX.writeFile(workbook, `FireSafe_Operational_Report_${todayString()}.xlsx`);
+        showToast("Consolidated operational Excel report generated successfully.", "success");
+    } catch (error) {
+        console.error("Operational report generation error:", error);
+        showToast("Unable to generate operational report: " + (error?.message || "Unknown error"), "error");
+    } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+    }
+}
+
 /* =====================================================
    DATE
 ===================================================== */
@@ -4434,6 +4846,7 @@ document.addEventListener(
 </script>
 
 <script src="./firesafe-control-bar.js" defer></script>
+<script src="./pwa-register.js"></script>
 </body>
 
 </html>
