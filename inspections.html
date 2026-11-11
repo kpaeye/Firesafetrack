@@ -1621,6 +1621,11 @@ tbody tr:hover{
 
 
                     <div class="form-group">
+                        <label class="form-label" for="inspectorSignature">Inspector Signature</label>
+                        <input id="inspectorSignature" class="input" type="text" placeholder="Type inspector's full name as signature">
+                    </div>
+
+                    <div class="form-group">
 
                         <label class="form-label">
                             Inspection Type
@@ -1655,6 +1660,37 @@ tbody tr:hover{
             </div>
 
 
+            <!-- DEBSWANA ONBOARD SUPPRESSION DETAILS -->
+            <div id="suppressionDetailsSection" class="form-section" style="display:none;">
+                <h3 class="section-title">Debswana Suppression System Details</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="suppressionSystemType">Type of System</label>
+                        <select id="suppressionSystemType" class="input" onchange="handleSuppressionSystemChange(this.value)">
+                            <option value="">Select system type</option>
+                            <option value="ANSUL">ANSUL</option>
+                            <option value="MANTA">MANTA</option>
+                            <option value="GAS">GAS</option>
+                            <option value="FOAM">FOAM</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="suppressionFleetNumber">Fleet Number</label>
+                        <input id="suppressionFleetNumber" class="input" type="text" placeholder="Enter fleet number">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="suppressionMachineType">Machine Type</label>
+                        <input id="suppressionMachineType" class="input" type="text" placeholder="Enter machine type">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="suppressionCylinderCount">Number of Cylinders</label>
+                        <input id="suppressionCylinderCount" class="input" type="number" min="0" step="1" placeholder="Enter number of cylinders">
+                    </div>
+                </div>
+                <p class="checklist-subtitle">Select the system installed on this machine. The matching inspection checklist and readings will load below.</p>
+                <p class="checklist-subtitle"><strong>Important:</strong> Do not leave the fire system isolated after servicing. Record every deviation, damage, wear or substandard condition. Ensure the inspector name and date of last service are marked on the system; the service date must not exceed three months.</p>
+            </div>
+
             <!-- CHECKLIST -->
 
 
@@ -1682,7 +1718,7 @@ tbody tr:hover{
                 </h3>
 
                 <p class="checklist-subtitle">
-                    Every requirement must be deliberately marked PASS, FAIL or N/A before the inspection can be saved.
+                    For suppression inspections: Y = satisfactory, N = unsatisfactory, N/A = not applicable. Other inspections use PASS, FAIL or N/A. Every requirement must be answered.
                 </p>
 
 
@@ -1836,6 +1872,8 @@ let equipmentList = [];
 let filteredEquipment = [];
 
 let currentEquipment = null;
+let currentInspectionForm = null;
+let currentSuppressionSystemType = "";
 
 let currentChecklist = [];
 
@@ -1955,9 +1993,14 @@ async function syncPendingInspections(manual=false){
                         equipment_id:item.equipment.id,
                         inspection_date:item.inspectionDate,
                         inspector_name:item.inspectorName,
+                        inspector_signature:item.inspectorSignature || null,
                         inspection_type:item.equipment.equipment_type,
                         overall_status:item.overallStatus,
-                        notes:item.notes || null
+                        notes:item.notes || null,
+                        suppression_system_type:item.suppressionSystemType || null,
+                        fleet_number:item.fleetNumber || null,
+                        machine_type:item.machineType || null,
+                        cylinder_count:item.cylinderCount === "" || item.cylinderCount == null ? null : Number(item.cylinderCount)
                     }).select().single();
                     if(error) throw error;
                     item.inspectionId = data.id;
@@ -1979,6 +2022,20 @@ async function syncPendingInspections(manual=false){
                     item.stage = "answers-saved";
                     await putQueuedInspection(item);
                 }
+                if(!item.readingsSaved){
+                    const readingRows = (item.readings || []).filter(reading=>reading.reading_value !== "").map(reading=>({
+                        inspection_id:item.inspectionId,
+                        reading_name:reading.reading_name,
+                        reading_value:reading.reading_value
+                    }));
+                    if(readingRows.length){
+                        const {error} = await client.from("inspection_readings").upsert(readingRows,{onConflict:"inspection_id,reading_name"});
+                        if(error) throw error;
+                    }
+                    item.readingsSaved = true;
+                    item.stage = "readings-saved";
+                    await putQueuedInspection(item);
+                }
                 if(!item.deviationsSaved){
                     const {data:existing,error:existingError} = await client.from("deviations").select("item_number").eq("inspection_id",item.inspectionId);
                     if(existingError) throw existingError;
@@ -1992,14 +2049,60 @@ async function syncPendingInspections(manual=false){
                     item.stage = "deviations-saved";
                     await putQueuedInspection(item);
                 }
-                if(!item.equipmentUpdated){
-                    const nextInspection = calculateNextInspectionDate(item.inspectionDate);
-                    const {error} = await client.from("equipment").update({last_inspection_date:item.inspectionDate,next_inspection_date:nextInspection}).eq("id",item.equipment.id);
-                    if(error) throw error;
-                    item.equipmentUpdated = true;
-                    item.stage = "equipment-updated";
-                    await putQueuedInspection(item);
-                }
+                
+if(!item.equipmentUpdated){
+
+    const nextInspection =
+        calculateNextInspectionDate(item.inspectionDate);
+
+    const {error} = await client
+        .from("equipment")
+        .update({
+            last_inspection_date:item.inspectionDate,
+            next_inspection_date:nextInspection
+        })
+        .eq("id",item.equipment.id);
+
+    if(error) throw error;
+
+    // Immediately update the equipment in memory.
+    const updateEquipment = equipment => ({
+        ...equipment,
+        last_inspection_date:item.inspectionDate,
+        next_inspection_date:nextInspection
+    });
+
+    equipmentList = equipmentList.map(e =>
+        String(e.id) === String(item.equipment.id)
+            ? updateEquipment(e)
+            : e
+    );
+
+    filteredEquipment = filteredEquipment.map(e =>
+        String(e.id) === String(item.equipment.id)
+            ? updateEquipment(e)
+            : e
+    );
+
+    // Refresh the locally cached equipment records.
+    try {
+        localStorage.setItem(
+            "firesafeTrackEquipmentCache",
+            JSON.stringify(equipmentList)
+        );
+    } catch(cacheError) {
+        console.warn("Could not update equipment cache:",cacheError);
+    }
+
+    // Redraw the table immediately.
+    renderEquipment();
+
+    item.equipmentUpdated = true;
+    item.stage = "equipment-updated";
+
+    await putQueuedInspection(item);
+}
+
                 await removeQueuedInspection(item.queueId);
                 synced++;
             }catch(itemError){
@@ -2138,6 +2241,119 @@ const INSPECTION_FORMS = {
             "Pneumatic Actuators Functional"
         ]
 
+    },
+
+    "Onboard fire suppression": {
+        frequency: "Monthly",
+        requiresSystemType: true,
+        systems: {
+            "ANSUL": {
+                readings: [
+                    "End of line resistance readings",
+                    "Full mass readings (Cartridges)",
+                    "Input voltage",
+                    "Release / Discharge voltage output",
+                    "Full mass of Portable fire extinguisher"
+                ],
+                checklist: [
+                    "Green light flashing – 3 sec",
+                    "Inspect the display screen for any faults / fire",
+                    "Is buzzer alarm activated?",
+                    "Inspect linear detection wire",
+                    "Remove detonator wire before continuing with servicing / checks",
+                    "Reset Panel before re-connecting detonator",
+                    "Blow off discharge hoses",
+                    "Position the nozzles properly",
+                    "Cover the nozzles with blow off caps",
+                    "Are hoses properly secured?",
+                    "Is the detection wire properly secured?",
+                    "Are the hoses damaged / cracked?",
+                    "Are the brackets properly secured?",
+                    "Inspect agent level, caking and foreign objects",
+                    "Inspect shutdown line / relay functionality",
+                    "Inspect manual / electric actuators ( foreign objects, damages, functionality & obstruction)",
+                    "Inspect Pneumatic actuators (Damages, looseness and obstruction)"
+                ]
+            },
+            "MANTA": {
+                readings: [
+                    "Full mass of agent tank",
+                    "Full mass of Portable fire extinguisher"
+                ],
+                checklist: [
+                    "Are the gauges on green range?",
+                    "Inspect the manual in CAB on green range?",
+                    "Has system lost pressure?",
+                    "Inspect the detection tube",
+                    "Isolate with safety pin before continuing with servicing / checks",
+                    "Inspect the detection tube before activating the system",
+                    "Blow off discharge hoses",
+                    "Position the nozzles properly",
+                    "Cover the nozzles with blow off caps",
+                    "Are hoses properly secured?",
+                    "Is the detection wire properly secured?",
+                    "Are the hoses damaged / cracked?",
+                    "Are the brackets properly secured?",
+                    "Inspect agent level, caking and foreign objects",
+                    "Inspect shutdown line / relay functionality",
+                    "Inspect manual / electric actuators ( foreign objects, damages, functionality & obstruction)",
+                    "Inspect for leaks in all the connections"
+                ]
+            },
+            "GAS": {
+                readings: [
+                    "Full mass of agent tank",
+                    "Full mass of Portable fire extinguisher",
+                    "Readings of the gauges on agent tank"
+                ],
+                checklist: [
+                    "Gas Control unit powered ‘ON’",
+                    "Inspect the display screen for any faults / fire",
+                    "Is buzzer alarm activated?",
+                    "Inspect linear detection wire / detectors",
+                    "Remove detonator wire before continuing with servicing / checks",
+                    "Reset Panel before re-connecting detonator",
+                    "Inspect manual & Automatic key change",
+                    "Position the nozzles properly",
+                    "Test for double knock response",
+                    "Are pipes properly secured?",
+                    "Is the detection wire / detectors properly secured?",
+                    "Are the pipes damaged / cracked?",
+                    "Are the brackets properly secured?",
+                    "Inspect shutdown line / relay functionality",
+                    "Inspect manual / electric actuators ( foreign objects, damages, functionality & obstruction)",
+                    "Inspect Pneumatic actuators (Damages, looseness and obstruction)"
+                ]
+            },
+            "FOAM": {
+                readings: [
+                    "End of line resistance readings",
+                    "Full mass readings (Cartridges)",
+                    "Input voltage",
+                    "Release / Discharge voltage output",
+                    "Full mass of Portable fire extinguisher"
+                ],
+                checklist: [
+                    "Green light flashing – 3 sec",
+                    "Inspect the display screen for any faults / fire",
+                    "Is buzzer alarm activated?",
+                    "Inspect linear detection wire",
+                    "Remove detonator wire before continuing with servicing / checks",
+                    "Reset Panel before re-connecting detonator",
+                    "Blow off discharge hoses",
+                    "Position the nozzles properly",
+                    "Cover the nozzles with blow off caps",
+                    "Are hoses properly secured?",
+                    "Is the detection wire properly secured?",
+                    "Are the hoses damaged / cracked?",
+                    "Are the brackets properly secured?",
+                    "Inspect agent level, caking and foreign objects",
+                    "Inspect shutdown line / relay functionality",
+                    "Inspect manual / electric actuators ( foreign objects, damages, functionality & obstruction)",
+                    "Inspect Pneumatic actuators (Damages, looseness and obstruction)"
+                ]
+            }
+        }
     }
 
 };
@@ -2620,7 +2836,12 @@ function renderEquipment(){
                         getInspectionAvailability(
                             equipment
                         );
-
+console.log("INSPECTION BUTTON CHECK:", {
+    equipment: equipment.name,
+    nextDate: equipment.next_inspection_date,
+    availability: inspection.available,
+    daysUntilDue: inspection.daysUntilDue
+});
 
                     /*
                      * Build the Action column.
@@ -2919,86 +3140,46 @@ function resetFilters(){
    START INSPECTION
 ===================================================== */
 
-function startInspection(
-    equipmentId
-){
-
-    const equipment =
-        equipmentList.find(
-            item =>
-                String(item.id) ===
-                String(equipmentId)
-        );
-
-
+function startInspection(equipmentId){
+    const equipment = equipmentList.find(item => String(item.id) === String(equipmentId));
     if(!equipment){
-
-        showToast(
-            "Equipment record could not be found.",
-            "error"
-        );
-
+        showToast("Equipment record could not be found.","error");
         return;
-
     }
-
-
     if(!equipment.equipment_type){
-
-        showToast(
-            "This equipment does not have an Equipment Type assigned.",
-            "error"
-        );
-
+        showToast("This equipment does not have an Equipment Type assigned.","error");
         return;
-
     }
 
-
-    const checklist =
-        INSPECTION_FORMS[
-            equipment.equipment_type
-        ];
-
-
-    if(!checklist){
-
-        showToast(
-            "No inspection form is configured for: " +
-            equipment.equipment_type,
-            "error"
-        );
-
+    const form = INSPECTION_FORMS[equipment.equipment_type];
+    if(!form){
+        showToast("No inspection form is configured for: " + equipment.equipment_type,"error");
         return;
-
     }
 
+    currentEquipment = equipment;
+    currentSuppressionSystemType = "";
+    currentInspectionForm = form.requiresSystemType ? null : form;
+    currentChecklist = currentInspectionForm ? currentInspectionForm.checklist : [];
+    checklistAnswers = currentChecklist.map(() => null);
+    openInspectionForm(equipment);
+}
 
-    currentEquipment =
-        equipment;
+function handleSuppressionSystemChange(systemType){
+    const parentForm = INSPECTION_FORMS["Onboard fire suppression"];
+    const selectedForm = parentForm && parentForm.systems ? parentForm.systems[systemType] : null;
+    currentSuppressionSystemType = selectedForm ? systemType : "";
+    currentInspectionForm = selectedForm;
+    currentChecklist = selectedForm ? selectedForm.checklist : [];
+    checklistAnswers = currentChecklist.map(() => null);
 
-    currentChecklist =
-    checklist.checklist;
-
-
-    /*
-     * CRITICAL:
-     *
-     * Every item starts as null.
-     *
-     * Nothing is automatically answered.
-     */
-
-    checklistAnswers =
-        currentChecklist.map(
-            () => null
-        );
-
-
-    openInspectionForm(
-        equipment
-    );
-
+    const title = document.getElementById("checklistTitle");
+    if(title){
+        title.textContent = selectedForm ? `${systemType} Suppression System Inspection Checklist` : "Select a suppression system to load its checklist";
+    }
+    renderReadingFields();
+    renderChecklist();
+    updateChecklistProgress();
 }
 
 
@@ -3093,6 +3274,8 @@ function openInspectionForm(
     document.getElementById(
         "inspectorName"
     ).value = "";
+    const signatureInput = document.getElementById("inspectorSignature");
+    if(signatureInput) signatureInput.value = "";
 
 
     document.getElementById(
@@ -3105,12 +3288,24 @@ function openInspectionForm(
         "inspectionNotes"
     ).value = "";
 
+    const suppressionSection = document.getElementById("suppressionDetailsSection");
+    const isSuppression = equipment.equipment_type === "Onboard fire suppression";
+    if(suppressionSection) suppressionSection.style.display = isSuppression ? "block" : "none";
+    const systemSelect = document.getElementById("suppressionSystemType");
+    if(systemSelect) systemSelect.value = "";
+    const fleetInput = document.getElementById("suppressionFleetNumber");
+    if(fleetInput) fleetInput.value = equipment.equipment_code || "";
+    const machineInput = document.getElementById("suppressionMachineType");
+    if(machineInput) machineInput.value = "";
+    const cylinderInput = document.getElementById("suppressionCylinderCount");
+    if(cylinderInput) cylinderInput.value = "";
+
 
     document.getElementById(
         "checklistTitle"
-    ).textContent =
-        equipment.equipment_type +
-        " Inspection Checklist";
+    ).textContent = currentInspectionForm
+        ? equipment.equipment_type + " Inspection Checklist"
+        : "Select a suppression system to load its checklist";
 
 
 
@@ -3155,10 +3350,7 @@ function renderReadingFields(){
             "readingFields"
         );
 
-    const form =
-        INSPECTION_FORMS[
-            currentEquipment.equipment_type
-        ];
+    const form = currentInspectionForm;
 
     if(
         !form ||
@@ -3251,6 +3443,13 @@ function renderChecklist(){
 
     currentChecklist.forEach(
         (requirement,index) => {
+            const isSuppressionChecklist = currentEquipment && currentEquipment.equipment_type === "Onboard fire suppression";
+            const negativeYesIndexes = { ANSUL:[11], MANTA:[2,11], GAS:[11], FOAM:[11] };
+            const yesMeansFail = isSuppressionChecklist && (negativeYesIndexes[currentSuppressionSystemType] || []).includes(index);
+            const yesAnswer = yesMeansFail ? "FAIL" : "PASS";
+            const noAnswer = yesMeansFail ? "PASS" : "FAIL";
+            const yesLabel = isSuppressionChecklist ? "Y" : "PASS";
+            const noLabel = isSuppressionChecklist ? "N" : "FAIL";
 
             html += `
 
@@ -3276,20 +3475,20 @@ function renderChecklist(){
                         <button
                             type="button"
                             class="answer-button"
-                            data-answer="PASS"
-                            onclick="setAnswer(${index},'PASS')"
+                            data-answer="${yesAnswer}"
+                            onclick="setAnswer(${index},'${yesAnswer}')"
                         >
-                            PASS
+                            ${yesLabel}
                         </button>
 
 
                         <button
                             type="button"
                             class="answer-button"
-                            data-answer="FAIL"
-                            onclick="setAnswer(${index},'FAIL')"
+                            data-answer="${noAnswer}"
+                            onclick="setAnswer(${index},'${noAnswer}')"
                         >
-                            FAIL
+                            ${noLabel}
                         </button>
 
 
@@ -3577,6 +3776,18 @@ function updateChecklistProgress(){
 
 
 /* =====================================================
+   COLLECT RECORDED READINGS
+===================================================== */
+function getInspectionReadings(){
+    if(!currentInspectionForm || !Array.isArray(currentInspectionForm.readings)) return [];
+    return currentInspectionForm.readings.map((reading,index)=>({
+        reading_name: reading,
+        reading_value: (document.getElementById(`reading-${index}`)?.value || "").trim()
+    }));
+}
+
+
+/* =====================================================
    GET CHECKLIST ANSWERS
 ===================================================== */
 
@@ -3745,6 +3956,34 @@ async function saveInspection(){
     const notes = document.getElementById("inspectionNotes").value.trim();
     if(!inspectionDate){showToast("Please select an inspection date.","error");return;}
     if(!inspectorName){showToast("Please enter the inspector name.","error");return;}
+    if(currentEquipment.equipment_type === "Onboard fire suppression" && !currentSuppressionSystemType){
+        showToast("Please select the suppression system type (ANSUL, MANTA, GAS or FOAM).","error");
+        return;
+    }
+    if(!currentInspectionForm){
+        showToast("The inspection checklist has not been loaded. Select the system type and try again.","error");
+        return;
+    }
+    const readings = getInspectionReadings();
+    if(currentEquipment.equipment_type === "Onboard fire suppression") {
+        const missingReading = readings.find(reading=>!reading.reading_value);
+        if(missingReading){
+            showToast(`Please enter a value for: ${missingReading.reading_name}`,"error");
+            return;
+        }
+        const fleetNumber = document.getElementById("suppressionFleetNumber").value.trim();
+        const machineType = document.getElementById("suppressionMachineType").value.trim();
+        const cylinderCount = document.getElementById("suppressionCylinderCount").value.trim();
+        const inspectorSignature = document.getElementById("inspectorSignature").value.trim();
+        if(!inspectorSignature){
+            showToast("Please enter the inspector signature.","error");
+            return;
+        }
+        if(!fleetNumber || !machineType || cylinderCount === "" || Number(cylinderCount) < 0 || !Number.isInteger(Number(cylinderCount))){
+            showToast("Please enter the fleet number, machine type and a valid number of cylinders.","error");
+            return;
+        }
+    }
     const answers = getChecklistAnswers();
     const failedWithoutRemarks = answers.find(item=>item.answer === "FAIL" && !item.remarks?.trim());
     if(failedWithoutRemarks){showToast(`Checklist item ${failedWithoutRemarks.item_number} is marked FAIL and requires remarks.`,"error");return;}
@@ -3757,9 +3996,13 @@ async function saveInspection(){
         const queueItem = {
             queueId:makeQueueId(), createdAt:new Date().toISOString(), status:"pending", stage:"local-saved",
             equipment:{id:currentEquipment.id,name:currentEquipment.name,equipment_code:currentEquipment.equipment_code,equipment_type:currentEquipment.equipment_type},
-            inspectionDate, inspectorName, notes, answers,
+            inspectionDate, inspectorName, inspectorSignature:document.getElementById("inspectorSignature").value.trim(), notes, answers, readings,
+            suppressionSystemType:currentSuppressionSystemType || null,
+            fleetNumber:currentEquipment.equipment_type === "Onboard fire suppression" ? document.getElementById("suppressionFleetNumber").value.trim() : null,
+            machineType:currentEquipment.equipment_type === "Onboard fire suppression" ? document.getElementById("suppressionMachineType").value.trim() : null,
+            cylinderCount:currentEquipment.equipment_type === "Onboard fire suppression" ? document.getElementById("suppressionCylinderCount").value.trim() : null,
             overallStatus:calculateOverallStatus(answers),
-            inspectionId:null, answersSaved:false, deviationsSaved:false, equipmentUpdated:false
+            inspectionId:null, answersSaved:false, readingsSaved:false, deviationsSaved:false, equipmentUpdated:false
         };
         await putQueuedInspection(queueItem);
         await updateOfflineQueueUi();
@@ -4009,6 +4252,9 @@ async function loadInspectionStats(){
 ===================================================== */
 
 function closeInspectionModal(){
+
+    currentInspectionForm = null;
+    currentSuppressionSystemType = "";
 
     document.getElementById(
         "inspectionModal"
@@ -4361,6 +4607,7 @@ document.addEventListener(
 
 
 <script src="./firesafe-control-bar.js" defer></script>
+<script src="./pwa-register.js"></script>
 </body>
 
 </html>
