@@ -1162,6 +1162,7 @@ tbody tr:hover{
 
                 <option value="In Progress">
                     In Progress
+
                 </option>
 
                 <option value="Closed">
@@ -1427,36 +1428,6 @@ tbody tr:hover{
 
                         <option value="Critical">
                             Critical
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <!-- Status -->
-
-                <div class="form-group">
-
-                    <label class="form-label">
-                        Status <span class="required">*</span>
-                    </label>
-
-                    <select
-                        id="status"
-                        class="select"
-                    >
-
-                        <option value="Open">
-                            Open
-                        </option>
-
-                        <option value="In Progress">
-                            In Progress
-                        </option>
-
-                        <option value="Closed">
-                            Closed
                         </option>
 
                     </select>
@@ -2736,13 +2707,6 @@ function openEditModal(id){
         .value =
         deviation.severity || "Medium";
 
-
-    document
-        .getElementById("status")
-        .value =
-        deviation.status || "Open";
-
-
     document
         .getElementById("responsiblePerson")
         .value =
@@ -2806,10 +2770,6 @@ function clearForm(){
     document
         .getElementById("severity")
         .value = "Medium";
-
-    document
-        .getElementById("status")
-        .value = "Open";
 
     document
         .getElementById("responsiblePerson")
@@ -2880,10 +2840,6 @@ async function saveDeviation(){
             .getElementById("severity")
             .value;
 
-    const status =
-        document
-            .getElementById("status")
-            .value;
 
     const responsiblePerson =
         document
@@ -2986,6 +2942,7 @@ async function saveDeviation(){
 
     try{
 
+        const wasEditing = !!editingDeviationId;
         if(editingDeviationId){
 
             await updateDeviation(
@@ -3009,26 +2966,13 @@ async function saveDeviation(){
                     severity:
                         severity,
 
-                    status:
-                        status,
-
                     responsible_person:
                         responsiblePerson || null,
 
                     target_date:
                         targetDate || null,
 
-                    completion_date:
-                        status === "Closed"
-                            ? (
-                                getExistingCompletionDate(
-                                    editingDeviationId
-                                ) ||
-                                new Date()
-                                    .toISOString()
-                                    .split("T")[0]
-                            )
-                            : null,
+                    
 
                     corrective_action:
                         correctiveAction || null,
@@ -3084,8 +3028,7 @@ async function saveDeviation(){
                     severity:
                         severity,
 
-                    status:
-                        status,
+                    status: "Open",
 
                     responsible_person:
                         responsiblePerson || null,
@@ -3093,12 +3036,7 @@ async function saveDeviation(){
                     target_date:
                         targetDate || null,
 
-                    completion_date:
-                        status === "Closed"
-                            ? new Date()
-                                .toISOString()
-                                .split("T")[0]
-                            : null,
+                    completion_date: null,
 
                     corrective_action:
                         correctiveAction || null,
@@ -3142,16 +3080,14 @@ async function saveDeviation(){
     }
     finally{
 
-        saveButton.disabled =
-            false;
+    saveButton.disabled = false;
 
-        saveButton.textContent =
-            editingDeviationId
-                ? "Update Deviation"
-                : "Save Deviation";
+    saveButton.textContent =
+        wasEditing
+            ? "Update Deviation"
+            : "Save Deviation";
 
-    }
-
+}
 }
 
 
@@ -3297,25 +3233,6 @@ function getInspection(id){
         inspection =>
             inspection.id === id
     );
-
-}
-
-
-/* =====================================================
-   GET EXISTING COMPLETION DATE
-===================================================== */
-
-function getExistingCompletionDate(id){
-
-    const deviation =
-        deviations.find(
-            item =>
-                item.id === id
-        );
-
-    return deviation
-        ? deviation.completion_date
-        : null;
 
 }
 
@@ -3712,39 +3629,71 @@ function closeDeleteModal(){
 }
 
 
+
 /* =====================================================
-   CONFIRM DELETE
+   CONFIRM DEVIATION DELETE
 ===================================================== */
 
-async function confirmDelete(){
+async function confirmDelete() {
 
-    if(!deletingDeviationId){
-        return;
+    if (!deletingDeviationId) return;
+
+    const id = deletingDeviationId;
+
+    const deleteButton = document.querySelector(
+        '#deleteModal .modal-footer .primary-btn'
+    );
+
+    if (deleteButton) {
+        deleteButton.disabled = true;
+        deleteButton.textContent = "Checking...";
     }
 
+    try {
+        
 
-    const id =
-        deletingDeviationId;
+        // Check for linked corrective actions
+        const { data: actions, error: actionError } =
+            await supabaseClient
+                .from("corrective_actions")
+                .select("id")
+                .eq("deviation_id", id)
+                .limit(1);
 
+        if (actionError) throw actionError;
 
-    try{
+        if (actions && actions.length > 0) {
 
-        const {
-            error
-        } =
-        await supabaseClient
-            .from("deviations")
-            .delete()
-            .eq(
-                "id",
-                id
+            showToast(
+                "This deviation has linked corrective actions. Delete or resolve those records first.",
+                "error"
             );
 
-
-        if(error){
-            throw error;
+            return;
         }
 
+        if (deleteButton) {
+            deleteButton.textContent = "Deleting...";
+        }
+
+        // Delete deviation
+        const { data, error } = await supabaseClient
+            .from("deviations")
+            .delete()
+            .eq("id", id)
+            .select("id");
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+
+            showToast(
+                "No deviation was deleted. Check permissions or whether the record still exists.",
+                "error"
+            );
+
+            return;
+        }
 
         closeDeleteModal();
 
@@ -3753,24 +3702,25 @@ async function confirmDelete(){
             "success"
         );
 
-
         await loadDeviations();
 
-    }
-    catch(error){
+    } catch (error) {
 
-        console.error(
-            "Deviation delete error:",
-            error
-        );
+        console.error("Deviation delete error:", error);
 
         showToast(
             `Unable to delete deviation: ${error.message}`,
             "error"
         );
 
-    }
+    } finally {
 
+        if (deleteButton) {
+            deleteButton.disabled = false;
+            deleteButton.textContent = "Delete";
+        }
+
+    }
 }
 
 
@@ -4194,33 +4144,10 @@ document
     );
 
 
-/* =====================================================
-   AUTO-FILL COMPLETION DATE BEHAVIOUR
-===================================================== */
-
-document
-    .getElementById("status")
-    .addEventListener(
-        "change",
-        function(){
-
-            if(
-                this.value === "Closed"
-            ){
-
-                /*
-                   Completion date is handled
-                   automatically when saving.
-                */
-
-            }
-
-        }
-    );
-
 </script>
 
 <script src="./firesafe-control-bar.js" defer></script>
+<script src="./pwa-register.js"></script>
 </body>
 
 </html>
