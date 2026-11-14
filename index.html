@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0b1f3a">
+<link rel="manifest" href="./manifest.json">
 <meta name="description" content="FireSafe Track fire safety equipment inspection and management platform.">
 
 <title>A-eye Group | FireSafe Track</title>
@@ -206,24 +207,6 @@ body {
     © 2026 A-eye Group | FireSafe Track System
 </footer>
 
-<script>
-/* Keep PWA installation and offline caching support. */
-if (
-    'serviceWorker' in navigator &&
-    (location.protocol === 'https:' || location.hostname === 'localhost')
-) {
-    addEventListener('load', () => {
-        navigator.serviceWorker
-            .register('./firesafe-sw.js')
-            .catch(error => {
-                console.warn(
-                    'PWA service worker registration failed:',
-                    error
-                );
-            });
-    });
-}
-</script>
-
+<script src="./pwa-register.js"></script>
 </body>
 </html>
