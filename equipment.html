@@ -3021,6 +3021,8 @@ function applyFilters(){
 
     renderEquipment();
 
+    updateStatistics(filteredEquipment);
+
     updateSelectAllState();
 
 }
@@ -3109,21 +3111,27 @@ function resetFilters(){
    STATISTICS
 ===================================================== */
 
-function updateStatistics(){
+function updateStatistics(equipmentToCount = filteredEquipment){
+
+    const records =
+        Array.isArray(equipmentToCount)
+            ? equipmentToCount
+            : [];
+
 
     const total =
-        equipmentList.length;
+        records.length;
 
 
     const active =
-        equipmentList.filter(
+        records.filter(
             item =>
                 item.status === "Active"
         ).length;
 
 
     const due =
-        equipmentList.filter(
+        records.filter(
             item => {
 
                 const state =
@@ -3142,7 +3150,7 @@ function updateStatistics(){
 
 
     const out =
-        equipmentList.filter(
+        records.filter(
             item =>
                 item.status ===
                 "Out of Service"
