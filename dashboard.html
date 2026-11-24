@@ -1132,6 +1132,11 @@
         .trends-heading h2 { margin:0 0 7px; font-size:21px; font-weight:700; }
         .trends-heading p { margin:0; color:#b9c8d9; font-size:13px; line-height:1.5; }
         #trendPeriod { background:#102743; color:#fff; border:1px solid rgba(255,255,255,.18); border-radius:8px; padding:10px 12px; min-width:155px; outline:none; }
+        .dashboard-filters { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:-7px 0 22px; padding:14px 16px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.10); border-radius:10px; }
+        .dashboard-filters label { color:#c4d1df; font-size:13px; font-weight:600; }
+        #areaFilter { min-width:240px; max-width:100%; background:#102743; color:#fff; border:1px solid rgba(255,255,255,.18); border-radius:8px; padding:10px 12px; outline:none; }
+        .filter-context { color:#9fb1c3; font-size:12px; }
+        @media(max-width:500px) { #areaFilter { width:100%; min-width:0; } .dashboard-filters { align-items:stretch; } }
         .trend-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-bottom:18px; }
         .trend-card { min-width:0; overflow:hidden; }
         .chart-container { position:relative; height:280px; min-height:240px; padding:14px 16px 18px; }
@@ -1468,6 +1473,14 @@
 
             </div>
 
+            <!-- GLOBAL AREA FILTER -->
+            <section class="dashboard-filters" aria-label="Dashboard filters">
+                <label for="areaFilter">View dashboard by area</label>
+                <select id="areaFilter">
+                    <option value="all">All Areas</option>
+                </select>
+                <span class="filter-context" id="areaFilterContext">Showing all areas</span>
+            </section>
 
             <!-- DATABASE ERROR -->
 
@@ -1967,6 +1980,8 @@
     let latestTrendDeviations = [];
     let latestTrendEquipment = [];
     let latestTrendInspections = [];
+    let selectedAreaKey = "all";
+    let equipmentMapCache = null;
     let complianceLoaded = false;
 
     async function fetchAllRows(table, columns = "*") {
@@ -2080,7 +2095,8 @@
 const dashboardStats = {
     totalEquipment: 0,
     openDeviations: 0,
-    overdueEquipment: 0
+    overdueEquipment: 0,
+    overdueDeviations: 0
 };
 
 
@@ -2470,15 +2486,8 @@ const dashboardStats = {
     async function loadEquipment() {
         const equipment = await fetchAllRows("equipment", "*");
         latestTrendEquipment = equipment;
-        totalEquipmentEl.textContent = equipment.length;
-        const today = localDateKey();
-        let dueCount = 0;
-        equipment.forEach(item => {
-            if (item.next_inspection_date && String(item.next_inspection_date).slice(0,10) <= today) dueCount++;
-        });
-        dueEquipmentEl.textContent = dueCount;
-        dashboardStats.totalEquipment = equipment.length;
-        dashboardStats.overdueEquipment = dueCount;
+        equipmentMapCache = null;
+        populateAreaFilter(equipment);
         return equipment;
     }
 
@@ -2488,34 +2497,18 @@ const dashboardStats = {
     ====================================================== */
 
     async function loadInspections() {
-    const inspections = await fetchAllRows(
-        "inspections",
-        "id, equipment_id, inspection_date, inspector_name, inspector_id, inspection_type, overall_status, notes, created_at"
-    );
-
-    inspections.sort((a, b) => {
-        const dateA = a.inspection_date || a.created_at || "";
-        const dateB = b.inspection_date || b.created_at || "";
-        return String(dateB).localeCompare(String(dateA));
-    });
-
-    totalInspectionsEl.textContent = inspections.length;
-
-    let passed = 0;
-    let failed = 0;
-
-    inspections.forEach(item => {
-        if (isPassed(item.overall_status)) passed++;
-        if (isFailed(item.overall_status)) failed++;
-    });
-
-    passedInspectionsEl.textContent = passed;
-    failedInspectionsEl.textContent = failed;
-
-    await renderRecentInspections(inspections.slice(0, 8));
-
-    return inspections;
-}
+        const inspections = await fetchAllRows(
+            "inspections",
+            "id, equipment_id, inspection_date, inspector_name, inspector_id, inspection_type, overall_status, notes, created_at"
+        );
+        inspections.sort((a, b) => {
+            const dateA = a.inspection_date || a.created_at || "";
+            const dateB = b.inspection_date || b.created_at || "";
+            return String(dateB).localeCompare(String(dateA));
+        });
+        latestTrendInspections = inspections;
+        return inspections;
+    }
 
     /* =====================================================
        LOAD INSPECTION ANSWERS
@@ -2572,39 +2565,10 @@ async function loadInspectionAnswers() {
     ====================================================== */
 
 async function loadDeviations() {
-    const deviations = await fetchAllRows("deviations", "*");
-
-    latestTrendDeviations = deviations;
-
-    // Count unresolved deviations.
-    const unresolvedStatuses = [
-        "OPEN",
-        "IN PROGRESS",
-        "ASSIGNED",
-        "PENDING"
-    ];
-
-    const unresolvedDeviations = deviations.filter(d =>
-        isActiveDeviation(d) &&
-        unresolvedStatuses.includes(normalizeStatus(d.status))
-    );
-
-    const openCount = unresolvedDeviations.length;
-
-    const overdue = unresolvedDeviations.filter(isOverdueDeviation).length;
-
-    // Update deviation indicators.
-    openDeviationsEl.textContent = openCount;
-    overdueCount.textContent = overdue;
-
-    dashboardStats.openDeviations = openCount;
-    dashboardStats.overdueEquipment = overdue;
-
-    // Keep deviation-based safety trends updated.
-    renderSafetyTrends();
-
-    return deviations;
+    latestTrendDeviations = await fetchAllRows("deviations", "*");
+    return latestTrendDeviations;
 }
+
     /* =====================================================
        LOAD SITE COMPLIANCE
     ====================================================== */
@@ -2612,69 +2576,108 @@ async function loadDeviations() {
 
 
 async function loadSiteCompliance() {
-    const equipment = await fetchAllRows(
-        "equipment",
-        "id"
-    );
+    // Compliance is recalculated from the already-loaded, RLS-protected
+    // equipment and deviation rows whenever the area filter changes.
+    return updateFilteredCompliance();
+}
 
-    const deviations = await fetchAllRows(
-        "deviations",
-        "id, equipment_id, status"
-    );
+function equipmentMatchesSelectedArea(item) {
+    if (selectedAreaKey === "all") return true;
+    return makeAreaKey(item) === selectedAreaKey;
+}
 
-    const unresolvedStatuses = [
-        "OPEN",
-        "IN PROGRESS",
-        "ASSIGNED",
-        "PENDING"
-    ];
+function makeAreaKey(item) {
+    const area = String(item?.area || "").trim();
+    return area || "__unspecified_area__";
+}
 
+function makeAreaLabel(item) {
+    return String(item?.area || "").trim() || "Unspecified area";
+}
+
+function populateAreaFilter(equipment) {
+    const select = document.getElementById("areaFilter");
+    if (!select) return;
+    const previous = selectedAreaKey;
+    const areas = new Map();
+    equipment.forEach(item => areas.set(makeAreaKey(item), makeAreaLabel(item)));
+    const sorted = [...areas.entries()].sort((a,b) => a[1].localeCompare(b[1]));
+    select.innerHTML = '<option value="all">All Areas</option>' +
+        sorted.map(([key,label]) => `<option value="${escapeHtml(key)}">${escapeHtml(label)}</option>`).join("");
+    if (previous !== "all" && areas.has(previous)) {
+        selectedAreaKey = previous;
+        select.value = previous;
+    } else {
+        selectedAreaKey = "all";
+        select.value = "all";
+    }
+}
+
+function filteredDashboardData() {
+    const equipment = latestTrendEquipment.filter(equipmentMatchesSelectedArea);
+    const equipmentIds = new Set(equipment.map(item => item.id));
+    const inspections = selectedAreaKey === "all"
+        ? latestTrendInspections.slice()
+        : latestTrendInspections.filter(item => equipmentIds.has(item.equipment_id));
+    const deviations = selectedAreaKey === "all"
+        ? latestTrendDeviations.slice()
+        : latestTrendDeviations.filter(item => equipmentIds.has(item.equipment_id));
+    return { equipment, equipmentIds, inspections, deviations };
+}
+
+function updateFilteredCompliance() {
+    const { equipment, deviations } = filteredDashboardData();
+    const unresolvedStatuses = ["OPEN", "IN PROGRESS", "ASSIGNED", "PENDING"];
     const equipmentWithOpenDeviations = new Set();
-
     deviations.forEach(deviation => {
-        const status = normalizeStatus(deviation.status);
-
-        if (
-            deviation.equipment_id &&
-            isActiveDeviation(deviation) &&
-            unresolvedStatuses.includes(status)
-        ) {
-            equipmentWithOpenDeviations.add(
-                deviation.equipment_id
-            );
+        if (deviation.equipment_id && isActiveDeviation(deviation) &&
+            unresolvedStatuses.includes(normalizeStatus(deviation.status))) {
+            equipmentWithOpenDeviations.add(deviation.equipment_id);
         }
     });
-
-    const totalEquipment = equipment.length;
-
-    const compliantEquipment = equipment.filter(
-        item => !equipmentWithOpenDeviations.has(item.id)
-    ).length;
-
-    const compliance = totalEquipment > 0
-        ? Math.round(
-            (compliantEquipment / totalEquipment) * 100
-        )
-        : null;
-
+    const compliantEquipment = equipment.filter(item => !equipmentWithOpenDeviations.has(item.id)).length;
+    const compliance = equipment.length ? Math.round(compliantEquipment / equipment.length * 100) : null;
     updateCompliance(compliance);
-
-    console.log("FireSafe Track deviation-based compliance:", {
-        totalEquipment,
-        compliantEquipment,
-        equipmentWithOpenDeviations:
-            equipmentWithOpenDeviations.size,
-        compliance
-    });
-
-    return {
-        totalEquipment,
-        compliantEquipment,
-        equipmentWithOpenDeviations:
-            equipmentWithOpenDeviations.size,
-        compliance
-    };
+    return { totalEquipment: equipment.length, compliantEquipment,
+        equipmentWithOpenDeviations: equipmentWithOpenDeviations.size, compliance };
 }
+
+function applyDashboardFilters() {
+    const { equipment, inspections, deviations } = filteredDashboardData();
+    const today = localDateKey();
+    const dueCount = equipment.filter(item => item.next_inspection_date &&
+        String(item.next_inspection_date).slice(0,10) <= today).length;
+    const unresolvedStatuses = ["OPEN", "IN PROGRESS", "ASSIGNED", "PENDING"];
+    const unresolved = deviations.filter(d => isActiveDeviation(d) &&
+        unresolvedStatuses.includes(normalizeStatus(d.status)));
+    const overdue = unresolved.filter(isOverdueDeviation).length;
+    const passed = inspections.filter(item => isPassed(item.overall_status)).length;
+    const failed = inspections.filter(item => isFailed(item.overall_status)).length;
+
+    totalEquipmentEl.textContent = equipment.length;
+    totalInspectionsEl.textContent = inspections.length;
+    openDeviationsEl.textContent = unresolved.length;
+    overdueCount.textContent = overdue;
+    dueEquipmentEl.textContent = dueCount;
+    passedInspectionsEl.textContent = passed;
+    failedInspectionsEl.textContent = failed;
+    dashboardStats.totalEquipment = equipment.length;
+    dashboardStats.overdueEquipment = dueCount;
+    dashboardStats.openDeviations = unresolved.length;
+    dashboardStats.overdueDeviations = overdue;
+
+    renderRecentInspections(inspections.slice(0,8));
+    updateFilteredCompliance();
+    renderSafetyTrends();
+
+    const context = document.getElementById("areaFilterContext");
+    if (context) {
+        const selected = document.getElementById("areaFilter")?.selectedOptions?.[0]?.textContent || "All Areas";
+        context.textContent = selected === "All Areas" ? "Showing all areas" : `Showing ${selected}`;
+    }
+}
+
+
 
 
     /* =====================================================
@@ -2700,6 +2703,8 @@ async function loadSiteCompliance() {
     ====================================================== */
 
     async function loadEquipmentMap() {
+
+        if (equipmentMapCache) return equipmentMapCache;
 
         const {
             data,
@@ -2741,6 +2746,7 @@ async function loadSiteCompliance() {
         );
 
 
+        equipmentMapCache = map;
         return map;
 
     }
@@ -2967,11 +2973,12 @@ async function loadSiteCompliance() {
 
     function selectedTrendDeviations() {
         const period = document.getElementById("trendPeriod")?.value || "90";
-        if (period === "all") return latestTrendDeviations.slice();
+        const source = filteredDashboardData().deviations;
+        if (period === "all") return source.slice();
         const cutoff = new Date();
         cutoff.setHours(0,0,0,0);
         cutoff.setDate(cutoff.getDate() - Number(period) + 1);
-        return latestTrendDeviations.filter(d => {
+        return source.filter(d => {
             const date = d.created_at || d.target_date || d.due_date;
             if (!date) return false;
             const parsed = new Date(date);
@@ -3086,6 +3093,10 @@ async function loadSiteCompliance() {
     }
 
     document.getElementById("trendPeriod")?.addEventListener("change", renderSafetyTrends);
+    document.getElementById("areaFilter")?.addEventListener("change", event => {
+        selectedAreaKey = event.target.value || "all";
+        applyDashboardFilters();
+    });
 
     /* =====================================================
        LOAD DASHBOARD
@@ -3101,13 +3112,14 @@ async function loadSiteCompliance() {
         // Verify the session and profile first.
         await loadCurrentUser();
 
+        // Load the three related datasets first so location filtering and
+        // compliance calculations always operate on a consistent snapshot.
         const results = await Promise.allSettled([
-    loadEquipment(),
-    loadInspections(),
-    loadDeviations(),
-    loadInspectionAnswers(),
-    loadSiteCompliance()
-]);
+            loadEquipment(),
+            loadInspections(),
+            loadDeviations(),
+            loadInspectionAnswers()
+        ]);
         const failed = results
             .map((result, index) => ({
                 result,
@@ -3115,8 +3127,7 @@ async function loadSiteCompliance() {
                     "Equipment",
                     "Inspections",
                     "Deviations",
-                    "Checklist answers",
-                    "Site Compliance"
+                    "Checklist answers"
                 ][index]
             }))
             .filter(item => item.result.status === "rejected");
@@ -3130,7 +3141,7 @@ async function loadSiteCompliance() {
             throw new Error(messages.join(" | "));
         }
 
-        renderSafetyTrends();
+        applyDashboardFilters();
 
         if (userMenuName) {
             userMenuName.textContent = userDisplay.textContent || "Signed in";
